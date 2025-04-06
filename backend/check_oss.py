@@ -8,8 +8,8 @@
 import oss2
 
 # 阿里云OSS配置
-access_key_id = 'LTAI5tMVdYzk5fVrmjQVk1Ga'
-access_key_secret = 'OKUYiiO9WOw5bJpRTfJa7F76Ayygdk'
+access_key_id = 'YOUR_ACCESS_KEY_ID'
+access_key_secret = 'YOUR_ACCESS_KEY_SECRET'
 endpoint = 'oss-cn-beijing.aliyuncs.com'
 bucket_name = 'ezijingai'
 

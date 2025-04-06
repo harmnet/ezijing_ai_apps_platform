@@ -37,8 +37,8 @@ else:
     logger.warning(f"找不到环境变量文件: {env_file}")
 
 # 手动设置阿里云OSS环境变量（用户提供的凭证）
-os.environ['ALIYUN_ACCESS_KEY_ID'] = 'LTAI5tMVdYzk5fVrmjQVk1Ga'
-os.environ['ALIYUN_ACCESS_KEY_SECRET'] = 'OKUYiiO9WOw5bJpRTfJa7F76Ayygdk'
+os.environ['ALIYUN_ACCESS_KEY_ID'] = 'YOUR_ACCESS_KEY_ID'
+os.environ['ALIYUN_ACCESS_KEY_SECRET'] = 'YOUR_ACCESS_KEY_SECRET'
 os.environ['ALIYUN_OSS_BUCKET'] = 'ezijingai'
 os.environ['ALIYUN_OSS_ENDPOINT'] = 'oss-cn-beijing.aliyuncs.com'
 os.environ['ALIYUN_REGION'] = 'cn-beijing'

@@ -417,10 +417,10 @@ def get_api_client(model_name):
         elif model_info["api_type"] == "volcano":
             # 根据不同模型选择不同API密钥
             if "doubao" in model_info["model_id"]:
-                api_key = "026f661d-3948-42e1-acdd-81e64e62da1b"
+                api_key = "YOUR_DOUBAO_API_KEY"
             else:
                 # 使用用户提供的有效密钥
-                api_key = "03824a7c-e453-4ccd-b356-e7f80a793add"
+                api_key = "YOUR_VOLCANO_API_KEY"
             print(f"使用默认火山引擎API密钥: {api_key[:4]}...{api_key[-4:]}")
         elif model_info["api_type"] == "dashscope":
             api_key = "sk-1f4bdb8a73ee47809ee148a977c39737"

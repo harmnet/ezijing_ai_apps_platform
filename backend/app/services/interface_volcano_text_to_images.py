@@ -20,8 +20,8 @@ from volcengine.visual.VisualService import VisualService
 
 # 火山引擎API配置
 VOLCANO_API_CONFIG = {
-    "access_key_id": os.environ.get("VOLCANO_ACCESS_KEY_ID", "AKLTYTE2YzZlNDQ1YjY4NGVhMzk1MTVmMTM4MzllNTEwMDY"),
-    "secret_access_key": os.environ.get("VOLCANO_SECRET_ACCESS_KEY", "TldGbVlXTTBPVEZrT0dKbE5HTTFaVGxoTUdZNFpXUXhObVUwWVRVMFpETQ=="),
+    "access_key_id": os.environ.get("VOLCANO_ACCESS_KEY_ID", "YOUR_VOLCANO_ACCESS_KEY_ID"),
+    "secret_access_key": os.environ.get("VOLCANO_SECRET_ACCESS_KEY", "YOUR_VOLCANO_SECRET_ACCESS_KEY"),
     "req_key": "high_aes_general_v21_L",
     "model_version": "general_v2.1_L",
     "req_schedule_conf": "general_v20_9B_pe"

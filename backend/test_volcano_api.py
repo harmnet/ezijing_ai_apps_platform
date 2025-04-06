@@ -10,8 +10,8 @@ import json
 from volcengine.visual.VisualService import VisualService
 
 # 火山引擎API配置
-ACCESS_KEY_ID = "AKLTYTE2YzZlNDQ1YjY4NGVhMzk1MTVmMTM4MzllNTEwMDY"
-SECRET_ACCESS_KEY = "TldGbVlXTTBPVEZrT0dKbE5HTTFaVGxoTUdZNFpXUXhObVUwWVRVMFpETQ=="
+ACCESS_KEY_ID = "YOUR_VOLCANO_ACCESS_KEY_ID"
+SECRET_ACCESS_KEY = "YOUR_VOLCANO_SECRET_ACCESS_KEY"
 
 def test_volcano_image_generation():
     """测试火山引擎文生图API"""

@@ -20,8 +20,8 @@ import logging
 
 # 阿里云OSS配置
 OSS_CONFIG = {
-    "access_key_id": os.environ.get("ALIYUN_OSS_ACCESS_KEY_ID", "LTAI5tMVdYzk5fVrmjQVk1Ga"),
-    "access_key_secret": os.environ.get("ALIYUN_OSS_ACCESS_KEY_SECRET", "OKUYiiO9WOw5bJpRTfJa7F76Ayygdk"),
+    "access_key_id": os.environ.get("ALIYUN_OSS_ACCESS_KEY_ID", "YOUR_ACCESS_KEY_ID"),
+    "access_key_secret": os.environ.get("ALIYUN_OSS_ACCESS_KEY_SECRET", "YOUR_ACCESS_KEY_SECRET"),
     "endpoint": os.environ.get("ALIYUN_OSS_ENDPOINT", "oss-cn-beijing.aliyuncs.com"),
     "bucket_name": os.environ.get("ALIYUN_OSS_BUCKET_NAME", "ezijingai")
 }
