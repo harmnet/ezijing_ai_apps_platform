@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <!-- import CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        #app {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        button {
+            margin: 4px 0px !important;
+        }
+
+        .rtc_box {
+            width: 450px;
+            height: 800px;
+            margin: 0 auto;
+            border: 1px solid #000;
+        }
+
+        .rtc_box_warp {
+            border: 1px solid rebeccapurple;
+            padding: 10px;
+            width: 80vw;
+            min-height: 20px;
+            margin: 10px;
+        }
+
+        .title {
+            text-align: left;
+            font-size: 28px;
+            margin-top: 10px;
+        }
+
+        .asr_box {
+            border: 1px solid palegreen;
+            padding: 10px;
+            width: 80vw;
+            min-height: 20px;
+            margin: 10px;
+        }
+
+        .pre_box {
+            border: 1px solid skyblue;
+            padding: 10px;
+            width: 80vw;
+            min-height: 20px;
+            margin: 10px;
+
+        }
+
+        .pre_box_input {
+            margin-bottom: 10px;
+        }
+
+        .signature_box {
+            padding: 5px;
+            border: 1px solid #f0f0f0;
+            word-wrap: break-word;
+            word-break: break-all
+        }
+
+        .sdk_box {
+            border: 1px solid pink;
+            padding: 10px;
+            width: 80vw;
+            min-height: 20px;
+            margin: 10px;
+        }
+
+        body {
+            margin: 0;
+
+        }
+
+        button {
+            margin: 4px 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="left">
+            <div class="title">一、前置内容</div>
+            <div class="pre_box">
+                <div class="pre_box_input">
+                    <el-button @click="getSignature">获取signature</el-button>
+                    <br>
+                    subscriptionKey: <el-input v-model='subscriptionKey'></el-input>
+                    signature: <br>
+                    <div class="signature_box">
+                        {{this.signature}}
+                    </div>
+
+                </div>
+                <div class="pre_box_input">
+                    项目ID: <el-input v-model='projectId'></el-input>
+                    虚拟人ID： <el-input v-model='vHumanId'></el-input>
+                    language: <el-input v-model='language' /></el-input>
+                </div>
+                <div>
+                    要不要根元素
+                    <el-switch v-model="needBox" /></el-switch>
+                    <br />
+                    要不要原始背景
+                    <el-switch v-model="needUI" /></el-switch>
+                    <br />
+                    推流分辨率是否1080P(默认720P)
+                    <el-switch v-model="needHighRate" /></el-switch>
+                    <br />
+                    是否展示默认静态形象
+                    <el-switch v-model="needShowDefaultStaticImage" /></el-switch>
+                    <br />
+                    <el-button @click="startInt">开始初始化项目</el-button>
+                </div>
+            </div>
+            <div class="title">二、TRTC SDK 功能</div>
+            <div class="sdk_box">
+                <el-button @click="startRtcFn">开始拉流</el-button>
+                <br>
+                <div class="sdk_el-input">
+                    <el-button @click="rtcTalk">
+                        驱动数字人说
+                    </el-button>
+                    驱动数字人说的值： <el-input v-model='talkValue' /></el-input>
+                    <el-button @click="rtcAsk">
+                        向数字人问
+                    </el-button>
+                    向数字人问的值： <el-input v-model='askValue' /></el-input>
+                </div>
+                <el-button @click="rtcTalkAudio">
+                    音频驱动数字人说
+                </el-button>
+                <el-button @click="rtcBreak">
+                    打断数字人
+                </el-button>
+                <el-button @click="rtcEnd">
+                    结束交互
+                </el-button>
+                <el-button @click="rtcDestroy">
+                    销毁交互
+                </el-button>
+            </div>
+            <div class="title">三、ASR SDK 功能</div>
+            <div class="asr_box">
+                engine_model_type: <el-input v-model='engine_model_type' /></el-input>
+                <br>
+                <el-button @click="handleTesthandleMicrophone">测试麦克风</el-button>
+                <br />
+                <el-button @click="handleStartASR">开始识别</el-button>
+                <br>
+                <el-button @click="handleEndASR">结束识别</el-button>
+                <br>
+                ASR返回值：
+                <div>{{asrValue}}</div>
+
+                <el-button @click="rtcAskAsrValue">
+                    问数字人当前ASR返回值
+                </el-button>
+                <br>
+                <el-button @click="rtcTalkAsrValue">
+                    驱动数字人说当前ASR返回值
+                </el-button>
+            </div>
+        </div>
+        <div class="right">
+            <div class="title">RTC渲染容器</div>
+            <div class="rtc_box_warp">
+                <div class="rtc_box">
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+<!-- import Vue before Element -->
+<script src="https://unpkg.com/vue@2/dist/vue.js"></script>
+<!-- import JavaScript -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<!-- import RTCSDK -->
+<script src="https://virtualhuman-app.oss-cn-beijing.aliyuncs.com/interaction/public/js/sdk/release/xiaoiceRTC1.0.8.js"
+    type="text/javascript"></script>
+<!-- import AsrSDK -->
+<script src="https://virtualhuman-app.oss-cn-beijing.aliyuncs.com/interaction/public/js/sdk/release/xiaoiceASR1.0.7.js"
+    type="text/javascript"></script>
+<!-- import axios -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.2/axios.min.js"></script>
+<script>
+    const service = axios.create({
+        baseURL: 'https://interactive-virtualhuman.xiaoice.com/openapi'
+    })
+    //RTC实例
+    const { RTCInteraction } = window;
+    let rtcInstance = null
+    let webAudioSpeechRecognizerInstance = null;
+    let isReady = false;
+    let asrConfig = {
+        hotword_list: [],
+        // engine_model_type: '',
+    }
+    new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                subscriptionKey: '',// 建议写死
+                signature: '',// 建议获取后存起来
+                projectId: "",
+                vHumanId: '',
+                needUI: false,
+                needBox: true,
+                needHighRate: false,
+                needShowDefaultStaticImage: false,
+                talkValue: '',
+                askValue: '',
+                asrValue: '',
+                engine_model_type: "",
+                language: ""
+            }
+        },
+        methods: {
+            getSignature: function (key) {
+                if (!this.subscriptionKey) {
+                    alert('请填写subscriptionKey');
+                    return
+                }
+                service({
+                    url: '/signature/gen',
+                    headers: {
+                        ['subscription-key']: this.subscriptionKey
+                    }
+                }).then((res) => {
+                    console.log('getSignature', res)
+                    this.signature = res.data.data
+                })
+            },
+            startInt: function () {
+                console.log('startIntstartIntstartInt')
+                rtcInstance?.destroy(false);
+                rtcInstance = null;
+                let options = {
+                    mountClass: this.needBox ? ".rtc_box" : '',
+                    includeUI: this.needUI,
+                    showDefaultStaticImage: this.needShowDefaultStaticImage,
+                    bitrateEnum: this.needHighRate ? 'R_1080P' : 'R_720P',
+                    language: this.language
+                }
+                if (this.projectId) {
+                    options.projectId = this.projectId;
+                }
+                if (this.vHumanId) {
+                    options.exclusiveVirtualHumanId = this.vHumanId;
+                }
+                options.signature = this.signature
+                console.log('~~~~~~options~~~~~~', options, this)
+                if (!options.projectId && !options.exclusiveVirtualHumanId) {
+                    alert('请填写项目ID或者虚拟人ID');
+                    return
+                }
+                if (!options.signature) {
+                    alert('请填写signature');
+                    return
+                }
+                rtcInstance = new RTCInteraction({
+                    ...options,
+                    onError(res) {
+                        console.log("=================onError===================>");
+                        console.log(res);
+                        console.log("<==================onError==================");
+                    },
+                    onInited(res) {
+                        console.log("================onInited====================", res);
+                        asrConfig = {
+                            hotword_list: res?.hotword_list,
+                            // engine_model_type: res?.engine_model_type,
+                        }
+                        isReady = true;
+                    },
+                    onPlayStream() {
+                        console.log("===============onPlayStream=====================");
+                    },
+                    onJoinRoom() {
+                        console.log("===============onJoinRoom=====================");
+                    },
+                    onStopStream() {
+                        console.log("==================onStopStream==================");
+                    },
+                    onTalkStart(TalkRes) {
+                        console.log("==================onTalkStart==================>");
+                        console.log(TalkRes);
+                        console.log("<==================onTalkStart==================");
+
+                    },
+                    onTalkEnd(TalkRes) {
+                        console.log("====================onTalkEnd================>");
+                        console.log(TalkRes);
+                        console.log("<====================onTalkEnd================");
+
+                    },
+                });
+                // });
+            },
+            startRtcFn: function () {
+                console.log('startRtcFnstartRtcFnstartRtcFn', rtcInstance, isReady)
+                if (!isReady) {
+                    alert('请先初始化RTC');
+                    return
+                }
+                rtcInstance?.startRTC();
+            },
+            rtcTalk: function () {
+                if (!isReady) {
+                    alert('请先初始化RTC');
+                    return
+                }
+                rtcInstance?.talk(this.talkValue);
+            },
+            rtcAsk: function () {
+                if (!isReady) {
+                    alert('请先初始化RTC');
+                    return
+                }
+                rtcInstance?.ask(this.askValue);
+            },
+            rtcTalkAudio: function () {
+                if (!isReady) {
+                    alert('请先初始化RTC');
+                    return
+                }
+                rtcInstance?.talkByAudio(
+                    "http://virtualhuman-app.oss-cn-beijing.aliyuncs.com/interaction/test/%E9%99%88%E5%AE%9D%E5%B9%B3-24.wav"
+                );
+            },
+            rtcBreak: function () {
+                if (!isReady) {
+                    alert('请先初始化RTC');
+                    return
+                }
+                rtcInstance?.breakTalking();
+            },
+            rtcEnd: function () {
+                if (!isReady) {
+                    alert('请先初始化RTC');
+                    return
+                }
+                rtcInstance?.endRTC();
+            },
+            rtcDestroy: function () {
+                if (!isReady) {
+                    alert('请先初始化RTC');
+                    return
+                }
+                rtcInstance?.destroy();
+        // rtcInstance?.destroy(false);
+                rtcInstance = null;
+            },
+            handleTesthandleMicrophone: function () {
+                window.AsrSDK.authUseMicrophone().then(res => {
+                    console.log('==>授权成功', res)
+                }).catch(err => {
+                    console.log('==>授权失败', err)
+                })
+            },
+            handleStartASR: function () {
+                console.log('初始化ASR');
+                if (!this.signature) {
+                    alert('signature 为空');
+                    return;
+                }
+                let resultText = '';
+                const { hotword_list } = asrConfig;
+                console.log('hotword_listhotword_listhotword_listhotword_list', hotword_list);
+                //@ts-ignore
+                const webAudioSpeechRecognizer = new window.AsrSDK({
+                    // closeProxy: true,
+                    isDev: true,
+                    hotword_list: hotword_list,
+                    engine_model_type: this.engine_model_type,
+                    projectId: this.projectId,
+                    // 开始识别
+                    onRecognitionStart: (res) => {
+                        console.log('开始识别', res);
+                    },
+                    // 一句话开始
+                    onSentenceBegin: (res) => {
+                        console.log('一句话开始', res);
+                    },
+                    // 识别变化时
+                    onRecognitionResultChange: (res) => {
+                        console.log('识别变化时', res);
+                        const currentText = `${resultText}${res.result.voice_text_str}`;
+                        this.asrValue = currentText;
+                    },
+                    // 一句话结束
+                    onSentenceEnd: (res) => {
+                        console.log('一句话结束', res);
+                        resultText += res.result.voice_text_str;
+                        this.asrValue = resultText
+                    },
+                    // 识别结束
+                    onRecognitionComplete: (res) => {
+                        console.log('识别结束', res);
+                    },
+                    // 识别错误
+                    onError: (res) => {
+                        console.log('识别失败', res);
+                    },
+                });
+                webAudioSpeechRecognizer.start(this.signature);
+
+                webAudioSpeechRecognizerInstance = webAudioSpeechRecognizer;
+            },
+            handleEndASR: function () {
+                console.log('结束ASR');
+                const webAudioSpeechRecognizer = webAudioSpeechRecognizerInstance
+                if (webAudioSpeechRecognizer) {
+                    webAudioSpeechRecognizer.stop();
+                    this.asrValue = ''
+                }
+            },
+
+            rtcTalkAsrValue: function () {
+                if (!isReady) {
+                    alert('请先初始化RTC');
+                    return
+                }
+                rtcInstance?.talk(this.asrValue);
+            },
+            rtcAskAsrValue: function () {
+                if (!isReady) {
+                    alert('请先初始化RTC');
+                    return
+                }
+                rtcInstance?.ask(this.asrValue);
+            },
+        }
+
+    })
+</script>
+
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>图片风格转换服务</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f9f9f9;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #333;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    input[type="text"],
+    input[type="file"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    select {
+      height: 42px;
+    }
+    button {
+      background-color: #1890ff;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #40a9ff;
+    }
+    .result {
+      margin-top: 30px;
+      border-top: 1px solid #eee;
+      padding-top: 20px;
+    }
+    .image-preview {
+      margin-top: 15px;
+      text-align: center;
+    }
+    .image-preview img {
+      max-width: 100%;
+      max-height: 400px;
+      border-radius: 4px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .loading {
+      text-align: center;
+      margin: 15px 0;
+    }
+    .status {
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .status.success {
+      background-color: #f6ffed;
+      border: 1px solid #b7eb8f;
+      color: #52c41a;
+    }
+    .status.error {
+      background-color: #fff2f0;
+      border: 1px solid #ffccc7;
+      color: #ff4d4f;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>图片风格转换服务</h1>
+    
+    <div class="form-group">
+      <label for="imageUpload">上传图片</label>
+      <input type="file" id="imageUpload" accept="image/*">
+      <div class="image-preview" id="uploadPreview"></div>
+    </div>
+    
+    <div class="form-group">
+      <label for="functionType">选择功能</label>
+      <select id="functionType">
+        <option value="stylization_all">全局风格化</option>
+        <option value="stylization_local">局部风格化</option>
+        <option value="description_edit">去文字水印</option>
+        <option value="super_resolution">图像超分辨率</option>
+        <option value="colorization">图像上色</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="prompt">提示词</label>
+      <textarea id="prompt" rows="3" placeholder="例如：转换成法国绘本风格"></textarea>
+    </div>
+    
+    <button id="submitBtn">提交转换任务</button>
+    
+    <div class="result" id="result">
+      <h3>处理结果</h3>
+      <div class="loading" id="loading" style="display: none;">处理中，请稍候...</div>
+      <div class="status" id="statusContainer"></div>
+      <div class="image-preview" id="resultPreview"></div>
+      <pre id="resultJson"></pre>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const imageUploadEl = document.getElementById('imageUpload');
+      const uploadPreviewEl = document.getElementById('uploadPreview');
+      const functionTypeEl = document.getElementById('functionType');
+      const promptEl = document.getElementById('prompt');
+      const submitBtnEl = document.getElementById('submitBtn');
+      const loadingEl = document.getElementById('loading');
+      const statusContainerEl = document.getElementById('statusContainer');
+      const resultPreviewEl = document.getElementById('resultPreview');
+      const resultJsonEl = document.getElementById('resultJson');
+      
+      let uploadedImageUrl = '';
+      
+      // 加载功能列表
+      fetch('/api/images/functions')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.functions) {
+            functionTypeEl.innerHTML = '';
+            data.functions.forEach(func => {
+              const option = document.createElement('option');
+              option.value = func.id;
+              option.textContent = func.name + ' - ' + func.description;
+              functionTypeEl.appendChild(option);
+            });
+          }
+        })
+        .catch(error => {
+          console.error('加载功能列表失败：', error);
+        });
+      
+      // 图片上传预览
+      imageUploadEl.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        uploadPreviewEl.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        uploadPreviewEl.appendChild(img);
+        
+        // 上传图片到服务器
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        fetch('/api/images/upload', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            uploadedImageUrl = data.file.url;
+            showStatus('图片上传成功', 'success');
+          } else {
+            showStatus('图片上传失败: ' + data.error, 'error');
+          }
+        })
+        .catch(error => {
+          showStatus('图片上传失败: ' + error.message, 'error');
+        });
+      });
+      
+      // 提交转换任务
+      submitBtnEl.addEventListener('click', function() {
+        if (!uploadedImageUrl) {
+          showStatus('请先上传图片', 'error');
+          return;
+        }
+        
+        if (!promptEl.value.trim()) {
+          showStatus('请输入提示词', 'error');
+          return;
+        }
+        
+        loadingEl.style.display = 'block';
+        resultPreviewEl.innerHTML = '';
+        resultJsonEl.textContent = '';
+        
+        // 创建转换任务
+        fetch('/api/images/style-transfer', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            imageUrl: uploadedImageUrl,
+            prompt: promptEl.value.trim(),
+            functionType: functionTypeEl.value
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showStatus('任务创建成功，正在处理...', 'success');
+            // 轮询查询任务结果
+            checkTaskStatus(data.taskId);
+          } else {
+            loadingEl.style.display = 'none';
+            showStatus('任务创建失败: ' + data.error, 'error');
+          }
+        })
+        .catch(error => {
+          loadingEl.style.display = 'none';
+          showStatus('任务创建失败: ' + error.message, 'error');
+        });
+      });
+      
+      // 轮询查询任务状态
+      function checkTaskStatus(taskId) {
+        fetch(`/api/images/tasks/${taskId}`)
+          .then(response => response.json())
+          .then(data => {
+            resultJsonEl.textContent = JSON.stringify(data, null, 2);
+            
+            if (data.success && data.task) {
+              const task = data.task;
+              
+              if (task.status === 'SUCCEEDED') {
+                loadingEl.style.display = 'none';
+                showStatus('任务处理完成', 'success');
+                
+                // 显示结果图片
+                if (task.output && task.output.results && task.output.results.length > 0) {
+                  const imgUrl = task.output.results[0].url;
+                  const img = document.createElement('img');
+                  img.src = imgUrl;
+                  resultPreviewEl.innerHTML = '';
+                  resultPreviewEl.appendChild(img);
+                }
+              } else if (task.status === 'FAILED') {
+                loadingEl.style.display = 'none';
+                showStatus('任务处理失败: ' + (task.error_msg || '未知错误'), 'error');
+              } else {
+                // 任务还在处理中，继续轮询
+                setTimeout(() => checkTaskStatus(taskId), 2000);
+              }
+            } else {
+              loadingEl.style.display = 'none';
+              showStatus('查询任务状态失败: ' + (data.error || '未知错误'), 'error');
+            }
+          })
+          .catch(error => {
+            loadingEl.style.display = 'none';
+            showStatus('查询任务状态失败: ' + error.message, 'error');
+          });
+      }
+      
+      // 显示状态信息
+      function showStatus(message, type) {
+        statusContainerEl.textContent = message;
+        statusContainerEl.className = 'status ' + type;
+      }
+    });
+  </script>
+</body>
+</html> 
