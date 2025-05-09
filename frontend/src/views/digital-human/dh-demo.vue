@@ -113,7 +113,7 @@
             
             <el-form-item label="语音">
               <el-select v-model="scene.voiceId" placeholder="选择语音">
-                <el-option label="默认语音(101-master-ugdr)" value="101-master-ugdr"></el-option>
+                <el-option label="默认语音(181-0319jiaying-8W3y)" value="181-0319jiaying-8W3y"></el-option>
               </el-select>
             </el-form-item>
             
@@ -336,7 +336,7 @@ export default {
     const rightScene = {
       virtualHumanId: 'VHP3S1EF7',
       virtualHumanPostureId: defaultParams.right.postureId,
-      voiceId: '101-master-ugdr',
+      voiceId: '181-0319jiaying-8W3y',
       attributes: {
         width: defaultParams.right.width,
         height: defaultParams.right.height,
@@ -371,7 +371,7 @@ export default {
     const leftScene = {
       virtualHumanId: 'VHP3S1EF7',
       virtualHumanPostureId: defaultParams.left.postureId,
-      voiceId: '101-master-ugdr',
+      voiceId: '181-0319jiaying-8W3y',
       attributes: {
         width: defaultParams.left.width,
         height: defaultParams.left.height,
@@ -406,7 +406,7 @@ export default {
     const thirdScene = {
       virtualHumanId: 'VHP3S1EF7',
       virtualHumanPostureId: defaultParams.right.postureId,
-      voiceId: '101-master-ugdr',
+      voiceId: '181-0319jiaying-8W3y',
       attributes: {
         width: defaultParams.right.width,
         height: defaultParams.right.height,
@@ -520,7 +520,7 @@ export default {
       return {
         virtualHumanId: 'VHP3S1EF7',
         virtualHumanPostureId: params.postureId,
-        voiceId: '101-master-ugdr',
+        voiceId: '181-0319jiaying-8W3y',
         attributes: {
           width: params.width,
           height: params.height,

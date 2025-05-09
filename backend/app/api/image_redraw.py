@@ -9,9 +9,13 @@
 from flask import Blueprint, request, jsonify, current_app
 import traceback
 from app.services.aliyun_image_redraw import create_redraw_task, query_redraw_task
+from app.utils.logger import get_image_redraw_logger
 
 # 创建蓝图
 image_redraw = Blueprint('image_redraw', __name__)
+
+# 获取图像重绘专用日志记录器
+image_redraw_logger = get_image_redraw_logger()
 
 @image_redraw.route('/image_redraw/create', methods=['POST'])
 def create_redraw():
@@ -83,7 +87,7 @@ def create_redraw():
             }), 400
             
         # 记录请求信息
-        current_app.logger.info(f"阿里云图片重绘请求 - 提示词: {prompt}, 基础图片URL: {base_image_url}, 蒙版图片URL: {mask_image_url}")
+        image_redraw_logger.info(f"阿里云图片重绘请求 - 提示词: {prompt}, 基础图片URL: {base_image_url}, 蒙版图片URL: {mask_image_url}")
         
         # 调用服务创建任务
         result = create_redraw_task(
@@ -111,8 +115,8 @@ def create_redraw():
             
     except Exception as e:
         # 捕获所有异常
-        current_app.logger.error(f"阿里云图片重绘API异常: {str(e)}")
-        current_app.logger.error(traceback.format_exc())
+        image_redraw_logger.error(f"阿里云图片重绘API异常: {str(e)}")
+        image_redraw_logger.error(traceback.format_exc())
         
         return jsonify({
             "success": False,
@@ -148,7 +152,7 @@ def query_redraw(task_id):
             }), 400
             
         # 记录查询信息
-        current_app.logger.info(f"查询阿里云图片重绘任务 - 任务ID: {task_id}")
+        image_redraw_logger.info(f"查询阿里云图片重绘任务 - 任务ID: {task_id}")
         
         # 调用服务查询任务
         result = query_redraw_task(task_id)
@@ -169,8 +173,8 @@ def query_redraw(task_id):
             
     except Exception as e:
         # 捕获所有异常
-        current_app.logger.error(f"阿里云图片重绘查询API异常: {str(e)}")
-        current_app.logger.error(traceback.format_exc())
+        image_redraw_logger.error(f"阿里云图片重绘查询API异常: {str(e)}")
+        image_redraw_logger.error(traceback.format_exc())
         
         return jsonify({
             "success": False,

@@ -5,9 +5,10 @@
         <h2>营销文案生成</h2>
       </div>
       <div class="page-actions">
-        <button class="action-btn" title="创作小贴士" @click="showTips">
-          <i class="ri-lightbulb-line"></i>
-        </button>
+        <div class="learn-button" @click="showTipsModal = true">
+          <i class="ri-lightbulb-flash-line"></i>
+          <span>知识学习</span>
+        </div>
       </div>
     </div>
     
@@ -207,19 +208,33 @@
             
             <div v-if="!generatedCopy && !isLoading" class="empty-result">
               <div class="empty-content">
-                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgZmlsbC1vcGFjaXR5PSIuMDgiIGZpbGw9IiNEOEQ4RDgiIGN4PSI2NCIgY3k9IjY0IiByPSI2NCIvPjxwYXRoIGQ9Ik00MS41OTkgNDkuODhjMS4xIDAgMiAuOSAyIDJ2MzIuMjRjMCAxLjEtLjkgMi0yIDJoLTguOTdhLjk3Ljk3IDAgMDEtLjk1LS45NSAwIDAgMCAwLS4wNCAwIDAgMCAwLS4wM3YtMjkuNTFjMC0xLjk5IDEuNjItMy42MiAzLjYyLTMuNjJsMCAwUTQxLjU5OCA0OS44OTggNDEuNTk5IDQ5Ljg4ek04Ni4wNyA0OS44OGMxLjEgMCAyIC45IDIgMnYzMi4yNGMwIDEuMS0uOSAyLTIgMmgtOC45N3MtLjk2LS43OS0uOTYtLjk2VjUyLjgyYzAtMS42MiAxLjMyLTIuOTUgMi45NS0yLjk1bDAgMGg2Ljk4ek02NC4wNyA0Ni44M2MxLjMxIDAgMi4zNyAxLjA2IDIuMzcgMi4zN3YzNC44OGMwIDEuMzEtMS4wNiAyLjM3LTIuMzcgMi4zN2gtOS43YTIuMzcgMi4zNyAwIDAxLTIuMzctMi4zN1Y0OS4yYzAtMS4zMSAxLjA2LTIuMzcgMi4zNy0yLjM3bDAgMGg5LjciIGZpbGw9IiNFMUUxRTEiLz48cGF0aCBkPSJNMzIuNjMgNjkuNzVjMCAyLjYgMi4xMSA0LjcxIDQuNzEgNC43MXMyLjYtMi4xMSA0LjctNC43MS0yLjExLTQuNzEtNC43LTQuNzEtNC43MSAyLjExLTQuNzEgNC43MXpNODcuMDMgNjkuNzVjMCAyLjYtMi4xMSA0LjcxLTQuNzEgNC43MXMtNC43MS0yLjExLTQuNzEtNC43MSAyLjExLTQuNzEgNC43MS00LjcxIDQuNzEgMi4xMSA0LjcxIDQuNzF6TTY0LjQgNjcuMzhjMCAzLjczLTMuMDIgNi43NS02Ljc1IDYuNzVzLTYuNzYtMy4wMi02Ljc2LTYuNzUgMy4wMy02Ljc2IDYuNzYtNi43NiA2Ljc1IDMuMDMgNi43NSA2Ljc2eiIgZmlsbD0iI0JBMDA0MCIgZmlsbC1vcGFjaXR5PSIuNSIvPjwvZz48L3N2Zz4=" class="empty-image" alt="暂无数据" />
+                <img src="@/assets/images/no_data.png" class="empty-image" alt="暂无数据" />
                 <p class="empty-message">暂无文案，请点击"生成文案"按钮开始创作</p>
               </div>
             </div>
             
-            <div v-else-if="generatedCopy" class="copy-result" :class="{'blur-content': isLoading}">
+            <div v-else-if="generatedCopy" class="copy-result" :class="{'blur-content': isLoading, 'streaming': isStreaming}">
               <!-- 添加离线模式提示条 -->
               <div v-if="isOfflineGenerated" class="offline-mode-banner">
                 <i class="ri-information-line"></i>
                 <span>您当前正在使用离线模式，生成的是基础模板文案。要获得AI生成的更优质文案，请联系管理员启动后端服务。</span>
               </div>
               
-              <div class="copy-content" v-html="formattedCopy"></div>
+              <!-- 简单内容展示区 -->
+              <div class="content-display-container">
+                <div class="pad-status-icons">
+                  <div class="pad-status-icon wifi"></div>
+                  <div class="pad-status-icon"></div>
+                  <div class="pad-status-icon battery"></div>
+                </div>
+                <div class="pad-screen-glare"></div>
+                <div class="content-display" v-html="formattedCopy"></div>
+                <div v-if="isStreaming" class="streaming-indicator">
+                  <span class="dot-typing"></span>
+                </div>
+                <div class="pad-home-button"></div>
+              </div>
+              
             </div>
           </div>
         </div>
@@ -227,28 +242,24 @@
     </div>
     
     <!-- 创作小贴士模态框 -->
-    <div class="modal" v-if="showTipsModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3><i class="ri-lightbulb-line"></i> 创作小贴士</h3>
-          <button class="close-btn" @click="showTipsModal = false">
-            <i class="ri-close-line"></i>
-          </button>
+    <el-drawer
+      v-model="showTipsModal"
+      title="营销文案创作指南"
+      direction="rtl"
+      size="30%"
+      :destroy-on-close="false"
+      class="knowledge-drawer"
+    >
+      <div class="knowledge-content">
+        <div v-for="(item, index) in copywritingKnowledge" :key="index" class="knowledge-section">
+          <h3 class="knowledge-subtitle">
+            <i :class="item.icon" class="knowledge-icon"></i>
+            {{ item.subtitle }}
+          </h3>
+          <div class="knowledge-text" v-html="formatMarkdown(item.text)"></div>
         </div>
-        <div class="modal-body">
-          <ul class="tips-list">
-            <li>根据目标受众选择适合的文案风格和语调</li>
-            <li>突出产品/服务的独特卖点和解决的问题</li>
-            <li>根据不同的平台调整文案长度和格式</li>
-            <li>使用行业数据和统计数字增加文案的说服力</li>
-            <li>加入情感元素，与目标受众建立情感连接</li>
-            <li>确保文案有明确的行动号召(CTA)</li>
-            <li>使用客户见证和社会认同原则增强信任度</li>
-            <li>注意文案的节奏和可读性，使用短句和段落</li>
-          </ul>
         </div>
-      </div>
-    </div>
+    </el-drawer>
     
     <!-- 提示词查看模态框 -->
     <div class="modal" v-if="showPromptModal">
@@ -276,10 +287,11 @@
 
 <script>
 import axios from 'axios'
+import '@/assets/css/text-creation-common.css'
 
 // 创建axios实例，配置baseURL
 const apiClient = axios.create({
-  baseURL: 'http://localhost:9000', // 后端服务地址
+  baseURL: window.APP_CONFIG.API_BASE_URL, // 后端服务地址
   timeout: 30000 // 请求超时时间
 });
 
@@ -302,13 +314,52 @@ export default {
       showPromptModal: false,
       lastUsedPrompt: '',
       modelList: [],
-      selectedModel: 'deepseek-v3-vol',
+      selectedModel: 'deepseek-v3',
       isGenerating: false,
       isLoading: false,
       loadingText: '正在生成文案...',
       validationErrors: [],
       currentExampleIndex: 0,
       exampleTranslateX: 0,
+      isStreaming: false, // 添加流式输出状态标记
+      // 添加营销文案知识内容
+      copywritingKnowledge: [
+        {
+          subtitle: '营销文案的定义与重要性',
+          icon: 'ri-question-line',
+          text: '营销文案是指为推广产品、服务或品牌而创作的文字内容。它是营销传播的核心组成部分，直接影响消费者对产品的认知和购买决策。优秀的营销文案能够准确传达产品价值，引发目标受众共鸣，并促使其采取行动。在当今信息爆炸的时代，有效的营销文案是品牌脱颖而出的关键。'
+        },
+        {
+          subtitle: '营销文案的理论基础',
+          icon: 'ri-book-line',
+          text: '**AIDA模型**：引起注意(Attention)→激发兴趣(Interest)→激发欲望(Desire)→促成行动(Action)，是经典的营销文案结构模型。\n\n**FAB原则**：特点(Feature)→优势(Advantage)→效益(Benefit)，强调从产品特点到用户实际获益的转化逻辑。\n\n**USP理论**：独特销售主张(Unique Selling Proposition)，强调产品独特的竞争优势。\n\n**情感诉求理论**：通过触发情感共鸣建立品牌与消费者的情感连接。\n\n**社会认同原则**：利用消费者从众心理，通过他人的认可增强说服力。'
+        },
+        {
+          subtitle: '营销文案的类型与结构',
+          icon: 'ri-folder-line',
+          text: '**产品介绍文案**：详细描述产品特点、功能和优势，帮助用户全面了解产品。\n\n**品牌故事文案**：讲述品牌起源、理念和价值观，增强品牌情感连接。\n\n**社交媒体文案**：简短、有趣、易传播的内容，适合在社交平台分享。\n\n**电子邮件营销文案**：包含引人注目的主题行和促使用户点击的内容。\n\n**落地页文案**：引导用户完成转化的页面文案，包含清晰的行动号召。\n\n**SEO文案**：优化搜索引擎排名的内容，合理包含关键词。\n\n**促销活动文案**：强调优惠力度和紧迫感，促使用户快速行动。'
+        },
+        {
+          subtitle: '营销文案的基本要素',
+          icon: 'ri-layout-line',
+          text: '**标题**：抓住注意力的第一关，应具有吸引力和独特性。\n\n**开场**：快速建立联系，明确价值主张。\n\n**正文**：详细阐述产品优势，解决用户痛点。\n\n**证明**：提供数据、案例和用户见证增强可信度。\n\n**承诺**：明确产品将为用户带来的价值和保证。\n\n**行动号召(CTA)**：明确指导用户下一步行动，如"立即购买"、"免费试用"等。\n\n**紧迫感**：创造限时、限量的稀缺感，促使用户迅速行动。'
+        },
+        {
+          subtitle: '文案写作的专业技巧',
+          icon: 'ri-pen-nib-line',
+          text: '**目标受众分析**：深入了解目标用户的需求、痛点和语言习惯。\n\n**独特价值提炼**：明确产品与竞品的差异化优势。\n\n**情感触发**：选择适合的情感元素，如希望、恐惧、成就感等。\n\n**故事化表达**：通过故事情节增强代入感和记忆点。\n\n**简洁明了**：使用清晰、简洁的语言，避免行业术语和冗长表达。\n\n**突出主要卖点**：集中强调最核心的2-3个产品优势。\n\n**数据支持**：适当引用具体数据增强说服力。\n\n**消除顾虑**：预先解答潜在疑问，降低购买障碍。'
+        },
+        {
+          subtitle: '数字化时代的营销文案趋势',
+          icon: 'ri-global-line',
+          text: '**个性化文案**：基于用户数据和行为，提供定制化的营销信息。\n\n**对话式文案**：模拟真实对话，增强亲和力和互动性。\n\n**沉浸式体验**：结合视频、图像等多媒体元素，创造全方位感官体验。\n\n**价值导向**：从单纯推销产品转向提供有价值的内容和解决方案。\n\n**社会责任**：融入环保、可持续发展等社会议题，与消费者建立价值共鸣。\n\n**AI辅助创作**：利用人工智能技术提高文案创作效率和针对性。\n\n**数据驱动优化**：通过A/B测试和数据分析持续优化文案效果。'
+        },
+        {
+          subtitle: '不同行业的文案特点',
+          icon: 'ri-briefcase-line',
+          text: '**科技行业**：强调创新性、技术优势和用户体验，注重专业术语与通俗表达的平衡。\n\n**教育行业**：突出学习成果和未来发展，激发成长动力和自我提升愿望。\n\n**健康医疗**：注重专业权威性和解决实际健康问题，同时满足监管要求。\n\n**金融服务**：强调安全性、稳定性和收益潜力，清晰解释复杂金融概念。\n\n**时尚美妆**：营造品牌调性和生活方式，重视视觉元素与文案的协调。\n\n**餐饮食品**：通过感官描述激发食欲，突出食材品质和独特口味。\n\n**旅游服务**：描绘目的地体验和情感价值，激发探索欲和度假需求。'
+        }
+      ],
       examples: [
         { title: '科技', desc: '产品介绍', icon: 'ri-smartphone-line', style: 'professional', template: 'product-intro', 
           productDesc: '新一代智能手机搭载最新处理器，提供超长电池续航和专业级摄像系统，支持5G网络和AI智能助手功能。', 
@@ -349,13 +400,196 @@ export default {
     formattedCopy() {
       if (!this.generatedCopy) return '';
       
-      // 将换行符转换为HTML段落
-      return this.generatedCopy
-        .split('\n\n')
-        .map(para => para.trim())
-        .filter(para => para.length > 0)
-        .map(para => `<p>${para.replace(/\n/g, '<br>')}</p>`)
-        .join('');
+      // 将文本分成不同部分（标题、正文等）
+      const lines = this.generatedCopy.split('\n').map(line => line.trim()).filter(line => line);
+      let result = '';
+      
+      // 检查第一行是否是标题（以"#"开头或者没有标点的短句）
+      let hasTitle = false;
+      if (lines.length > 0) {
+        const firstLine = lines[0];
+        if (firstLine.startsWith('#') || (firstLine.length < 30 && !firstLine.match(/[.,:;?!。，：；？！]/))) {
+          // 是标题，特殊处理
+          // 当标题中包含产品名称时自动加粗
+          let titleText = firstLine.replace(/^#+\s*/, '');
+          if (this.productName && titleText.includes(this.productName)) {
+            titleText = titleText.replace(
+              this.productName,
+              `<strong class="product-highlight">${this.productName}</strong>`
+            );
+          }
+          result += `<div class="poster-title">${titleText}</div>`;
+          hasTitle = true;
+          lines.shift(); // 移除已处理的标题行
+        }
+      }
+      
+      // 检查副标题（如果有标题且下一行较短）
+      let hasSubtitle = false;
+      if (hasTitle && lines.length > 0 && lines[0].length < 50 && !lines[0].startsWith('#')) {
+        result += `<div class="poster-subtitle">${lines[0]}</div>`;
+        hasSubtitle = true;
+        lines.shift(); // 移除已处理的副标题行
+      }
+      
+      // 添加海报装饰元素和背景
+      result = `<div class="poster-container">
+        <div class="poster-corner poster-corner-tl"></div>
+        <div class="poster-corner poster-corner-tr"></div>
+        <div class="poster-corner poster-corner-bl"></div>
+        <div class="poster-corner poster-corner-br"></div>
+        <div class="poster-background-overlay"></div>
+        ${result}
+        <div class="poster-accent-line"></div>
+        <div class="poster-ribbon"></div>
+        <div class="poster-content">
+      `;
+      
+      // 处理剩余的段落
+      const paragraphs = [];
+      let currentParagraph = '';
+      
+      for (const line of lines) {
+        // 如果是标题，创建新的标题元素
+        if (line.startsWith('#')) {
+          if (currentParagraph) {
+            paragraphs.push(`<p>${currentParagraph}</p>`);
+            currentParagraph = '';
+          }
+          
+          const level = (line.match(/^#+/) || ['#'])[0].length;
+          let titleText = line.replace(/^#+\s*/, '');
+          
+          // 为标题中的产品名称和品牌名称添加强调
+          if (this.productName && titleText.includes(this.productName)) {
+            titleText = titleText.replace(
+              this.productName,
+              `<strong class="product-highlight">${this.productName}</strong>`
+            );
+          }
+          
+          if (level === 1) {
+            paragraphs.push(`<h2 class="poster-section-title">${titleText}</h2>`);
+          } else {
+            paragraphs.push(`<h3 class="poster-section-subtitle">${titleText}</h3>`);
+          }
+        } 
+        // 检查是否是列表项
+        else if (line.match(/^[-*•]\s+/)) {
+          if (currentParagraph) {
+            paragraphs.push(`<p>${currentParagraph}</p>`);
+            currentParagraph = '';
+          }
+          
+          // 提取列表项文本并添加到结果中
+          let listItemText = line.replace(/^[-*•]\s+/, '');
+          
+          // 为列表项中的产品名称和品牌名称添加强调
+          if (this.productName && listItemText.includes(this.productName)) {
+            listItemText = listItemText.replace(
+              this.productName,
+              `<strong class="product-highlight">${this.productName}</strong>`
+            );
+          }
+          
+          paragraphs.push(`<div class="poster-list-item"><span class="poster-bullet">•</span>${listItemText}</div>`);
+        }
+        // 强调文本（引号包围）
+        else if (line.match(/^["'"「].*[""'」]$/)) {
+          if (currentParagraph) {
+            paragraphs.push(`<p>${currentParagraph}</p>`);
+            currentParagraph = '';
+          }
+          paragraphs.push(`<div class="poster-quote">${line}</div>`);
+        }
+        // 普通段落
+        else {
+          if (line.endsWith('.') || line.endsWith('。') || line.endsWith('!') || line.endsWith('！') || 
+              line.endsWith('?') || line.endsWith('？') || line.length > 50) {
+            // 完整句子，添加为新段落
+            if (currentParagraph) {
+              currentParagraph += ' ' + line;
+              
+              // 添加简单文本强调：为产品名称添加强调
+              let processedText = currentParagraph;
+              if (this.productName && processedText.includes(this.productName)) {
+                processedText = processedText.replace(
+                  new RegExp(this.productName, 'g'),
+                  `<strong class="product-highlight">${this.productName}</strong>`
+                );
+              }
+              
+              paragraphs.push(`<p>${processedText}</p>`);
+              currentParagraph = '';
+            } else {
+              // 对单行文本也应用相同的强调处理
+              let processedText = line;
+              if (this.productName && processedText.includes(this.productName)) {
+                processedText = processedText.replace(
+                  new RegExp(this.productName, 'g'),
+                  `<strong class="product-highlight">${this.productName}</strong>`
+                );
+              }
+              
+              paragraphs.push(`<p>${processedText}</p>`);
+            }
+          } else {
+            // 短句，可能是段落的一部分
+            if (currentParagraph) {
+              currentParagraph += ' ' + line;
+            } else {
+              currentParagraph = line;
+            }
+          }
+        }
+      }
+      
+      // 添加最后剩余的段落
+      if (currentParagraph) {
+        // 对最后的段落也应用强调处理
+        let processedText = currentParagraph;
+        if (this.productName && processedText.includes(this.productName)) {
+          processedText = processedText.replace(
+            new RegExp(this.productName, 'g'),
+            `<strong class="product-highlight">${this.productName}</strong>`
+          );
+        }
+        
+        paragraphs.push(`<p>${processedText}</p>`);
+      }
+      
+      // 将所有段落添加到结果中
+      result += paragraphs.join('');
+      
+      // 添加品牌签名和装饰元素
+      if (this.brandName) {
+        result += `<div class="poster-brand">
+          <span class="poster-brand-prefix">by</span> 
+          <span class="brand-name">${this.brandName}</span>
+        </div>`;
+      }
+      
+      // 添加行业标签（如果有）
+      if (this.industry) {
+        result += `<div class="poster-tag">${this.industry}</div>`;
+      }
+      
+      // 检测文案底部的字数统计信息
+      const lastParagraph = paragraphs[paragraphs.length - 1];
+      if (lastParagraph && lastParagraph.match(/【字数统计：\d+字】/)) {
+        result = result.replace(/【字数统计：\d+字】/, '');
+        result += `<div class="poster-word-count">字数统计：${this.generatedCopy.match(/【字数统计：(\d+)字】/)?.[1] || ''}字</div>`;
+      }
+      
+      // 添加底部装饰和海报效果
+      result += `<div class="poster-shadow-inner"></div>
+                <div class="poster-footer-decoration"></div>
+              </div>
+              <div class="poster-decoration"></div>
+              <div class="poster-shine-effect"></div>
+            </div>`;
+      
+      return result;
     },
     
     // 判断是否已经到达最后一页
@@ -388,10 +622,8 @@ export default {
           
           // 按照指定顺序排序模型
           const orderedModelIds = [
-            'deepseek-v3-vol',  // DeepSeek-V3（火山引擎）- 放在第一位
-            'deepseek-r1-vol',  // DeepSeek-R1（火山引擎）
-            'deepseek-r1-sf',   // DeepSeek-R1（硅基流动）
-            'deepseek-v3-sf',   // DeepSeek-V3（硅基流动）
+            'deepseek-r1',  // DeepSeek-R1（火山引擎）- 放在第一位
+            'deepseek-v3',  // DeepSeek-V3（火山引擎）
             'qwq-32b',          // 通义千问-32B（硅基流动）
             'qwen-max',         // 通义千问-Max（阿里云）
             'doubao-pro'        // 豆包-Pro（火山引擎）
@@ -405,7 +637,7 @@ export default {
           console.log('可用模型:', this.modelList);
           
           // 默认选择火山引擎的DeepSeek V3模型
-          this.selectedModel = 'deepseek-v3-vol';
+          this.selectedModel = 'deepseek-v3';
           
           // 如果没有可用模型，创建一个默认列表作为备用
           if (this.modelList.length === 0) {
@@ -423,13 +655,11 @@ export default {
     
     setupDefaultModels() {
       this.modelList = [
-        { id: 'deepseek-v3-vol', name: 'DeepSeek-V3（火山引擎）' },
-        { id: 'deepseek-r1-vol', name: 'DeepSeek-R1（火山引擎）' },
-        { id: 'deepseek-r1-sf', name: 'DeepSeek-R1（硅基流动）' },
-        { id: 'deepseek-v3-sf', name: 'DeepSeek-V3（硅基流动）' },
+        { id: 'deepseek-r1', name: 'DeepSeek-R1（火山引擎）' },
+        { id: 'deepseek-v3', name: 'DeepSeek-V3（火山引擎）' },
         { id: 'qwq-32b', name: '通义千问-32B（硅基流动）' }
       ];
-      this.selectedModel = 'deepseek-v3-vol';
+      this.selectedModel = 'deepseek-v3';
     },
     
     // 生成营销文案
@@ -460,6 +690,9 @@ export default {
         this.isLoading = true;
         this.isGenerating = true;
         this.loadingText = '正在生成营销文案...';
+        // 清空之前的生成结果
+        this.generatedCopy = '';
+        this.isOfflineGenerated = false;
         
         // 构建提示词
         const prompt = this.buildPrompt();
@@ -467,8 +700,8 @@ export default {
         // 调用API并获取结果
         const result = await this.callLLMApi(prompt);
         
-        // 更新营销文案内容
-        this.generatedCopy = result.text || '';
+        // 不需要再次设置generatedCopy，因为在流式输出中已经设置了
+        // 只需设置离线模式标志
         this.isOfflineGenerated = result.offlineMode || false;
         
         // 如果是离线模式，显示提示
@@ -612,6 +845,10 @@ export default {
     
     // 调用大模型API
     async callLLMApi(prompt) {
+      console.log('===== 调用LLM API开始 =====');
+      console.log('当前isStreaming状态:', this.isStreaming);
+      console.log('当前generatedCopy长度:', this.generatedCopy ? this.generatedCopy.length : 0);
+      
       try {
         // 检查是否有可用模型
         if (!this.selectedModel) {
@@ -621,42 +858,146 @@ export default {
         
         console.log(`正在调用API，使用模型: ${this.selectedModel}，提示词长度: ${prompt.length}`);
         
+        // 准备所有消息历史
+        const messages = [{ role: 'user', content: prompt }];
+        
         // 构建API请求参数
         const apiParams = {
           model: this.selectedModel,
-          messages: [{ role: 'user', content: prompt }],
+          messages: messages,
+          stream: true,
           temperature: 0.7,
-          max_tokens: 3000
+          max_tokens: 2000,
+          return_reasoning: this.selectedModel.includes('r1') // 如果是R1模型，则启用思考过程
         };
         
         // 记录API请求详情，方便调试
         console.log('API请求参数:', JSON.stringify(apiParams));
         
         try {
-          // 发送API请求
-          const response = await axios.post('/api/v1/llm/chat', apiParams, { timeout: 30000 });
-          console.log('API响应:', response);
+          // 重置生成的内容已经在generateCopy方法中完成
+          // 开始流式状态
+          this.isStreaming = true;
           
-          if (response.data.status === 'success') {
-            const content = response.data.data.choices[0].message.content;
-            console.log('成功获取到结果:', content);
-            
-            return {
-              text: content,
-              offlineMode: false
-            };
-          } else {
-            console.error('API返回错误:', response.data.message);
-            throw new Error(`服务器返回错误: ${response.data.message || '未知错误'}`);
+          // 发送API请求，使用fetch API来处理流式响应
+          console.log('开始发送流式请求到:', '/api/v1/v1/deepseek_volcano/chat');
+          const response = await fetch('/api/v1/v1/deepseek_volcano/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'text/event-stream'
+            },
+            body: JSON.stringify(apiParams)
+          });
+          
+          console.log('收到响应, 状态码:', response.status);
+          console.log('响应头:', {
+            'Content-Type': response.headers.get('Content-Type'),
+            'Transfer-Encoding': response.headers.get('Transfer-Encoding')
+          });
+          
+          if (!response.ok) {
+            throw new Error(`服务器返回错误: ${response.status}`);
           }
+          
+          // 处理流式响应
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          
+          // 读取流数据
+          while (true) {
+            const { done, value } = await reader.read();
+            
+            if (done) {
+              console.log('流式响应完成');
+              break;
+            }
+            
+            // 解码二进制数据
+            const decoded = decoder.decode(value, { stream: true });
+            console.log('收到数据块:', decoded.length, '字节');
+            buffer += decoded;
+            
+            // 处理收到的数据
+            const lines = buffer.split('\n\n');
+            buffer = lines.pop() || '';
+            
+            for (const line of lines) {
+              if (line.trim() === '') continue;
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6);
+                if (data === '[DONE]') {
+                  console.log('收到结束标志');
+                  continue;
+                }
+                
+                try {
+                  console.log('解析数据:', data.substring(0, 100) + '...');
+                  const parsed = JSON.parse(data);
+                  console.log('解析后的数据格式:', Object.keys(parsed));
+                  
+                  // 处理错误消息
+                  if (parsed.error) {
+                    console.error("API错误:", parsed.error);
+                    throw new Error(parsed.error.message || '生成文案失败');
+                  }
+                  
+                  // 处理火山引擎返回的delta格式数据
+                  if (parsed.choices && parsed.choices.length > 0 && parsed.choices[0].delta) {
+                    const delta = parsed.choices[0].delta;
+                    
+                    // 处理思考过程（如果有）
+                    if (delta.reasoning_content) {
+                      console.log("收到思考过程:", delta.reasoning_content);
+                      // 这里可以添加思考过程的处理逻辑，如果需要的话
+                    }
+                    
+                    // 处理内容增量
+                    if (delta.content) {
+                      console.log("收到内容增量:", delta.content);
+                      // 累加收到的内容
+                      this.generatedCopy += delta.content;
+                    }
+                  }
+                  // 处理标准格式的思考过程
+                  else if (parsed.reasoning) {
+                    console.log("收到标准思考过程:", parsed.reasoning);
+                    // 这里可以添加思考过程的处理逻辑，如果需要的话
+                  }
+                  // 处理完整思考过程
+                  else if (parsed.full_reasoning) {
+                    console.log("收到完整思考过程");
+                    // 这里可以添加完整思考过程的处理逻辑，如果需要的话
+                  }
+                  // 如果是包含使用情况统计的最后一个数据块，不需要特殊处理
+                } catch (e) {
+                  console.error('解析流式数据失败:', e, data);
+                }
+              }
+            }
+          }
+          
+          // 处理完成，移除流式状态
+          this.isStreaming = false;
+          
+          return {
+            text: this.generatedCopy,
+            offlineMode: false
+          };
+          
         } catch (error) {
           console.error('API调用异常:', error);
+          // 结束流式状态
+          this.isStreaming = false;
           
           // 判断是否是网络错误或服务器不可用
           if (error.code === 'ECONNABORTED' || !error.response || error.message.includes('Network Error')) {
             console.warn('后端服务不可用，切换到离线模式');
             // 离线模式
-            return this.generateOfflineContent();
+            const offlineContent = await this.generateOfflineContent();
+            this.generatedCopy = offlineContent.text; // 设置离线生成的内容
+            return offlineContent;
           }
           
           // 其他API错误
@@ -664,6 +1005,8 @@ export default {
         }
       } catch (error) {
         console.error('营销文案生成失败:', error);
+        // 确保结束流式状态
+        this.isStreaming = false;
         
         // 根据错误类型提供更具体的错误信息
         let errorMessage = '生成营销文案失败';
@@ -922,6 +1265,62 @@ export default {
         this.$message ? this.$message.error('复制失败，请手动复制文本') : 
           alert('复制失败，请手动复制文本');
       }
+    },
+    
+    // 格式化Markdown文本
+    formatMarkdown(text) {
+      if (!text) return '';
+      
+      // 处理加粗
+      let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      
+      // 处理斜体
+      formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      
+      // 处理换行
+      formatted = formatted.replace(/\n\n/g, '<br><br>');
+      
+      // 处理列表
+      formatted = formatted.replace(/- (.*?)(?:\n|$)/g, '<li>$1</li>');
+      formatted = formatted.replace(/<li>/g, '<ul><li>').replace(/<\/li>(?!<li>)/g, '</li></ul>');
+      formatted = formatted.replace(/<\/ul><ul>/g, '');
+      
+      // 处理数字列表
+      formatted = formatted.replace(/(\d+)\. (.*?)(?:\n|$)/g, '<li>$1. $2</li>');
+      
+      return formatted;
+    },
+    
+    // 获取提示词模板
+    getPromptTemplate() {
+      // 这里应该返回提示词模板的内容
+      return '';
+    },
+    
+    // 检查内容是否可滚动
+    checkScrollable() {
+      this.$nextTick(() => {
+        const contentEl = document.querySelector('.content-display');
+        if (contentEl) {
+          if (contentEl.scrollHeight > contentEl.clientHeight) {
+            contentEl.classList.add('scrollable');
+          } else {
+            contentEl.classList.remove('scrollable');
+          }
+        }
+      });
+    }
+  },
+  
+  // 在内容更新后检查是否可滚动
+  updated() {
+    this.checkScrollable();
+  },
+  
+  // 监听生成的文案变化
+  watch: {
+    generatedCopy() {
+      this.checkScrollable();
     }
   }
 }
@@ -939,6 +1338,9 @@ export default {
   align-items: center;
   margin-bottom: 10px;
   padding: 0;
+  /* 删除顶部的灰色虚线 */
+  border-top: none;
+  border-bottom: none;
 }
 
 .page-nav h2 {
@@ -1109,16 +1511,18 @@ textarea.form-control {
 .section-title {
   display: flex;
   align-items: center;
-  color: #333;
-  font-size: 16px;
-  margin: 0 0 10px 0;
+  font-size: 18px;
   font-weight: 600;
+  margin: 0 0 15px 0;
+  color: #ba003f; /* 紫荆红色 */
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
 }
 
 .section-title i {
   margin-right: 8px;
   font-size: 20px;
-  color: var(--primary-color, #ba003f);
+  color: #ba003f; /* 紫荆红色 */
 }
 
 .example-carousel {
@@ -1244,11 +1648,10 @@ textarea.form-control {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 15px;
+  padding: 15px 20px; /* 增加左右内边距 */
   border-bottom: 1px solid #eee;
-  background-color: #fff;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
+  background-color: #f9f9f9;
+  border-radius: 8px 8px 0 0;
 }
 
 .section-header h2 {
@@ -1274,10 +1677,11 @@ textarea.form-control {
 }
 
 .copy-content {
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  background-color: white;
+  border-radius: 12px;
+  padding: 0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
 .copy-content p {
@@ -1357,13 +1761,15 @@ textarea.form-control {
 }
 
 .section-header {
-  position: sticky;
-  top: 0;
-  background-color: #fff;
-  z-index: 100;
-  padding: 15px 15px 20px; /* 增加底部内边距从10px到20px */
-  margin: -15px -15px 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 15px;
+  padding: 0 15px;
+  /* 移除sticky定位 */
+  position: relative;
+  top: auto;
+  z-index: auto;
+  background: transparent;
+  border-bottom: none;
+  box-shadow: none;
 }
 
 
@@ -1506,6 +1912,7 @@ textarea.form-control {
   width: 120px;
   height: 120px;
   margin-bottom: 20px;
+  opacity: 0.8;
 }
 
 .empty-message {
@@ -1793,5 +2200,1238 @@ textarea.form-control:focus {
 
 .offline-mode-banner i {
   font-size: 18px;
+}
+
+/* 恢复和增强海报样式 */
+/* 海报容器 */
+.poster-container {
+  position: relative;
+  background: linear-gradient(135deg, #ffffff, #f5f5f5);
+  border-radius: 12px;
+  overflow: hidden;
+  color: #333;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  margin: 10px 0;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  background-image: 
+    radial-gradient(circle at 90% 10%, rgba(186, 0, 63, 0.03) 10%, transparent 10.5%),
+    radial-gradient(circle at 10% 90%, rgba(186, 0, 63, 0.03) 10%, transparent 10.5%),
+    linear-gradient(135deg, #ffffff, #f9f9f9);
+  padding-bottom: 30px; /* 添加底部间距 */
+}
+
+.poster-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(186, 0, 63, 0.01) 5%, transparent 5.5%),
+    radial-gradient(circle at 85% 85%, rgba(186, 0, 63, 0.01) 5%, transparent 5.5%);
+  pointer-events: none;
+}
+
+/* 首字放大效果 */
+.poster-content p:first-of-type::first-letter {
+  font-size: 200%;
+  color: var(--primary-color, #ba003f);
+  font-weight: bold;
+  float: left;
+  margin-right: 6px;
+  line-height: 1;
+}
+
+/* 段落强调线 */
+.poster-section-title::after {
+  content: "";
+  display: block;
+  width: 40px;
+  height: 3px;
+  background-color: var(--primary-color, #ba003f);
+  margin-top: 8px;
+  border-radius: 2px;
+  opacity: 0.7;
+}
+
+/* 增强引用样式 */
+.poster-quote {
+  position: relative;
+  padding: 20px 30px;
+  margin: 25px 15px;
+  background-color: rgba(186, 0, 63, 0.05);
+  border-radius: 8px;
+  font-style: italic;
+  text-align: center;
+  box-shadow: 0 3px 10px rgba(186, 0, 63, 0.1);
+}
+
+.poster-quote::before,
+.poster-quote::after {
+  content: '"';
+  position: absolute;
+  font-size: 60px;
+  color: rgba(186, 0, 63, 0.15);
+  font-family: Georgia, serif;
+}
+
+.poster-quote::before {
+  top: -20px;
+  left: 10px;
+}
+
+.poster-quote::after {
+  bottom: -50px;
+  right: 10px;
+}
+
+/* 强化列表项 */
+.poster-list-item {
+  position: relative;
+  padding: 8px 0 8px 30px;
+  margin: 8px 0;
+}
+
+.poster-bullet {
+  position: absolute;
+  left: 0;
+  top: 5px;
+  width: 20px;
+  height: 20px;
+  background-color: var(--primary-color, #ba003f);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.poster-container:hover {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+  transform: translateY(-3px);
+}
+
+/* 角标装饰 */
+.poster-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: var(--primary-color, #ba003f);
+  border-style: solid;
+  opacity: 0.7;
+  z-index: 2;
+}
+
+.poster-corner-tl {
+  top: 12px;
+  left: 12px;
+  border-width: 2px 0 0 2px;
+  border-radius: 4px 0 0 0;
+}
+
+.poster-corner-tr {
+  top: 12px;
+  right: 12px;
+  border-width: 2px 2px 0 0;
+  border-radius: 0 4px 0 0;
+}
+
+.poster-corner-bl {
+  bottom: 12px;
+  left: 12px;
+  border-width: 0 0 2px 2px;
+  border-radius: 0 0 0 4px;
+}
+
+.poster-corner-br {
+  bottom: 12px;
+  right: 12px;
+  border-width: 0 2px 2px 0;
+  border-radius: 0 0 4px 0;
+}
+
+/* 强调线条 */
+.poster-accent-line {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 5px;
+  background-color: var(--primary-color, #ba003f);
+  border-radius: 0 0 3px 3px;
+  opacity: 0.8;
+  z-index: 3;
+}
+
+/* 主标题样式 */
+.poster-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary-color, #ba003f);
+  text-align: center;
+  padding: 40px 30px 5px;
+  margin: 0;
+  position: relative;
+  z-index: 2;
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.8);
+  line-height: 1.3;
+}
+
+/* 副标题样式 */
+.poster-subtitle {
+  font-size: 18px;
+  color: #555;
+  text-align: center;
+  padding: 0 30px 25px;
+  font-weight: 500;
+  position: relative;
+  z-index: 2;
+  font-style: italic;
+}
+
+/* 主内容区域 */
+.poster-content {
+  position: relative;
+  z-index: 2;
+  padding: 20px 30px 40px;
+}
+
+/* 内容区段标题 */
+.poster-section-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--primary-color, #ba003f);
+  margin: 25px 0 15px;
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.poster-section-title:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background-color: var(--primary-color, #ba003f);
+  opacity: 0.6;
+}
+
+/* 内容区小标题 */
+.poster-section-subtitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #444;
+  margin: 20px 0 12px;
+}
+
+/* 正文段落 */
+.poster-content p {
+  margin-bottom: 16px;
+  color: #555;
+  line-height: 1.7;
+  font-size: 16px;
+}
+
+/* 列表项样式 */
+.poster-list-item {
+  margin: 10px 0;
+  padding-left: 25px;
+  position: relative;
+  line-height: 1.6;
+  color: #555;
+}
+
+.poster-bullet {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  color: var(--primary-color, #ba003f);
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* 引用样式 */
+.poster-quote {
+  font-size: 18px;
+  font-style: italic;
+  color: var(--primary-color, #ba003f);
+  padding: 15px 25px;
+  position: relative;
+  margin: 20px 0;
+  line-height: 1.6;
+  background-color: rgba(186, 0, 63, 0.05);
+  border-radius: 6px;
+  text-align: center;
+}
+
+.poster-quote::before {
+  content: '"';
+  font-size: 40px;
+  color: rgba(186, 0, 63, 0.15);
+  position: absolute;
+  top: -10px;
+  left: 8px;
+}
+
+.poster-quote::after {
+  content: '"';
+  font-size: 40px;
+  color: rgba(186, 0, 63, 0.15);
+  position: absolute;
+  bottom: -30px;
+  right: 8px;
+}
+
+/* 品牌签名 */
+.poster-brand {
+  text-align: right;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary-color, #ba003f);
+  margin-top: 30px;
+  padding-top: 15px;
+  border-top: 1px dashed rgba(186, 0, 63, 0.3);
+  font-style: italic;
+  position: relative;
+}
+
+.poster-brand-prefix {
+  font-size: 14px;
+  font-weight: normal;
+  color: #888;
+  font-style: normal;
+  margin-right: 5px;
+}
+
+/* 行业标签 */
+.poster-tag {
+  position: absolute;
+  bottom: 15px;
+  left: 15px;
+  background-color: var(--primary-color, #ba003f);
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 4px;
+  opacity: 0.8;
+  box-shadow: 0 2px 4px rgba(186, 0, 63, 0.2);
+}
+
+/* 海报背景装饰 */
+.poster-decoration {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 150px;
+  height: 150px;
+  background: linear-gradient(135deg, rgba(186, 0, 63, 0.1), rgba(186, 0, 63, 0.02));
+  border-radius: 0 0 0 100%;
+  z-index: 1;
+}
+
+/* 自动高亮文本的关键部分 */
+.poster-content p strong,
+.poster-content p b,
+.poster-section-title strong,
+.poster-section-subtitle strong {
+  color: var(--primary-color, #ba003f);
+  font-weight: 700;
+}
+
+/* 首段特殊样式 */
+.poster-content p:first-of-type {
+  font-size: 17px;
+  font-weight: 500;
+}
+
+/* 在小屏幕上调整样式 */
+@media (max-width: 768px) {
+  .poster-title {
+    font-size: 26px;
+    padding: 30px 20px 5px;
+  }
+  
+  .poster-subtitle {
+    font-size: 16px;
+    padding: 0 20px 20px;
+  }
+  
+  .poster-content {
+    padding: 15px 20px 30px;
+  }
+  
+  .poster-section-title {
+    font-size: 20px;
+  }
+  
+  .poster-section-subtitle {
+    font-size: 17px;
+  }
+  
+  .poster-quote {
+    font-size: 16px;
+    padding: 12px 20px;
+  }
+  
+  .poster-corner {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .poster-accent-line {
+    width: 60px;
+    height: 4px;
+  }
+}
+
+/* 修改整体内容容器样式 */
+.copy-content {
+  background-color: white;
+  border-radius: 12px;
+  padding: 0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* 添加额外的海报样式 */
+.brand-name {
+  font-weight: 700;
+  color: var(--primary-color, #ba003f);
+}
+
+.poster-footer-decoration {
+  width: 100%;
+  height: 3px;
+  margin-top: 20px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(186, 0, 63, 0.3) 20%, 
+    rgba(186, 0, 63, 0.5) 50%, 
+    rgba(186, 0, 63, 0.3) 80%, 
+    transparent 100%);
+}
+
+/* 重新设计营销海报样式 */
+.marketing-poster-wrapper {
+  position: relative;
+  max-width: 700px;
+  margin: 20px auto;
+  padding: 20px;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+.marketing-poster {
+  position: relative;
+  z-index: 1;
+  transition: transform 0.3s ease;
+  transform-style: preserve-3d;
+}
+
+.marketing-poster:hover {
+  transform: translateY(-5px) rotateX(2deg);
+}
+
+/* 增强海报容器样式 */
+.poster-container {
+  position: relative;
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  transition: all 0.4s ease;
+  transform-style: preserve-3d;
+  margin-bottom: 30px;
+}
+
+.poster-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(186, 0, 63, 0.03) 5%, transparent 10%),
+    radial-gradient(circle at 85% 85%, rgba(186, 0, 63, 0.03) 5%, transparent 10%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 新增背景叠加层 */
+.poster-background-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, 
+    rgba(255,255,255,0.4) 0%, 
+    rgba(255,255,255,0.1) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 首字放大效果增强 */
+.poster-content p:first-of-type::first-letter {
+  font-size: 300%;
+  color: var(--primary-color, #ba003f);
+  font-weight: bold;
+  float: left;
+  margin-right: 8px;
+  line-height: 0.85;
+  text-shadow: 1px 1px 2px rgba(186, 0, 63, 0.2);
+}
+
+/* 增强段落强调线 */
+.poster-section-title::after {
+  content: "";
+  display: block;
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-color, #ba003f), rgba(186, 0, 63, 0.3));
+  margin-top: 10px;
+  border-radius: 3px;
+}
+
+/* 产品名高亮样式 */
+.product-highlight {
+  color: var(--primary-color, #ba003f);
+  font-weight: 700;
+  position: relative;
+  display: inline-block;
+  padding: 0 2px;
+}
+
+.product-highlight::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background-color: rgba(186, 0, 63, 0.1);
+  border-radius: 5px;
+  z-index: -1;
+}
+
+/* 增强海报引用样式 */
+.poster-quote {
+  position: relative;
+  padding: 25px 35px;
+  margin: 30px 15px;
+  background-color: rgba(186, 0, 63, 0.05);
+  border-radius: 10px;
+  font-style: italic;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(186, 0, 63, 0.07);
+  border-left: 4px solid var(--primary-color, #ba003f);
+}
+
+.poster-quote::before,
+.poster-quote::after {
+  content: '"';
+  position: absolute;
+  font-size: 70px;
+  color: rgba(186, 0, 63, 0.15);
+  font-family: Georgia, serif;
+  line-height: 0.5;
+}
+
+.poster-quote::before {
+  top: 15px;
+  left: 15px;
+}
+
+.poster-quote::after {
+  bottom: 0;
+  right: 15px;
+}
+
+/* 强化列表项 */
+.poster-list-item {
+  position: relative;
+  padding: 10px 0 10px 34px;
+  margin: 12px 0;
+  transition: transform 0.2s ease;
+}
+
+.poster-list-item:hover {
+  transform: translateX(5px);
+}
+
+.poster-bullet {
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, var(--primary-color, #ba003f), #e83e6c);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 3px 6px rgba(186, 0, 63, 0.2);
+}
+
+/* 增加海报光泽效果 */
+.poster-shine-effect {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  animation: shine 6s infinite linear;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%) rotate(30deg); }
+  100% { transform: translateX(100%) rotate(30deg); }
+}
+
+/* 角标装饰增强 */
+.poster-corner {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-color: var(--primary-color, #ba003f);
+  border-style: solid;
+  opacity: 0.7;
+  z-index: 3;
+}
+
+.poster-corner-tl {
+  top: 12px;
+  left: 12px;
+  border-width: 3px 0 0 3px;
+  border-radius: 5px 0 0 0;
+}
+
+.poster-corner-tr {
+  top: 12px;
+  right: 12px;
+  border-width: 3px 3px 0 0;
+  border-radius: 0 5px 0 0;
+}
+
+.poster-corner-bl {
+  bottom: 12px;
+  left: 12px;
+  border-width: 0 0 3px 3px;
+  border-radius: 0 0 0 5px;
+}
+
+.poster-corner-br {
+  bottom: 12px;
+  right: 12px;
+  border-width: 0 3px 3px 0;
+  border-radius: 0 0 5px 0;
+}
+
+/* 强调线条加强 */
+.poster-accent-line {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 6px;
+  background: linear-gradient(to right, rgba(186, 0, 63, 0.3), var(--primary-color, #ba003f), rgba(186, 0, 63, 0.3));
+  border-radius: 0 0 3px 3px;
+  z-index: 5;
+}
+
+/* 新增彩带效果 */
+.poster-ribbon {
+  position: absolute;
+  top: 0;
+  right: 40px;
+  width: 30px;
+  height: 100px;
+  background-color: var(--primary-color, #ba003f);
+  z-index: 2;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.poster-ribbon::before {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 15px 20px 15px;
+  border-color: transparent transparent var(--primary-color, #ba003f) transparent;
+  transform: rotate(180deg);
+}
+
+/* 主标题样式增强 */
+.poster-title {
+  font-size: 36px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--primary-color, #ba003f), #e83e6c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-align: center;
+  padding: 45px 30px 20px;
+  margin: 0;
+  position: relative;
+  z-index: 3;
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.8);
+  line-height: 1.3;
+  letter-spacing: -0.5px;
+}
+
+.poster-title::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 3px;
+  background: linear-gradient(to right, rgba(186, 0, 63, 0.1), var(--primary-color, #ba003f), rgba(186, 0, 63, 0.1));
+  border-radius: 3px;
+}
+
+/* 副标题样式增强 */
+.poster-subtitle {
+  font-size: 20px;
+  color: #555;
+  text-align: center;
+  padding: 5px 30px 25px;
+  margin: 0;
+  font-weight: 500;
+  font-style: italic;
+  position: relative;
+  z-index: 3;
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* 内容区样式增强 */
+.poster-content {
+  padding: 25px 35px;
+  background-color: rgba(255, 255, 255, 0.7);
+  position: relative;
+  z-index: 3;
+  border-radius: 8px;
+}
+
+.poster-content p {
+  margin-bottom: 18px;
+  line-height: 1.8;
+  font-size: 16px;
+  color: #444;
+  position: relative;
+  z-index: 5;
+}
+
+.poster-content p:first-of-type {
+  font-size: 18px;
+  font-weight: 500;
+  color: #222;
+}
+
+/* 内部阴影效果 */
+.poster-shadow-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* 段落标题增强 */
+.poster-section-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--primary-color, #ba003f);
+  margin: 35px 0 20px;
+  position: relative;
+  padding-left: 15px;
+  border-left: 5px solid var(--primary-color, #ba003f);
+  letter-spacing: -0.5px;
+}
+
+.poster-section-subtitle {
+  font-size: 22px;
+  font-weight: 600;
+  color: #333;
+  margin: 30px 0 15px;
+  position: relative;
+  letter-spacing: -0.3px;
+}
+
+/* 品牌签名增强 */
+.poster-brand {
+  text-align: right;
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--primary-color, #ba003f), #e83e6c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-top: 40px;
+  padding: 20px 20px 10px;
+  position: relative;
+  border-top: 2px dashed rgba(186, 0, 63, 0.2);
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.8);
+}
+
+.poster-brand-prefix {
+  font-size: 14px;
+  font-weight: normal;
+  color: #999;
+  font-style: normal;
+  margin-right: 6px;
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  color: #999;
+}
+
+.brand-name {
+  position: relative;
+  display: inline-block;
+}
+
+.brand-name::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(to right, rgba(186, 0, 63, 0.3), var(--primary-color, #ba003f), rgba(186, 0, 63, 0.3));
+  border-radius: 3px;
+}
+
+/* 行业标签增强 */
+.poster-tag {
+  position: absolute;
+  top: 30px;
+  right: -35px;
+  background: linear-gradient(135deg, var(--primary-color, #ba003f), #e83e6c);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 35px;
+  transform: rotate(45deg);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  letter-spacing: 1px;
+}
+
+/* 字数统计样式 */
+.poster-word-count {
+  text-align: right;
+  font-size: 12px;
+  color: #999;
+  margin-top: 15px;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* 底部装饰增强 */
+.poster-footer-decoration {
+  width: 100%;
+  height: 6px;
+  margin-top: 30px;
+  background: linear-gradient(90deg, 
+    rgba(186, 0, 63, 0.3) 0%, 
+    var(--primary-color, #ba003f) 50%, 
+    rgba(186, 0, 63, 0.3) 100%);
+  border-radius: 5px;
+}
+
+/* 纸质效果叠加 */
+.poster-texture-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.05;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEWFhYWDg4N3d3dtbW17e3t1dXWBgYGHh4d5eXlzc3OLi4ubm5uVlZWPj4+NjY19fX2JiYl/f39ra2uRkZGZmZlpaWmXl5dvb29xcXGTk5NnZ2c8TV1mAAAAG3RSTlNAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAvEOwtAAAFVklEQVR4XpWWB67c2BUFb3g557T/hRo9/WUMZHlgr4Bg8Z4qQgQJlHI4A8SzFVrapvmTF9O7dmYRFZ60YiBhJRCgh1FYhiLAmdvX0CzTOpNE77ME0Zty/nWWzchDtiqrmQDeuv3powQ5ta2eN0FY0InkqDD73lT9c9lEzwUNqgFHs9VQce3TVClFCQrSTfOiYkVJQBmpbq2L6iZavPnAPcoU0dSw0SUTqz/GtrGuXfbyyBniKykOWQWGqwwMA7QiYAxi+IlPdqo+hYHnUt5ZPfnsHJyNiDtnpJyayNBkF6cWoYGAMY92U2hXHF/C1M8uP/ZtYdiuj26UdAdQQSXQErwSOMzt/XWRWAz5GuSBIkwG1H3FabJ2OsUOUhGC6tK4EMtJO0ttC6IBD3kM0ve0tJwMdSfjZo+EEISaeTr9P3wYrGjXqyC1krcKdhMpxEnt5JetoulscpyzhXN5FRpuPHvbeQaKxFAEB6EN+cYN6xD7RYGpXpNndMmZgM5Dcs3YSNFDHUo2LGfZuukSWyUYirJAdYbF3MfqEKmjM+I2EfhA94iG3L7uKrR+GdWD73ydlIB+6hgref1QTlmgmbM3/LeX5GI1Ux1RWpgxpLuZ2+I+IjzZ8wqE4nilvQdkUdfhzI5QDWy+kw5Wgg2pGpeEVeCCA7b85BO3F9DzxB3cdqvBzWcmzbyMiqhzuYqtHRVG2y4x+KOlnyqla8AoWWpuBoYRxzXrfKuILl6SfiWCbjxoZJUaCBj1CjH7GIaDbc9kqBY3W/Rgjda1iqQcOJu2WW+76pZC9QG7M00dffe9hNnseupFL53r8F7YHSwJWUKP2q+k7RdsxyOB11n0xtOvnW4irMMFNV4H0uqwS5ExsmP9AxbDTc9JwgneAT5vTiUSm1E7BSflSt3bfa1tv8Di3R8n3Af7MNWzs49hmauE2wP+ttrq+AsWpFG2awvsuOqbipWHgtuvuaAE+A1Z/7gC9hesnr+7wqCwG8c5yAg3AL1fm8T9AZtp/bbJGwl1pNrE7RuOX7PeMRUERVaPpEs+yqeoSmuOlokqw49pgomjLeh7icHNlG19yjs6XXOMedYm5xH2YxpV2tc0Ro2jJfxC50ApuxGob7lMsxfTbeUv07TyYxpeLucEH1gNd4IKH2LAg5TdVhlCafZvpskfncCfx8pOhJzd76bJWeYFnFciwcYfubRc12Ip/ppIhA1/mSZ/RxjFDrJC5xifFjJpY2Xl5zXdguFqYyTR1zSp1Y9p+tktDYYSNflcxI0iyO4TPBdlRcpeqjK/piF5bklq77VSEaA+z8qmJTFzIWiitbnzR794USKBUaT0NTEsVjZqLaFVqJoPN9ODG70IPbfBHKK+/q/AWR0tJzYHRULOa4MP+W/HfGadZUbfw177G7j/OGbIs8TahLyynl4X4RinF793Oz+BU0saXtUHrVBFT/DnA3ctNPoGbs4hRIjTok8i+algT1lTHi4SxFvONKNrgQFAq2/gFnWMXgwffgYMJpiKYkmW3tTg3ZQ9Jq+f8XN+A5eeUKHWvJWJ2sgJ1Sop+wwhqFVijqWaJhwtD8MNlSBeWNNWTa5Z5kPZw5+LbVT99wqTdx29lMUH4OIG/D86ruKEauBjvH5xy6um/Sfj7ei6UUVk4AIl3MyD4MSSTOFgSwsH/QJWaQ5as7ZcmgBZkzjjU1UrQ74ci1gWBCSGHtuV1H2mhSnO3Wp/3fEV5a+4wz//6qy8JxjZsmxxy5+4w9CDNJY09T072iKG0EnOS0arEYgXqYnXcYHwjTtUNAcMelOd4xpkoqiTYICWFq0JSiPfPDQdnt+4/wuqcXY47QILbgAAAABJRU5ErkJggg==');
+  pointer-events: none;
+  z-index: 2;
+  mix-blend-mode: overlay;
+}
+
+.poster-fold-line {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.03);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.poster-fold-horizontal {
+  height: 1px;
+  width: 100%;
+  top: 50%;
+  left: 0;
+}
+
+.poster-fold-vertical {
+  width: 1px;
+  height: 100%;
+  left: 50%;
+  top: 0;
+}
+
+.poster-shadow {
+  position: absolute;
+  bottom: -10px;
+  left: 10%;
+  width: 80%;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.1);
+  filter: blur(10px);
+  border-radius: 50%;
+  z-index: 0;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .poster-title {
+    font-size: 30px;
+    padding: 35px 15px 15px;
+  }
+  
+  .poster-subtitle {
+    font-size: 18px;
+    padding: 0 15px 20px;
+  }
+  
+  .poster-content {
+    padding: 20px 25px;
+  }
+  
+  .poster-content p:first-of-type::first-letter {
+    font-size: 250%;
+  }
+  
+  .poster-section-title {
+    font-size: 22px;
+  }
+  
+  .poster-section-subtitle {
+    font-size: 18px;
+  }
+  
+  .poster-quote {
+    padding: 20px 30px;
+    margin: 20px 10px;
+  }
+  
+  .poster-corner {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* 营销文案海报风格 */
+.marketing-poster-wrapper {
+  position: relative;
+  overflow: hidden; /* 保持内容不溢出 */
+  min-height: 300px; /* 保证最小高度 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.marketing-poster {
+  font-family: 'SimSun', 'Songti SC', serif; /* 使用更适合中文排版的字体 */
+  color: #333; /* 默认文字颜色 */
+  line-height: 1.8;
+  white-space: pre-wrap; /* 保留换行和空格 */
+  word-wrap: break-word; /* 允许长单词换行 */
+  text-align: left; /* 文本左对齐 */
+  width: 100%;
+  max-width: 90%; /* 限制内容最大宽度 */
+  padding: 20px; /* 内部内容边距 */
+  background-color: #fff; /* 文案内容的背景色 */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 轻微阴影 */
+  border-radius: 4px; /* 轻微圆角 */
+}
+
+/* 简单内容展示区 */
+.content-display-container {
+  position: relative;
+  background-color: white;
+  overflow: hidden;
+  margin: 30px auto;
+  max-width: 700px;
+  height: 438px; /* 调整高度为16:10比例 (700÷16×10=437.5) */
+  /* 平板外观样式 */
+  border: 16px solid #333;
+  border-radius: 24px;
+  box-shadow: 
+    0 0 0 2px #666,
+    0 15px 40px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  padding: 0; /* 移除padding以便更好地控制内部布局 */
+}
+
+/* 平板顶部状态栏 */
+.content-display-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 24px; /* 减小状态栏高度 */
+  background-color: #333;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  z-index: 4; /* 调整z-index */
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* 平板摄像头 */
+.content-display-container::after {
+  content: '';
+  position: absolute;
+  top: 8px; /* 调整位置 */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px; /* 减小尺寸 */
+  height: 6px; /* 减小尺寸 */
+  background-color: #555;
+  border-radius: 50%;
+  border: 2px solid #444;
+  z-index: 5; /* 调整z-index */
+}
+
+/* 平板底部Home按钮 */
+.pad-home-button {
+  position: absolute;
+  bottom: 8px; /* 调整到平板内部底部 */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px; /* 减小尺寸 */
+  height: 32px; /* 减小尺寸 */
+  border-radius: 50%;
+  border: 1px solid #444;
+  background-color: #333;
+  z-index: 5; /* 增大z-index确保在内容之上 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pad-home-button::before {
+  content: '';
+  width: 16px; /* 减小尺寸 */
+  height: 16px; /* 减小尺寸 */
+  border: 2px solid #666;
+  border-radius: 4px;
+}
+
+/* 添加状态栏图标 */
+.pad-status-icons {
+  position: absolute;
+  top: 6px; /* 调整位置 */
+  right: 15px;
+  z-index: 5; /* 调整z-index */
+  display: flex;
+  gap: 10px;
+}
+
+.pad-status-icon {
+  width: 10px; /* 减小尺寸 */
+  height: 10px; /* 减小尺寸 */
+  border-radius: 50%;
+  background-color: #666;
+}
+
+.pad-status-icon.wifi {
+  background-color: #80c080;
+  clip-path: polygon(0% 100%, 50% 30%, 100% 100%);
+}
+
+.pad-status-icon.battery {
+  width: 16px; /* 调整宽度 */
+  height: 8px; /* 调整高度 */
+  border-radius: 2px;
+  background-color: #80b0ff;
+  position: relative;
+}
+
+.pad-status-icon.battery::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: -3px; /* 调整位置 */
+  width: 3px; /* 调整宽度 */
+  height: 4px; /* 调整高度 */
+  background-color: #80b0ff;
+  border-radius: 0 2px 2px 0;
+}
+
+/* 屏幕光泽效果 */
+.pad-screen-glare {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.content-display {
+  font-size: 16px;
+  line-height: 1.7; /* 减小行高 */
+  color: #333;
+  padding: 15px 20px 50px 20px; /* 减小内边距 */
+  height: calc(100% - 24px); /* 调整为新的状态栏高度 */
+  overflow-y: auto; /* 添加垂直滚动 */
+  position: relative;
+  background-color: #f8f8f8; /* 轻微的背景色 */
+  margin-top: 24px; /* 调整为新的状态栏高度 */
+  box-sizing: border-box; /* 确保padding包含在高度内 */
+}
+
+.content-display > *:last-child::after {
+  content: '↓ 向下滚动查看更多 ↓';
+  display: none; /* 默认隐藏 */
+  text-align: center;
+  font-size: 12px;
+  color: #888;
+  margin: 20px 0 30px; /* 底部留出足够空间不被Home按钮遮挡 */
+}
+
+/* 只有在内容可滚动时显示提示 */
+.content-display.scrollable > *:last-child::after {
+  display: block;
+}
+
+/* 自定义滚动条样式 */
+.content-display::-webkit-scrollbar {
+  width: 8px;
+}
+
+.content-display::-webkit-scrollbar-track {
+  background: #eee;
+  border-radius: 4px;
+}
+
+.content-display::-webkit-scrollbar-thumb {
+  background-color: #999;
+  border-radius: 4px;
+  border: 2px solid #eee;
+}
+
+.streaming .streaming-indicator {
+  display: flex;
+  margin-top: 8px;
+  justify-content: center;
+}
+
+.dot-typing {
+  position: relative;
+  left: -9999px;
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background-color: var(--primary-color, #ba003f);
+  color: var(--primary-color, #ba003f);
+  box-shadow: 9984px 0 0 0 var(--primary-color, #ba003f), 9998px 0 0 0 var(--primary-color, #ba003f), 10012px 0 0 0 var(--primary-color, #ba003f);
+  animation: dotTyping 1.5s infinite linear;
+}
+
+@keyframes dotTyping {
+  0% {
+    box-shadow: 9984px 0 0 0 var(--primary-color, #ba003f), 9998px 0 0 0 var(--primary-color, #ba003f), 10012px 0 0 0 var(--primary-color, #ba003f);
+  }
+  16.667% {
+    box-shadow: 9984px -6px 0 0 var(--primary-color, #ba003f), 9998px 0 0 0 var(--primary-color, #ba003f), 10012px 0 0 0 var(--primary-color, #ba003f);
+  }
+  33.333% {
+    box-shadow: 9984px 0 0 0 var(--primary-color, #ba003f), 9998px 0 0 0 var(--primary-color, #ba003f), 10012px 0 0 0 var(--primary-color, #ba003f);
+  }
+  50% {
+    box-shadow: 9984px 0 0 0 var(--primary-color, #ba003f), 9998px -6px 0 0 var(--primary-color, #ba003f), 10012px 0 0 0 var(--primary-color, #ba003f);
+  }
+  66.667% {
+    box-shadow: 9984px 0 0 0 var(--primary-color, #ba003f), 9998px 0 0 0 var(--primary-color, #ba003f), 10012px 0 0 0 var(--primary-color, #ba003f);
+  }
+  83.333% {
+    box-shadow: 9984px 0 0 0 var(--primary-color, #ba003f), 9998px 0 0 0 var(--primary-color, #ba003f), 10012px -6px 0 0 var(--primary-color, #ba003f);
+  }
+  100% {
+    box-shadow: 9984px 0 0 0 var(--primary-color, #ba003f), 9998px 0 0 0 var(--primary-color, #ba003f), 10012px 0 0 0 var(--primary-color, #ba003f);
+  }
+}
+
+.streaming .content-display {
+  position: relative;
+}
+
+.streaming .content-display::after {
+  content: '|';
+  display: inline-block;
+  color: var(--primary-color, #ba003f);
+  font-weight: bold;
+  font-size: 20px;
+  animation: blink 0.5s infinite;
+  position: relative;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* 调整内容在流式输出时的样式 */
+.streaming .content-display {
+  position: relative;
+  color: #000000;
+  font-weight: 500;
+}
+
+/* 最新输出的文字有颜色变化效果 */
+.streaming .content-display span.latest {
+  color: var(--primary-color, #ba003f);
+  font-weight: bold;
+  animation: fadeToNormal 2s forwards;
+}
+
+@keyframes fadeToNormal {
+  from { color: var(--primary-color, #ba003f); font-weight: bold; }
+  to { color: #000000; font-weight: normal; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 </style> 

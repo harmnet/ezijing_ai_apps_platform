@@ -2,14 +2,14 @@
   <div class="longform-article-page">
     <div class="page-header">
       <div class="page-nav">
-        <h2 class="page-title test-style">AI文生视频</h2>
+        <h2 class="page-title">AI文生视频</h2>
     </div>
       <div class="page-actions">
         <button class="action-btn" title="历史记录" @click="showHistoryModal = true">
           <i class="ri-history-line icon-red"></i>
         </button>
-        <button class="action-btn" title="创作小贴士" @click="showTips">
-          <i class="ri-lightbulb-line icon-red"></i>
+        <button class="learn-button" title="知识学习" @click="showTips">
+          <i class="ri-lightbulb-line"></i> 知识学习
         </button>
       </div>
     </div>
@@ -383,37 +383,28 @@
       </div>
     </div>
 
-    <!-- 创作小贴士模态框 -->
-    <div class="modal" v-if="showTipsModal">
-      <div class="modal-content tips-modal">
-        <div class="modal-header">
-          <h3><i class="ri-lightbulb-line icon-red"></i> 创作小贴士</h3>
-          <button class="close-btn" @click="showTipsModal = false">
-            <i class="ri-close-line"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <h4>如何写好视频提示词？</h4>
-          <ul class="tips-list">
-            <li>描述要具体，包含场景、物体、动作、光线等信息</li>
-            <li>可以描述镜头的运动方式，如特写、远景、平移等</li>
-            <li>视频生成比图像更复杂，提供更多细节会有更好的效果</li>
-            <li>可以使用参考案例中的提示词作为参考，调整后生成您的创意</li>
-          </ul>
-          <h4>参考示例：</h4>
-          <div class="example-list">
-            <div class="example-item">
-              <strong>场景描述：</strong>
-              <p>一只橙色的小猫在阳光明媚的后院花园中嬉戏。它轻盈地在彩色花朵间跳跃，偶尔停下来好奇地观察飞舞的蝴蝶。阳光透过树叶洒在猫咪的毛发上，形成斑驳的光影。</p>
-            </div>
-            <div class="example-item">
-              <strong>镜头描述：</strong>
-              <p>镜头从远处慢慢推进，展现整个花园的美丽，然后聚焦在猫咪身上，最后特写猫咪好奇的眼神和微微摆动的尾巴。</p>
-            </div>
-          </div>
+    <!-- 创作小贴士模态框 - 已被替换为侧边抽屉 -->
+    
+
+    <!-- 知识学习侧边抽屉 -->
+    <el-drawer
+      v-model="showTipsModal"
+      title="AI文生视频创作指南"
+      direction="rtl"
+      size="30%"
+      :destroy-on-close="false"
+      class="knowledge-drawer"
+    >
+      <div class="knowledge-content">
+        <div v-for="(item, index) in videoKnowledge" :key="index" class="knowledge-section">
+          <h3 class="knowledge-subtitle">
+            <i :class="item.icon" class="knowledge-icon"></i>
+            {{ item.subtitle }}
+          </h3>
+          <div class="knowledge-text" v-html="formatMarkdown(item.text)"></div>
         </div>
       </div>
-    </div>
+    </el-drawer>
 
     <!-- 提示词信息模态框 -->
     <div class="modal" v-if="showPromptInfo">
@@ -522,6 +513,8 @@ import axios from 'axios';
 import { useToast } from 'vue-toastification';
 import { mapState } from 'vuex';
 import Plyr from 'plyr';
+import '@/assets/css/text-creation-common.css'; // 引入统一CSS样式文件
+import { textToVideoKnowledge } from '@/views/Knowledge_data.js'; // 引入文生视频知识数据
 
 export default {
   name: 'TextToVideo',
@@ -791,6 +784,8 @@ export default {
       apiLogs: [],
       demoVideoUrl: 'https://file-examples-com.github.io/uploads/2017/04/file_example_MP4_480_1_5MG.mp4',
       isMockVideo: false,
+      // 添加文生视频知识内容
+      videoKnowledge: textToVideoKnowledge,
     };
   },
   computed: {
@@ -927,7 +922,7 @@ export default {
           try {
             console.log('发送创建任务请求:', requestData);
             response = await axios.post('/api/v1/text-to-videos/create', requestData, {
-              timeout: 30000, // 30秒超时
+              timeout: 120000, // 120秒超时
               headers: this.getRequestHeaders()
             });
             break; // 成功则跳出循环
@@ -1095,7 +1090,7 @@ export default {
           try {
             console.log(`查询任务ID ${this.taskId} 的状态`);
             response = await axios.get(`/api/v1/text-to-videos/query?task_id=${this.taskId}`, {
-              timeout: 10000, // 10秒超时
+              timeout: 120000, // 120秒超时
               headers: this.getRequestHeaders()
             });
             break; // 成功则跳出循环
@@ -1989,6 +1984,29 @@ export default {
     updateVideoStatus(status) {
       this.videoStatus = status;
       this.addApiLog(`视频状态更新: ${status}`);
+    },
+    // 格式化Markdown文本
+    formatMarkdown(text) {
+      if (!text) return '';
+      
+      // 处理加粗
+      text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      
+      // 处理无序列表
+      text = text.replace(/\n- (.*?)(?=\n|$)/g, '\n<li>$1</li>');
+      if (text.includes('<li>')) {
+        text = text.replace(/(.+?)(\n<li>)/g, '$1\n<ul>$2');
+        text = text.replace(/(<\/li>)(?!\n<li>|<\/ul>)/g, '$1</ul>');
+      }
+      
+      // 处理段落
+      text = text.replace(/\n\n/g, '</p><p>');
+      text = '<p>' + text + '</p>';
+      
+      // 清理空段落
+      text = text.replace(/<p><\/p>/g, '');
+      
+      return text;
     },
   },
   watch: {
@@ -2997,28 +3015,6 @@ export default {
 .tips-list li {
   margin-bottom: 10px;
   line-height: 1.5;
-}
-
-.example-item {
-  margin-bottom: 20px;
-  padding: 16px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border-left: 3px solid #ba003f;
-}
-
-.example-item strong {
-  color: #ba003f;
-  display: block;
-  margin-bottom: 8px;
-  font-size: 15px;
-}
-
-.example-item p {
-  margin: 0;
-  color: #212529;
-  font-size: 14px;
-  line-height: 1.6;
 }
 
 /* 参考案例区域样式 */
@@ -4053,5 +4049,18 @@ export default {
   .reference-card {
     flex: 0 0 240px;
   }
+}
+
+/* 标题样式优化 */
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  padding: 0;
+  letter-spacing: 0.5px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 </style> 

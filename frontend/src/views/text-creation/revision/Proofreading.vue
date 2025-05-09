@@ -1,12 +1,13 @@
 <template>
-  <div class="longform-article-page">
+  <div class="text-creation-page">
     <div class="page-header">
       <div class="page-nav">
         <h2>文章校对</h2>
       </div>
       <div class="page-actions">
-        <button class="action-btn" title="创作小贴士" @click="showTips">
-          <i class="ri-lightbulb-line"></i>
+        <button class="learn-button" title="知识学习" @click="showTips">
+          <i class="ri-book-read-line"></i>
+          知识学习
         </button>
       </div>
     </div>
@@ -41,11 +42,33 @@
         <div class="form-group">
           <label for="file-upload">上传文件</label>
           <div class="file-upload-container">
-            <button class="file-upload-btn" disabled>
+            <input 
+              type="file" 
+              id="file-upload" 
+              ref="fileUpload" 
+              class="file-input" 
+              @change="handleFileUpload" 
+              accept=".pdf,.doc,.docx,.txt,.csv,.md,.xls,.xlsx"
+            />
+            <button class="file-upload-btn" @click="triggerFileUpload">
               <i class="ri-upload-2-line"></i>
               选择文件
             </button>
-            <span class="file-upload-hint">文件上传功能暂不可用</span>
+            <span class="file-upload-hint" v-if="!selectedFile">
+              支持PDF、Word、Excel和文本文件等格式
+            </span>
+            <span class="file-upload-selected" v-else>
+              已选择: {{ selectedFile.name }}
+              <button class="file-clear-btn" @click="clearSelectedFile">
+                <i class="ri-close-line"></i>
+              </button>
+            </span>
+          </div>
+          <div class="file-upload-progress" v-if="isUploading">
+            <div class="progress-bar">
+              <div class="progress-fill" :style="{ width: uploadProgress + '%' }"></div>
+            </div>
+            <span class="progress-text">上传中... {{ uploadProgress }}%</span>
           </div>
         </div>
         
@@ -53,37 +76,37 @@
         <div class="form-group">
           <label>校对选项</label>
           <div class="checkbox-group">
-            <label class="checkbox-container">
+            <label class="checkbox-item" :class="{'checkbox-active': checkOptions.grammar}">
               <input type="checkbox" v-model="checkOptions.grammar">
-              <span>语法检查</span>
+              <span class="checkbox-label">语法检查</span>
             </label>
-            <label class="checkbox-container">
+            <label class="checkbox-item" :class="{'checkbox-active': checkOptions.spelling}">
               <input type="checkbox" v-model="checkOptions.spelling">
-              <span>拼写检查</span>
+              <span class="checkbox-label">拼写检查</span>
             </label>
-            <label class="checkbox-container">
+            <label class="checkbox-item" :class="{'checkbox-active': checkOptions.punctuation}">
               <input type="checkbox" v-model="checkOptions.punctuation">
-              <span>标点符号</span>
+              <span class="checkbox-label">标点符号</span>
             </label>
-            <label class="checkbox-container">
+            <label class="checkbox-item" :class="{'checkbox-active': checkOptions.tone}">
               <input type="checkbox" v-model="checkOptions.tone">
-              <span>语气一致性</span>
+              <span class="checkbox-label">语气一致性</span>
             </label>
-            <label class="checkbox-container">
+            <label class="checkbox-item" :class="{'checkbox-active': checkOptions.readability}">
               <input type="checkbox" v-model="checkOptions.readability">
-              <span>可读性分析</span>
+              <span class="checkbox-label">可读性分析</span>
             </label>
-            <label class="checkbox-container">
+            <label class="checkbox-item" :class="{'checkbox-active': checkOptions.format}">
               <input type="checkbox" v-model="checkOptions.format">
-              <span>格式规范</span>
+              <span class="checkbox-label">格式规范</span>
             </label>
-            <label class="checkbox-container">
+            <label class="checkbox-item" :class="{'checkbox-active': checkOptions.synonym}">
               <input type="checkbox" v-model="checkOptions.synonym">
-              <span>同义词建议</span>
+              <span class="checkbox-label">同义词建议</span>
             </label>
-            <label class="checkbox-container">
+            <label class="checkbox-item" :class="{'checkbox-active': checkOptions.clarity}">
               <input type="checkbox" v-model="checkOptions.clarity">
-              <span>表达清晰度</span>
+              <span class="checkbox-label">表达清晰度</span>
             </label>
           </div>
         </div>
@@ -100,7 +123,7 @@
         
         <!-- 生成按钮 -->
         <div class="action-buttons">
-          <button @click="generateLongform" class="btn btn-primary" :disabled="isGenerating">
+          <button @click="generateLongform" class="btn btn-primary" :disabled="isGenerating || (!textInput.trim() && !selectedFile)">
             <i class="ri-magic-line" v-if="!isGenerating"></i>
             <i class="ri-loader-4-line spinning" v-else></i>
             {{ isGenerating ? '校对中...' : '开始校对' }}
@@ -147,42 +170,41 @@
             
             <div v-if="!generatedNote && !isGenerating" class="empty-result">
               <div class="empty-content">
-                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgZmlsbC1vcGFjaXR5PSIuMDgiIGZpbGw9IiNEOEQ4RDgiIGN4PSI2NCIgY3k9IjY0IiByPSI2NCIvPjxwYXRoIGQ9Ik00MS41OTkgNDkuODhjMS4xIDAgMiAuOSAyIDJ2MzIuMjRjMCAxLjEtLjkgMi0yIDJoLTguOTdhLjk3Ljk3IDAgMDEtLjk1LS45NSAwIDAgMCAwLS4wNCAwIDAgMCAwLS4wM3YtMjkuNTFjMC0xLjk5IDEuNjItMy42MiAzLjYyLTMuNjJsMCAwUTQxLjU5OCA0OS44OTggNDEuNTk5IDQ5Ljg4ek04Ni4wNyA0OS44OGMxLjEgMCAyIC45IDIgMnYzMi4yNGMwIDEuMS0uOSAyLTIgMmgtOC45N3MtLjk2LS43OS0uOTYtLjk2VjUyLjgyYzAtMS42MiAxLjMyLTIuOTUgMi45NS0yLjk1bDAgMGg2Ljk4ek02NC4wNyA0Ni44M2MxLjMxIDAgMi4zNyAxLjA2IDIuMzcgMi4zN3YzNC44OGMwIDEuMzEtMS4wNiAyLjM3LTIuMzcgMi4zN2gtOS43YTIuMzcgMi4zNyAwIDAxLTIuMzctMi4zN1Y0OS4yYzAtMS4zMSAxLjA2LTIuMzcgMi4zNy0yLjM3bDAgMGg5LjciIGZpbGw9IiNFMUUxRTEiLz48cGF0aCBkPSJNMzIuNjMgNjkuNzVjMCAyLjYgMi4xMSA0LjcxIDQuNzEgNC43MXMyLjYtMi4xMSA0LjctNC43MS0yLjExLTQuNzEtNC43LTQuNzEtNC43MSAyLjExLTQuNzEgNC43MXpNODcuMDMgNjkuNzVjMCAyLjYtMi4xMSA0LjcxLTQuNzEgNC43MXMtNC43MS0yLjExLTQuNzEtNC43MSAyLjExLTQuNzEgNC43MS00LjcxIDQuNzEgMi4xMSA0LjcxIDQuNzF6TTY0LjQgNjcuMzhjMCAzLjczLTMuMDIgNi43NS02Ljc1IDYuNzVzLTYuNzYtMy4wMi02Ljc2LTYuNzUgMy4wMy02Ljc2IDYuNzYtNi43NiA2Ljc1IDMuMDMgNi43NSA2Ljc2eiIgZmlsbD0iI0JBMDA0MCIgZmlsbC1vcGFjaXR5PSIuNSIvPjwvZz48L3N2Zz4=" class="empty-image" alt="暂无数据" />
+                <img src="@/assets/images/no_data.png" class="empty-image" alt="暂无数据" />
                 <p class="empty-message">暂无校对内容，请点击"开始校对"按钮开始校对</p>
               </div>
             </div>
             
-            <div v-else-if="generatedNote" class="note-result" :class="{'blur-content': isGenerating}">
+            <div v-else-if="generatedNote" class="note-result" :class="{'blur-content': isGenerating, 'streaming': isStreaming}">
               <textarea v-model="generatedNote" class="result-textarea" readonly></textarea>
+              <div v-if="isStreaming" class="streaming-indicator">
+                <span class="dot-typing"></span>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
     
-    <!-- 创作小贴士模态框 -->
-    <div class="modal" v-if="showTipsModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3><i class="ri-lightbulb-line"></i> 校对小贴士</h3>
-          <button class="close-btn" @click="showTipsModal = false">
-            <i class="ri-close-line"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <ul class="tips-list">
-            <li>📝 完整检查 - 整篇文章通读至少一遍，确保内容完整与连贯</li>
-            <li>🔍 语法规范 - 注意检查句子结构、主谓一致性和时态问题</li>
-            <li>🚫 错别字校正 - 重点检查容易混淆的字词和专业术语</li>
-            <li>❗ 标点使用 - 确保标点符号使用正确，避免多余或缺失</li>
-            <li>🔄 语气一致 - 全文保持一致的语气和人称视角</li>
-            <li>📊 结构清晰 - 段落组织有逻辑，确保主题句与支撑句关系合理</li>
-            <li>🌈 用词精准 - 避免冗余表达，选择最精确的词语传达意思</li>
-            <li>📖 可读性强 - 控制句子长度，确保表达清晰易懂</li>
-          </ul>
+    <!-- 替换原有的弹窗为侧边抽屉 -->
+    <el-drawer
+      v-model="showTipsModal"
+      title="文章校对知识学习"
+      direction="rtl"
+      size="30%"
+      :destroy-on-close="false"
+      class="knowledge-drawer"
+    >
+      <div class="knowledge-content">
+        <div v-for="(item, index) in articleKnowledge" :key="index" class="knowledge-section">
+          <h3 class="knowledge-subtitle">
+            <i :class="item.icon" class="knowledge-icon"></i>
+            {{ item.subtitle }}
+          </h3>
+          <div class="knowledge-text" v-html="formatMarkdown(item.text)"></div>
         </div>
       </div>
-    </div>
+    </el-drawer>
 
     <!-- 提示词模态框 -->
     <div class="modal" v-if="showPromptModal">
@@ -216,6 +238,8 @@
 
 <script>
 import axios from 'axios';
+import '@/assets/css/text-creation-common.css'; // 引入统一CSS样式文件
+import { proofreadingKnowledge } from '@/views/Knowledge_data.js';
 
 export default {
   name: 'Proofreading',
@@ -223,6 +247,11 @@ export default {
     return {
       // 文本输入
       textInput: '',
+      
+      // 文件上传相关
+      selectedFile: null,
+      isUploading: false,
+      uploadProgress: 0,
       
       // 校对选项
       checkOptions: {
@@ -241,20 +270,36 @@ export default {
       loadingText: '正在校对文章，请耐心等待...',
       generatedNote: '',
       lastUsedPrompt: null,
+      isStreaming: false,
       
       // 模态框控制
       showTipsModal: false,
       showPromptModal: false,
       
       // 模型选择 - 默认使用火山引擎V3
-      selectedModel: 'deepseek-v3-vol',
+      selectedModel: 'deepseek-v3',
       modelList: [],
+      
+      // 添加文章校对知识内容
+      articleKnowledge: proofreadingKnowledge
     };
   },
   mounted() {
     this.fetchModelList();
   },
   methods: {
+    // 设置默认模型列表
+    setupDefaultModels() {
+      console.log('使用默认模型列表');
+      this.modelList = [
+        { id: 'deepseek-v3', name: '火山引擎 DeepSeek V3' },
+        { id: 'deepseek-r1', name: 'DeepSeek R1（火山引擎）' },
+        { id: 'deepseek-r1-vol', name: 'DeepSeek-R1（火山引擎旧版）' },
+        { id: 'douban', name: '豆包大模型' }
+      ];
+      this.selectedModel = 'deepseek-v3';
+    },
+    
     // 获取可用的大模型列表
     async fetchModelList() {
       try {
@@ -264,22 +309,43 @@ export default {
         console.log('获取模型列表响应:', response.data);
         
         if (response.data && response.data.status === 'success') {
-          // 不做过滤，获取所有可用模型
-          this.modelList = response.data.data || [];
-          console.log('可用模型列表:', this.modelList);
+          // 过滤模型，只保留火山引擎R1、V3和豆包模型
+          let allModels = response.data.data || [];
+          this.modelList = allModels.filter(model => 
+            model.id === 'deepseek-v3' || 
+            model.id === 'deepseek-r1' ||
+            model.id === 'deepseek-r1-vol' || 
+            model.id === 'douban'
+          );
           
-          // 如果没有模型，添加默认模型
+          // 确保所有需要的模型都在列表中，没有则添加
+          const modelIds = this.modelList.map(model => model.id);
+          if (!modelIds.includes('deepseek-v3')) {
+            this.modelList.push({ id: 'deepseek-v3', name: '火山引擎 DeepSeek V3' });
+          }
+          if (!modelIds.includes('deepseek-r1')) {
+            this.modelList.push({ id: 'deepseek-r1', name: 'DeepSeek R1（火山引擎）' });
+          }
+          
+          console.log('过滤后的可用模型列表:', this.modelList);
+          
+          // 如果过滤后没有模型，添加默认模型
           if (this.modelList.length === 0) {
             console.log('未找到可用模型，使用默认模型');
-            this.modelList.push({ id: 'deepseek-v3-vol', name: '火山引擎 DeepSeek V3' });
+            this.setupDefaultModels();
           }
           
-          // 默认选择火山引擎V3或第一个可用模型
-          if (!this.selectedModel) {
-            const volcanoModel = this.modelList.find(model => model.id === 'deepseek-v3-vol');
-            this.selectedModel = volcanoModel ? volcanoModel.id : (this.modelList[0] ? this.modelList[0].id : 'deepseek-v3-vol');
-            console.log('已选择模型:', this.selectedModel);
+          // 默认选择火山引擎V3
+          const volcanoModel = this.modelList.find(model => model.id === 'deepseek-v3');
+          if (volcanoModel) {
+            this.selectedModel = volcanoModel.id;
+          } else if (this.modelList.length > 0) {
+            this.selectedModel = this.modelList[0].id;
+          } else {
+            this.selectedModel = 'deepseek-v3';
           }
+          
+          console.log('已选择模型:', this.selectedModel);
         } else {
           console.error('获取模型列表失败:', response.data?.message);
           this.setupDefaultModels();
@@ -294,17 +360,546 @@ export default {
       }
     },
     
-    // 设置默认模型列表
-    setupDefaultModels() {
-      console.log('使用默认模型列表');
-      this.modelList = [
-        { id: 'deepseek-v3-vol', name: '火山引擎 DeepSeek V3' },
-        { id: 'deepseek-r1-vol', name: 'DeepSeek-R1（火山引擎）' },
-        { id: 'deepseek-r1-sf', name: 'DeepSeek-R1（硅基流动）' },
-        { id: 'deepseek-v3-sf', name: 'DeepSeek-V3（硅基流动）' },
-        { id: 'qwq-32b', name: '通义千问-32B（硅基流动）' }
+    // 触发文件上传控件点击
+    triggerFileUpload() {
+      this.$refs.fileUpload.click();
+    },
+    
+    // 临时函数：检查API路径是否存在和可访问
+    async checkApiPath() {
+      try {
+        console.log('测试API路径...');
+        // 尝试获取模型列表以检查API是否可访问
+        const testResponse = await axios.get('/api/v1/llm/models');
+        console.log('API测试结果:', testResponse.data);
+        
+        // 显示可用模型列表
+        if (testResponse.data && testResponse.data.status === 'success' && 
+            testResponse.data.data && Array.isArray(testResponse.data.data.models)) {
+          console.log('后端支持的模型列表:');
+          const models = testResponse.data.data.models;
+          models.forEach((model, index) => {
+            console.log(`[${index}] ID: ${model.id}, 名称: ${model.name}, 提供商: ${model.provider}`);
+          });
+        }
+        
+        return true;
+      } catch (error) {
+        console.error('API路径测试失败:', error);
+        return false;
+      }
+    },
+    
+    // 处理文件上传
+    handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      // 检查文件大小（限制为10MB）
+      if (file.size > 10 * 1024 * 1024) {
+        this.$message ? 
+          this.$message.error('文件大小不能超过10MB') : 
+          alert('文件大小不能超过10MB');
+        return;
+      }
+      
+      // 文件类型检查
+      const allowedTypes = [
+        'application/pdf', 
+        'application/msword', 
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain',
+        'text/csv',
+        'text/markdown',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       ];
-      this.selectedModel = 'deepseek-v3-vol';
+      
+      if (!allowedTypes.includes(file.type) && 
+          !file.name.match(/\.(pdf|doc|docx|txt|csv|md|xls|xlsx)$/i)) {
+        this.$message ? 
+          this.$message.error('不支持的文件格式') : 
+          alert('不支持的文件格式');
+        return;
+      }
+      
+      // 保存选中的文件
+      this.selectedFile = file;
+      console.log('选择文件:', file.name, '类型:', file.type, '大小:', file.size);
+    },
+    
+    // 清除已选择的文件
+    clearSelectedFile() {
+      this.selectedFile = null;
+      // 重置文件输入控件
+      this.$refs.fileUpload.value = '';
+    },
+    
+    // 上传文件并使用流式输出处理校对结果
+    async uploadFileWithStreaming() {
+      if (!this.selectedFile) return false;
+      
+      this.isUploading = true;
+      this.uploadProgress = 0;
+      
+      try {
+        console.log('========== 第1步：上传文档，读取文档内容 ==========');
+        console.log('文件信息:', {
+          名称: this.selectedFile.name,
+          类型: this.selectedFile.type,
+          大小: `${(this.selectedFile.size / 1024).toFixed(2)} KB`
+        });
+        
+        // 创建FormData对象
+        const formData = new FormData();
+        formData.append('file', this.selectedFile);
+        
+        // 模型ID映射表 - 从前端选择器ID到后端支持的ID
+        const modelMap = {
+          'deepseek-v3': 'deepseek-v3-vol', // 火山引擎 DeepSeek V3
+          'deepseek-r1': 'deepseek-r1-vol', // 火山引擎 DeepSeek R1
+          'deepseek-r1-vol': 'deepseek-r1-vol', // 已经是正确格式
+          'douban': 'doubao-pro' // 豆包模型
+        };
+        
+        // 重要：上传文件API需要使用转换后的模型ID
+        const originalModelId = this.selectedModel; // 存储原始ID，供后续流式请求使用
+        const uploadModelId = modelMap[originalModelId] || originalModelId;
+        
+        console.log('前端选择的模型ID:', originalModelId);
+        console.log('文件上传使用的转换后模型ID:', uploadModelId);
+        
+        // 使用转换后的模型ID进行文件上传
+        formData.append('model', uploadModelId);
+        
+        // 构建校对提示词
+        let prompt = '请对以下文件内容进行校对，';
+        
+        // 添加校对选项
+        prompt += '包括以下方面：';
+        
+        const options = [];
+        if (this.checkOptions.grammar) options.push('语法检查');
+        if (this.checkOptions.spelling) options.push('拼写检查');
+        if (this.checkOptions.punctuation) options.push('标点符号');
+        if (this.checkOptions.tone) options.push('语气一致性');
+        if (this.checkOptions.readability) options.push('可读性分析');
+        if (this.checkOptions.format) options.push('格式规范');
+        if (this.checkOptions.synonym) options.push('同义词建议');
+        if (this.checkOptions.clarity) options.push('表达清晰度');
+        
+        prompt += options.join('、');
+        prompt += '。请列出发现的主要问题类型及数量，并按照文本顺序列出具体问题和修改建议。';
+        
+        formData.append('prompt', prompt);
+        
+        // 文件上传API路径
+        const fileUploadApi = '/api/v1/llm/file_chat';
+        
+        console.log('文件上传参数:', {
+          API路径: fileUploadApi,
+          文件名: this.selectedFile.name,
+          模型ID: uploadModelId,
+          提示词长度: prompt.length
+        });
+        
+        console.log('开始上传文件...');
+        
+        // 上传文件，获取文本内容
+        const uploadResponse = await axios.post(fileUploadApi, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          onUploadProgress: (progressEvent) => {
+            this.uploadProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            console.log(`上传进度: ${this.uploadProgress}%`);
+          }
+        });
+        
+        console.log('文件上传完成，响应状态:', uploadResponse.status);
+        console.log('文件上传响应数据结构:', Object.keys(uploadResponse.data));
+        
+        // 检查上传响应
+        if (!uploadResponse.data || uploadResponse.data.status !== 'success') {
+          console.error('文件上传失败:', uploadResponse.data);
+          throw new Error(uploadResponse.data?.message || '文件处理失败');
+        }
+        
+        console.log('文件上传成功，状态:', uploadResponse.data.status);
+        
+        // 检查响应数据结构
+        console.log('响应data字段结构:', Object.keys(uploadResponse.data.data || {}));
+        
+        // 检查是否有提取的文本
+        let extractedText = '';
+        
+        // 处理不同的响应格式
+        if (uploadResponse.data.data && uploadResponse.data.data.extracted_text) {
+          extractedText = uploadResponse.data.data.extracted_text;
+          console.log('从extracted_text字段提取到文本');
+        } else if (uploadResponse.data.data && uploadResponse.data.data.text) {
+          extractedText = uploadResponse.data.data.text;
+          console.log('从text字段提取到文本');
+        } else if (uploadResponse.data.data && typeof uploadResponse.data.data === 'string') {
+          extractedText = uploadResponse.data.data;
+          console.log('从data字段直接提取到文本');
+        } else if (uploadResponse.data.data && uploadResponse.data.data.choices && 
+                  uploadResponse.data.data.choices.length > 0 && 
+                  uploadResponse.data.data.choices[0].message) {
+          
+          // 如果已经有完整结果，直接使用
+          console.log('发现上传响应中已包含完整的校对结果，直接使用');
+          this.generatedNote = uploadResponse.data.data.choices[0].message.content || '';
+          return true;
+        } else {
+          console.error('无法从响应中提取文本内容:', uploadResponse.data);
+          throw new Error('无法从上传的文件中提取文本');
+        }
+        
+        console.log('成功提取文本，长度:', extractedText.length);
+        if (extractedText.length > 100) {
+          console.log('文本前100字符:', extractedText.substring(0, 100) + '...');
+        } else {
+          console.log('提取的文本:', extractedText);
+        }
+        
+        console.log('第1步完成：成功上传文档并读取内容');
+        
+        // 保存提取的文本、提示词和原始模型ID，供后续步骤使用
+        this._extractedText = extractedText;
+        this._prompt = prompt;
+        this._originalModelId = originalModelId;
+        
+        // 继续执行第2步和第3步
+        await this.processExtractedText(extractedText, prompt, originalModelId);
+        
+        return true;
+      } catch (error) {
+        console.error('文件上传失败:', error);
+        
+        // 记录所有可能的错误信息
+        if (error.response) {
+          console.error('错误响应状态:', error.response.status);
+          console.error('错误响应数据:', error.response.data);
+          
+          const errorMsg = error.response.data?.message || error.response.data?.error || '请求参数错误';
+          this.$message ? 
+            this.$message.error(`文档上传失败: ${errorMsg}`) : 
+            alert(`文档上传失败: ${errorMsg}`);
+        } else {
+          this.$message ? 
+            this.$message.error(`文档上传失败: ${error.message || '未知错误'}`) : 
+            alert(`文档上传失败: ${error.message || '未知错误'}`);
+        }
+        
+        return false;
+      } finally {
+        this.isUploading = false;
+      }
+    },
+    
+    // 处理第2步和第3步：处理提取的文本并调用流式API
+    async processExtractedText(extractedText, prompt, originalModelId) {
+      console.log('========== 第2步：整理提示词 ==========');
+      // 构建完整提示词（包含文件内容）
+      const fullPrompt = `${prompt}\n\n${extractedText}`;
+      console.log('完整提示词长度:', fullPrompt.length);
+      
+      // 保存提示词供后续显示
+      this.lastUsedPrompt = [
+        { role: "user", content: prompt }
+      ];
+      
+      console.log('第2步完成：成功整理完整提示词');
+      
+      // 第3步：调用流式API获取结果
+      console.log('========== 第3步：调用流式API获取结果 ==========');
+      this.generatedNote = '';
+      this.isStreaming = true;
+      
+      // 流式API使用原始模型ID
+      console.log('流式请求使用原始模型ID:', originalModelId);
+      
+      // 流式API路径
+      const streamApiUrl = '/api/v1/v1/deepseek_volcano/chat';
+      console.log('流式API路径:', streamApiUrl);
+      
+      try {
+        // 构建API请求参数
+        const requestParams = {
+          model: originalModelId, // 使用原始模型ID
+          messages: [{ role: 'user', content: fullPrompt }],
+          stream: true,
+          temperature: 0.7,
+          max_tokens: 2000
+        };
+        
+        // 记录API请求详情
+        console.log('流式请求参数:', {
+          model: requestParams.model,
+          stream: requestParams.stream,
+          temperature: requestParams.temperature,
+          max_tokens: requestParams.max_tokens,
+          messages_length: requestParams.messages[0].content.length
+        });
+        
+        // 发送流式请求
+        const response = await fetch(streamApiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream'
+          },
+          body: JSON.stringify(requestParams)
+        });
+        
+        console.log('流式响应状态:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('流式请求错误响应:', errorText);
+          throw new Error(`流式请求失败: ${response.status}`);
+        }
+        
+        // 处理流式响应
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        
+        // 读取流数据
+        console.log('开始读取流数据...');
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) {
+            console.log('流式响应完成');
+            break;
+          }
+          
+          // 解码二进制数据
+          const decoded = decoder.decode(value, { stream: true });
+          buffer += decoded;
+          
+          // 处理收到的数据
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop() || '';
+          
+          for (const line of lines) {
+            if (line.trim() === '') continue;
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') {
+                console.log('收到结束标志');
+                continue;
+              }
+              
+              try {
+                const parsed = JSON.parse(data);
+                
+                // 处理错误消息
+                if (parsed.error) {
+                  console.error("API错误:", parsed.error);
+                  throw new Error(parsed.error.message || '校对失败');
+                }
+                
+                // 处理火山引擎返回的delta格式数据
+                if (parsed.choices && parsed.choices.length > 0 && parsed.choices[0].delta) {
+                  const delta = parsed.choices[0].delta;
+                  
+                  // 处理内容增量
+                  if (delta.content) {
+                    // 累加收到的内容
+                    this.generatedNote += delta.content;
+                  }
+                }
+              } catch (e) {
+                console.error('解析流式数据失败:', e);
+              }
+            }
+          }
+        }
+        
+        console.log('第3步完成，生成校对结果，总字数:', this.generatedNote.length);
+        this.$message ? this.$message.success('文章校对完成！') : alert('文章校对完成！');
+      } catch (error) {
+        console.error('流式请求处理失败:', error);
+        this.$message ? 
+          this.$message.error(`校对失败: ${error.message || '未知错误'}`) : 
+          alert(`校对失败: ${error.message || '未知错误'}`);
+      } finally {
+        this.isStreaming = false;
+      }
+    },
+    
+    // 上传文件到服务器 (非流式方式，备用)
+    async uploadFile() {
+      if (!this.selectedFile) return null;
+      
+      this.isUploading = true;
+      this.uploadProgress = 0;
+      let apiUrl = '/api/v1/llm/file_chat';
+      
+      try {
+        // 检查API是否可用 - 只在开发模式下检查
+        if (process.env.NODE_ENV === 'development') {
+          try {
+            const apiCheck = await this.checkApiPath();
+            console.log('API路径检查结果:', apiCheck);
+          } catch (e) {
+            console.warn('API路径检查失败，将继续尝试上传:', e);
+          }
+        }
+        
+        // 创建FormData对象
+        const formData = new FormData();
+        formData.append('file', this.selectedFile);
+        
+        // 转换模型ID为后端支持的模型ID格式
+        // 模型ID映射表 - 从前端选择器ID到后端支持的ID
+        const modelMap = {
+          'deepseek-v3': 'deepseek-v3-vol', // 火山引擎 DeepSeek V3
+          'deepseek-r1': 'deepseek-r1-vol', // 火山引擎 DeepSeek R1
+          'deepseek-r1-vol': 'deepseek-r1-vol', // 已经是正确格式
+          'douban': 'doubao-pro' // 豆包模型
+        };
+        
+        // 获取后端支持的模型ID，如果映射中没有则使用原始ID
+        const backendModelId = modelMap[this.selectedModel] || this.selectedModel;
+        console.log('前端选择的模型ID:', this.selectedModel);
+        console.log('转换为后端模型ID:', backendModelId);
+        
+        formData.append('model', backendModelId);
+        
+        // 构建校对提示词
+        let prompt = '请对以下文件内容进行校对，';
+        
+        // 添加校对选项
+        prompt += '包括以下方面：';
+        
+        const options = [];
+        if (this.checkOptions.grammar) options.push('语法检查');
+        if (this.checkOptions.spelling) options.push('拼写检查');
+        if (this.checkOptions.punctuation) options.push('标点符号');
+        if (this.checkOptions.tone) options.push('语气一致性');
+        if (this.checkOptions.readability) options.push('可读性分析');
+        if (this.checkOptions.format) options.push('格式规范');
+        if (this.checkOptions.synonym) options.push('同义词建议');
+        if (this.checkOptions.clarity) options.push('表达清晰度');
+        
+        prompt += options.join('、');
+        
+        prompt += '。请列出发现的主要问题类型及数量，并按照文本顺序列出具体问题和修改建议。';
+        
+        formData.append('prompt', prompt);
+        
+        console.log('上传文件:', this.selectedFile.name);
+        console.log('选择的模型:', this.selectedModel);
+        console.log('实际使用的模型ID:', backendModelId);
+        console.log('提示词:', prompt);
+        console.log('使用API URL:', apiUrl);
+        
+        // 修正API请求路径，使用正确的路径
+        let response;
+        try {
+          response = await axios.post(apiUrl, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            },
+            onUploadProgress: (progressEvent) => {
+              this.uploadProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            },
+            // 添加更长的超时时间
+            timeout: 90000 // 90秒超时
+          });
+        } catch (error) {
+          console.error('第一次尝试上传失败:', error);
+          
+          if (error.response && error.response.status === 404) {
+            console.log('尝试备用API路径...');
+            
+            // 尝试备用路径
+            const backupUrl = '/api/v1/file_chat/upload';
+            console.log('使用备用API URL:', backupUrl);
+            
+            response = await axios.post(backupUrl, formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              },
+              onUploadProgress: (progressEvent) => {
+                this.uploadProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              },
+              timeout: 90000
+            });
+          } else {
+            throw error; // 如果不是404错误，继续向上抛出
+          }
+        }
+        
+        console.log('文件上传响应:', response.data);
+        
+        // 保存提示词供后续显示
+        this.lastUsedPrompt = [
+          { role: "system", content: "你是一位专业的文章校对专家，能够提供准确、全面的文章校对和修改建议。" },
+          { role: "user", content: prompt }
+        ];
+        
+        return response.data;
+      } catch (error) {
+        console.error('文件上传失败:', error);
+        if (error.response) {
+          console.error('错误响应状态:', error.response.status);
+          console.error('错误响应数据:', error.response.data);
+          
+          // 根据状态码提供更具体的错误信息
+          if (error.response.status === 400) {
+            const errorMsg = error.response.data?.message || error.response.data?.error || '请求参数错误';
+            this.$message ? 
+              this.$message.error(`上传失败: ${errorMsg}`) : 
+              alert(`上传失败: ${errorMsg}`);
+          } else if (error.response.status === 413) {
+            this.$message ? 
+              this.$message.error('文件内容过长，超出模型上下文限制') : 
+              alert('文件内容过长，超出模型上下文限制');
+          } else if (error.response.status === 404) {
+            this.$message ? 
+              this.$message.error('API路径不存在，请联系系统管理员') : 
+              alert('API路径不存在，请联系系统管理员');
+          } else {
+            this.$message ? 
+              this.$message.error(`服务器错误 (${error.response.status})`) : 
+              alert(`服务器错误 (${error.response.status})`);
+          }
+        } else if (error.code === 'ECONNABORTED') {
+          this.$message ? 
+            this.$message.error('请求超时，服务器处理时间过长') : 
+            alert('请求超时，服务器处理时间过长');
+        } else {
+          this.$message ? 
+            this.$message.error(`上传失败: ${error.message || '未知错误'}`) : 
+            alert(`上传失败: ${error.message || '未知错误'}`);
+        }
+        
+        // 在开发模式下使用测试数据
+        if (process.env.NODE_ENV === 'development') {
+          console.log('开发模式：返回模拟数据');
+          return {
+            status: 'success',
+            data: {
+              choices: [
+                {
+                  message: {
+                    content: '【文件校对测试结果】\n\n由于API调用失败，这是一个测试响应。在实际环境中，系统会返回真实的校对结果。\n\n【测试问题摘要】\n- 语法问题：3处\n- 拼写错误：2处\n- 标点问题：4处\n\n【测试修改建议】\n1. 测试问题1：语法不通顺\n2. 测试问题2：标点使用错误\n3. 测试问题3：拼写错误'
+                  }
+                }
+              ]
+            }
+          };
+        }
+        
+        return null;
+      } finally {
+        this.isUploading = false;
+      }
     },
     
     // 生成校对结果的方法
@@ -316,12 +911,68 @@ export default {
       
       this.isGenerating = true;
       this.generatedNote = '';
+      this.isStreaming = false;
       
       try {
+        // 如果选择了文件，则使用流式方式处理
+        if (this.selectedFile) {
+          console.log('开始使用流式方式处理文件...');
+          this.loadingText = '正在上传和处理文件，请耐心等待...';
+          
+          // 使用流式方法处理文件
+          const streamSuccess = await this.uploadFileWithStreaming();
+          
+          if (streamSuccess) {
+            // 流式处理成功
+            this.$message ? this.$message.success('文章校对完成！') : alert('文章校对完成！');
+            return;
+          } else {
+            console.log('流式处理失败，尝试使用非流式方式...');
+            // 如果流式失败，尝试使用常规方式
+            const uploadResult = await this.uploadFile();
+            
+            if (uploadResult && uploadResult.status === 'success') {
+              console.log('文件处理成功:', uploadResult);
+              
+              // 根据响应格式处理结果
+              if (uploadResult.data && uploadResult.data.choices && uploadResult.data.choices.length > 0) {
+                const choice = uploadResult.data.choices[0];
+                if (choice.message && choice.message.content) {
+                  this.generatedNote = choice.message.content;
+                } else {
+                  this.generatedNote = '校对成功，但返回格式异常';
+                  console.warn('校对结果格式异常:', choice);
+                }
+              } else {
+                // 若返回格式不是期望的格式，尝试其他可能的数据结构
+                if (typeof uploadResult.data === 'string') {
+                  this.generatedNote = uploadResult.data;
+                } else if (uploadResult.data && uploadResult.data.content) {
+                  this.generatedNote = uploadResult.data.content;
+                } else {
+                  console.warn('无法识别的返回格式:', uploadResult);
+                  this.generatedNote = '校对成功，但无法解析返回结果';
+                }
+              }
+              
+              // 添加成功提示
+              this.$message ? this.$message.success('文章校对完成！') : alert('文章校对完成！');
+              return;
+            } else if (uploadResult && uploadResult.status === 'error') {
+              throw new Error(uploadResult.message || uploadResult.error || '文件处理失败');
+            } else if (!uploadResult) {
+              throw new Error('文件上传失败，请检查网络连接');
+            } else {
+              throw new Error('未知错误，请稍后重试');
+            }
+          }
+        }
+        
+        // 如果没有选择文件，使用原有的文本输入处理逻辑
         // 构建提示词
         const prompt = this.generatePrompt();
         
-        // 构建API请求
+        // 构建API请求参数
         const systemMessage = "你是一位专业的文章校对专家，能够提供准确、全面的文章校对和修改建议。";
         const userMessage = prompt;
         
@@ -337,157 +988,116 @@ export default {
         
         // 确保选择了模型
         if (!this.selectedModel) {
-          this.selectedModel = 'deepseek-v3-vol';
+          this.selectedModel = 'deepseek-v3';
           console.log('未选择模型，已自动选择默认模型');
         }
         
-        // 调用API (增加timeout和重试逻辑)
         console.log('开始调用API，模型:', this.selectedModel);
         
-        let maxRetries = 2;
-        let retryCount = 0;
-        let response;
+        // 准备API参数
+        const apiParams = {
+          model: this.selectedModel,
+          messages: [{ role: 'user', content: prompt }],
+          stream: true,
+          temperature: 0.7,
+          max_tokens: 2000
+        };
         
-        while (retryCount <= maxRetries) {
-          try {
-            if (retryCount > 0) {
-              this.loadingText = `正在重试校对 (${retryCount}/${maxRetries})...`;
-              console.log(`尝试第${retryCount}次重试...`);
-            }
-            
-            response = await axios.post('/api/v1/llm/chat', {
-              model: this.selectedModel,
-              messages: apiMessages,
-              temperature: 0.7,
-              top_p: 0.95,
-              max_tokens: 2000
-            }, { 
-              timeout: 60000 // 设置60秒超时
-            });
-            
-            // 如果成功获取响应，跳出重试循环
-            console.log('API调用成功，响应状态:', response.status);
-            console.log('API调用成功，返回数据类型:', typeof response.data);
-            
-            // 检查响应是否包含预期的字段
-            if (response.data) {
-              const hasStatus = 'status' in response.data;
-              const hasData = 'data' in response.data;
-              const hasContent = 'content' in response.data;
-              console.log(`响应字段检查: status=${hasStatus}, data=${hasData}, content=${hasContent}`);
+        // 记录API请求详情，方便调试
+        console.log('API请求参数:', JSON.stringify(apiParams));
+        
+        // 开始流式状态
+        this.isStreaming = true;
+        
+        // 使用fetch API发送请求，以处理流式响应
+        console.log('开始发送流式请求到:', '/api/v1/v1/deepseek_volcano/chat');
+        const response = await fetch('/api/v1/v1/deepseek_volcano/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream'
+          },
+          body: JSON.stringify(apiParams)
+        });
+        
+        console.log('收到响应, 状态码:', response.status);
+        console.log('响应头:', {
+          'Content-Type': response.headers.get('Content-Type'),
+          'Transfer-Encoding': response.headers.get('Transfer-Encoding')
+        });
+        
+        if (!response.ok) {
+          throw new Error(`服务器返回错误: ${response.status}`);
+        }
+        
+        // 处理流式响应
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        
+        // 读取流数据
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) {
+            console.log('流式响应完成');
+            break;
+          }
+          
+          // 解码二进制数据
+          const decoded = decoder.decode(value, { stream: true });
+          console.log('收到数据块:', decoded.length, '字节');
+          buffer += decoded;
+          
+          // 处理收到的数据
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop() || '';
+          
+          for (const line of lines) {
+            if (line.trim() === '') continue;
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') {
+                console.log('收到结束标志');
+                continue;
+              }
               
-              if (hasData && response.data.data) {
-                const dataType = typeof response.data.data;
-                console.log(`data字段类型: ${dataType}`);
+              try {
+                console.log('解析数据:', data.substring(0, 100) + '...');
+                const parsed = JSON.parse(data);
+                console.log('解析后的数据格式:', Object.keys(parsed));
                 
-                if (dataType === 'object') {
-                  console.log('data对象字段:', Object.keys(response.data.data).join(', '));
+                // 处理错误消息
+                if (parsed.error) {
+                  console.error("API错误:", parsed.error);
+                  throw new Error(parsed.error.message || '校对失败');
+                }
+                
+                // 处理火山引擎返回的delta格式数据
+                if (parsed.choices && parsed.choices.length > 0 && parsed.choices[0].delta) {
+                  const delta = parsed.choices[0].delta;
                   
-                  // 检查choices字段
-                  if (response.data.data.choices) {
-                    console.log('choices数量:', response.data.data.choices.length);
-                    if (response.data.data.choices.length > 0) {
-                      const choice = response.data.data.choices[0];
-                      console.log('第一个choice字段:', Object.keys(choice).join(', '));
-                      if (choice.message) {
-                        console.log('消息角色:', choice.message.role);
-                        console.log('消息内容 (前200字符):', choice.message.content.substring(0, 200));
-                      }
-                    }
+                  // 处理内容增量
+                  if (delta.content) {
+                    console.log("收到内容增量:", delta.content);
+                    // 累加收到的内容
+                    this.generatedNote += delta.content;
                   }
                 }
+              } catch (e) {
+                console.error('解析流式数据失败:', e, data);
               }
             }
-            
-            break;
-          } catch (error) {
-            console.error(`API调用失败 (尝试 ${retryCount+1}/${maxRetries+1}):`, error.message);
-            
-            if (retryCount === maxRetries) {
-              // 所有重试都失败了，抛出最后一个错误
-              throw error;
-            }
-            
-            // 增加重试次数并继续
-            retryCount++;
-            // 等待一段时间再重试 (1秒)
-            await new Promise(resolve => setTimeout(resolve, 1000));
           }
         }
         
-        // 日志记录API响应状态
-        console.log('API响应状态:', response.status);
-        console.log('API响应数据:', response.data);
+        // 流式响应完成
+        this.isStreaming = false;
+        console.log('校对完成，总字数:', this.generatedNote.length);
         
-        if (response.data && response.data.status === 'success') {
-          // 从响应中提取生成的内容
-          let content = '';
+        // 添加成功提示
+        this.$message ? this.$message.success('文章校对完成！') : alert('文章校对完成！');
           
-          if (response.data.data && response.data.data.choices && response.data.data.choices.length > 0) {
-            // 火山引擎格式
-            const message = response.data.data.choices[0].message;
-            content = message.content || '';
-            console.log('使用火山引擎响应格式，内容长度:', content.length);
-          } else if (response.data.data && response.data.data.response) {
-            // 硅基流动格式
-            content = response.data.data.response || '';
-            console.log('使用硅基流动响应格式，内容长度:', content.length);
-          } else if (response.data.data && typeof response.data.data === 'string') {
-            // 直接返回字符串
-            content = response.data.data;
-            console.log('使用字符串响应格式，内容长度:', content.length);
-          } else if (response.data.content) {
-            // 直接包含在内容字段
-            content = response.data.content;
-            console.log('使用content字段响应格式，内容长度:', content.length);
-          } else if (response.data.data) {
-            // 尝试直接获取data对象
-            const dataObj = response.data.data;
-            if (typeof dataObj === 'object' && dataObj.message && dataObj.message.content) {
-              content = dataObj.message.content;
-              console.log('从data.message.content获取内容，长度:', content.length);
-            } else if (typeof dataObj === 'object' && dataObj.content) {
-              content = dataObj.content;
-              console.log('从data.content获取内容，长度:', content.length);
-            } else {
-              // 尝试将整个data对象转换为字符串
-              content = JSON.stringify(dataObj);
-              console.log('将整个data对象转换为字符串，长度:', content.length);
-            }
-          }
-          
-          // 添加调试日志
-          console.log('API响应数据结构:', JSON.stringify(response.data, null, 2));
-          
-          if (content) {
-            this.generatedNote = content;
-            console.log('成功获取校对结果');
-            // 添加成功提示
-            this.$message ? this.$message.success('文章校对完成！') : alert('文章校对完成！');
-          } else {
-            console.error('API返回成功，但无法提取内容:', response.data);
-            // 尝试备用方法提取内容
-            try {
-              const rawData = JSON.stringify(response.data);
-              if (rawData.includes('"content":')) {
-                const contentMatch = rawData.match(/"content":"(.*?)"/);
-                if (contentMatch && contentMatch[1]) {
-                  this.generatedNote = contentMatch[1].replace(/\\n/g, '\n');
-                  console.log('使用备用方法提取内容成功');
-                  this.$message ? this.$message.success('文章校对完成！') : alert('文章校对完成！');
-                  return;
-                }
-              }
-            } catch (e) {
-              console.error('备用提取方法失败:', e);
-            }
-            throw new Error('无法从API响应中提取内容');
-          }
-        } else {
-          // 处理API响应不成功的情况
-          console.error('API返回不成功状态:', response.data);
-          throw new Error(response.data?.message || '服务器返回错误');
-        }
       } catch (error) {
         console.error('生成校对结果出错，详细错误:', error);
         
@@ -520,13 +1130,15 @@ export default {
         }
       } finally {
         this.isGenerating = false;
+        this.isStreaming = false;
       }
     },
     
     // 验证表单
     validateForm() {
-      if (!this.textInput.trim()) {
-        this.$message ? this.$message.error('请输入需要校对的文本内容') : alert('请输入需要校对的文本内容');
+      // 检查是否至少有文本输入或者上传了文件
+      if (!this.textInput.trim() && !this.selectedFile) {
+        this.$message ? this.$message.error('请输入需要校对的文本内容或上传文件') : alert('请输入需要校对的文本内容或上传文件');
         return false;
       }
       
@@ -591,6 +1203,12 @@ export default {
     // 重置表单
     resetForm() {
       this.textInput = '';
+      // 清除已选择的文件
+      this.selectedFile = null;
+      if (this.$refs.fileUpload) {
+        this.$refs.fileUpload.value = '';
+      }
+      
       // 重置校对选项为默认值
       this.checkOptions = {
         grammar: true,
@@ -664,843 +1282,169 @@ export default {
       document.body.appendChild(element);
       element.click();
       document.body.removeChild(element);
+    },
+    
+    // 格式化Markdown文本
+    formatMarkdown(text) {
+      if (!text) return '';
+      
+      // 处理加粗语法
+      text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      
+      // 处理换行
+      text = text.replace(/\n\n/g, '</p><p>');
+      
+      // 处理列表项
+      if (text.includes('- ')) {
+        const lines = text.split('\n');
+        let inList = false;
+        let formattedText = '';
+        
+        for (let line of lines) {
+          if (line.trim().startsWith('- ')) {
+            if (!inList) {
+              formattedText += '<ul>';
+              inList = true;
+            }
+            formattedText += `<li>${line.substring(2).trim()}</li>`;
+          } else {
+            if (inList) {
+              formattedText += '</ul>';
+              inList = false;
+            }
+            formattedText += line + '\n';
+          }
+        }
+        
+        if (inList) {
+          formattedText += '</ul>';
+        }
+        
+        text = formattedText;
+      }
+      
+      return `<p>${text}</p>`;
     }
   }
 };
 </script>
 
 <style scoped>
-.longform-article-page {
-  padding: 0;
-  margin-top: -40px;
-}
+/* 导入统一CSS样式文件 */
+@import "@/assets/css/text-creation-common.css";
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding: 0;
-}
+/* 页面特有样式 - 仅保留未在text-creation-common.css中定义的样式 */
 
-.page-nav h2 {
-  font-size: 24px;
-  color: #333;
-  margin: 0;
-}
-
-.page-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.action-btn {
-  background: none;
-  border: none;
-  color: #666;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s;
-}
-
-.action-btn:hover {
-  background-color: #f5f5f5;
-  color: var(--primary-color, #ba003f);
-  transform: scale(1.1);
-  box-shadow: 0 2px 6px rgba(186, 0, 63, 0.2);
-}
-
-/* 主要内容区域 - 使用两列布局 */
-.main-container {
-  display: flex;
-  gap: 20px;
-  min-height: calc(100vh - 120px);
-}
-
-/* 左侧：输入参数 */
-.input-section {
-  width: 45%;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.section-title {
-  font-size: 18px;
-  color: #333;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.section-title i {
-  color: var(--primary-color, #ba003f);
-}
-
-.form-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.form-group {
-  flex: 1;
-  margin-bottom: 16px;
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.form-group:hover label {
-  color: var(--primary-color, #ba003f);
-}
-
-/* 标签动画效果 */
-.form-group label {
-  transition: color 0.3s ease;
-  font-weight: 500;
-  display: block;
-  margin-bottom: 6px;
-}
-
-/* 焦点状态下整个表单组的效果 */
-.form-group:focus-within {
-  transform: translateY(-2px);
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #444;
-  font-size: 14px;
-}
-
-.required:after {
-  content: " *";
-  color: var(--primary-color, #ba003f);
-}
-
-.form-control {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.form-control:focus {
-  border-color: var(--primary-color, #ba003f);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-/* 下拉菜单的自定义样式 */
-select.form-control {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
-  background-repeat: no-repeat;
-  background-position: calc(100% - 12px) center;
-  background-size: 12px;
-  padding-right: 32px;
-  cursor: pointer;
-  transition: all 0.3s;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-select.form-control:hover {
-  border-color: #bbb;
-  background-color: #f9f9f9;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-}
-
-select.form-control:focus {
-  border-color: var(--primary-color, #ba003f);
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23ba003f' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
-}
-
-/* 优化下拉选项样式 */
-select.form-control option {
-  padding: 10px;
-  font-size: 14px;
-}
-
-/* 禁用状态样式 */
-select.form-control:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #f5f5f5;
-}
-
-/* 文本区域样式优化 */
-textarea.form-control {
-  min-height: 100px;
-  line-height: 1.5;
-  resize: vertical;
-  background-color: #fafafa;
-  transition: all 0.3s ease;
-}
-
-textarea.form-control:focus {
-  background-color: #fff;
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-/* 复选框样式 */
-.checkbox-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 5px;
-}
-
-.checkbox-container {
-  display: flex;
-  align-items: center;
-  background-color: #fcf2f5;
-  padding: 8px 14px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid #f9e0e7;
-  position: relative;
-}
-
-.checkbox-container:hover {
-  background-color: #f9e0e7;
-  transform: translateY(-2px);
-  box-shadow: 0 3px 6px rgba(186, 0, 63, 0.1);
-}
-
-.checkbox-container input {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-  height: 0;
-  width: 0;
-}
-
-.checkbox-container span {
-  padding-left: 24px;
-  position: relative;
-  font-weight: 500;
-  color: #555;
-}
-
-.checkbox-container span:before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  border: 1px solid #e6aebe;
-  background-color: #fff;
-  transition: all 0.2s ease;
-}
-
-.checkbox-container input:checked + span:before {
-  background-color: var(--primary-color, #ba003f);
-  border-color: var(--primary-color, #ba003f);
-}
-
-.checkbox-container input:checked + span:after {
-  content: '';
-  position: absolute;
-  left: 6px;
-  top: 50%;
-  width: 6px;
-  height: 10px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: translateY(-75%) rotate(45deg);
-}
-
-.checkbox-container input:focus + span:before {
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-.checkbox-container:active {
-  transform: scale(0.98);
-}
-
-/* 操作按钮 */
-.action-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 15px;
-}
-
-.btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  height: 44px;
-  padding: 0 16px;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  border: none;
-}
-
-.btn:active {
-  transform: scale(0.96);
-}
-
-.btn i {
-  font-size: 16px;
-}
-
-.btn-primary {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  flex: 1;
-}
-
-.btn-primary:hover {
-  background-color: #d4004c;
-  box-shadow: 0 4px 12px rgba(186, 0, 63, 0.3);
-  transform: translateY(-2px);
-}
-
-.btn-primary:disabled {
-  background-color: #e0e0e0;
-  color: #999;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.btn-secondary {
-  background-color: #f5f5f5;
-  color: #666;
-}
-
-.btn-secondary:hover {
-  background-color: #eaeaea;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-/* 右侧：输出内容 */
-.right-column {
-  width: 55%;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* 示例区域 */
-.examples-section {
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 12px 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  margin-bottom: 0;
-  transition: all 0.3s;
-}
-
-.examples-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.carousel-controls {
-  display: flex;
-  gap: 10px;
-}
-
-.carousel-control {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid #ddd;
-  background-color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: #666;
-}
-
-.carousel-control:hover:not(.disabled):not(:disabled) {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  border-color: var(--primary-color, #ba003f);
-  transform: scale(1.05);
-}
-
-.carousel-control.disabled,
-.carousel-control:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.carousel-control i {
-  font-size: 18px;
-}
-
-.example-carousel {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  padding-bottom: 5px;
-}
-
-.example-cards {
-  display: flex;
-  transition: transform 0.3s ease;
-  padding: 8px 0;
-  gap: 0;
-}
-
-.example-card {
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 12px;
-  margin-right: 15px;
-  width: 200px;
-  min-width: 200px;
-  max-width: 200px;
-  height: 150px;
-  min-height: 150px;
-  max-height: 150px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.3s;
-  background-color: #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  overflow: hidden;
-  box-sizing: border-box;
-}
-
-.example-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(186, 0, 63, 0.15);
-  border-color: var(--primary-color, #ba003f);
-}
-
-.example-icon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background-color: rgba(186, 0, 63, 0.1);
-  margin-bottom: 12px;
-}
-
-.example-icon svg {
-  width: 32px;
-  height: 32px;
-  color: #BA003F;
-}
-
-.example-info {
-  display: flex;
-  flex-direction: column;
-  text-align: center;
-  overflow: hidden;
-  width: 100%;
-}
-
-.example-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 5px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.example-desc {
+/* 文本计数器 */
+.text-counter {
+  text-align: right;
   font-size: 12px;
-  color: #888;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  color: #999;
+  margin-top: 4px;
 }
 
-/* 结果区域 */
-.result-section {
-  flex: 1;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  overflow-y: auto;
+/* 文件上传容器 */
+.file-upload-container {
   display: flex;
-  flex-direction: column;
-  padding: 0;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 12px 15px;
-  border-bottom: 1px solid #eee;
-  background-color: #fff;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
+  gap: 10px;
   flex-wrap: wrap;
-  gap: 8px;
 }
 
-.section-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-}
-
-.section-title {
-  display: flex;
-  align-items: center;
-  color: #333;
-  font-size: 16px;
-  margin: 0;
-  font-weight: 600;
-}
-
-.section-title i {
-  margin-right: 8px;
-  font-size: 20px;
-  color: var(--primary-color, #ba003f);
-}
-
-.result-content-wrapper {
-  position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 300px;
-}
-
-.loading-overlay {
+.file-input {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.9);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-}
-
-.loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 3px solid rgba(186, 0, 63, 0.1);
-  border-radius: 50%;
-  border-top-color: var(--primary-color, #ba003f);
-  animation: spin 1s linear infinite;
-  margin-bottom: 15px;
-}
-
-.loading-text {
-  font-size: 14px;
-  color: #666;
-}
-
-.empty-result {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-  text-align: center;
-}
-
-.empty-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.empty-image {
-  width: 120px;
-  height: 120px;
-  margin-bottom: 20px;
-}
-
-.empty-message {
-  margin: 0 0 20px;
-  font-size: 16px;
-  color: #666;
-}
-
-.note-result {
-  flex: 1;
-  padding: 15px;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
   overflow: hidden;
-  display: flex;
-  height: 100%;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
 }
 
-.result-textarea {
-  width: 100%;
-  height: 100%;
-  min-height: 350px;
-  padding: 20px;
-  border: 1px solid #eee;
-  border-radius: 6px;
-  font-size: 15px;
-  line-height: 1.6;
+.file-upload-btn {
+  background-color: #f5f5f5;
   color: #333;
-  resize: none;
-  background-color: #f9f9f9;
-  outline: none;
-  overflow-y: auto;
-  transition: border-color 0.3s;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-  white-space: pre-wrap;
-  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-}
-
-.result-textarea:focus {
-  border-color: var(--primary-color, #ba003f);
-}
-
-.blur-content {
-  filter: blur(1px);
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* 模态框 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid #ddd;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  gap: 5px;
+  font-size: 14px;
+  transition: all 0.2s ease;
 }
 
-.modal-content {
-  background-color: white;
-  border-radius: 10px;
-  max-width: 600px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+.file-upload-btn:hover {
+  background-color: #e9e9e9;
+  border-color: #ccc;
 }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
+.file-upload-hint {
+  font-size: 13px;
+  color: #999;
 }
 
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  color: #333;
+.file-upload-selected {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 13px;
+  color: #333;
+  background-color: #f0f0f0;
+  padding: 4px 10px;
+  border-radius: 4px;
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.close-btn {
+.file-clear-btn {
   background: none;
   border: none;
-  font-size: 20px;
-  color: #666;
+  color: #999;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.tips-list {
-  list-style-type: none;
   padding: 0;
-  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
 }
 
-.tips-list li {
-  margin-bottom: 12px;
-  padding-left: 20px;
-  position: relative;
-  line-height: 1.5;
+.file-clear-btn:hover {
+  background-color: #e0e0e0;
+  color: #666;
 }
 
-.tips-list li:before {
-  content: "•";
-  position: absolute;
-  left: 0;
-  color: var(--primary-color, #ba003f);
-  font-weight: bold;
+.file-upload-progress {
+  margin-top: 10px;
+  width: 100%;
 }
 
-/* 响应式调整 */
-@media (max-width: 1200px) {
-  .main-container {
-    flex-direction: column;
-  }
-  
-  .input-section, .right-column {
-    width: 100%;
-  }
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background-color: #f0f0f0;
+  border-radius: 3px;
+  overflow: hidden;
 }
 
-/* 新增公众号风格按钮样式 */
-.primary-button {
+.progress-fill {
+  height: 100%;
   background-color: var(--primary-color, #ba003f);
-  color: white;
-  border: none;
-  padding: 0 16px;
-  height: 36px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: all 0.2s ease;
+  transition: width 0.3s ease;
 }
 
-.primary-button:hover {
-  background-color: #d4004c;
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(186, 0, 63, 0.2);
-}
-
-.primary-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #ccc;
+.progress-text {
+  display: block;
+  font-size: 12px;
   color: #666;
-  transform: none;
-  box-shadow: none;
-}
-
-.secondary-button {
-  background-color: #f5f5f5;
-  color: #666;
-  border: 1px solid #e0e0e0;
-  padding: 0 16px;
-  height: 36px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: all 0.2s ease;
-}
-
-.secondary-button:hover {
-  background-color: #eaeaea;
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-}
-
-.secondary-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #f5f5f5;
-  color: #aaa;
-  transform: none;
-  box-shadow: none;
-}
-
-.prompt-button {
-  background-color: white;
-  color: var(--primary-color, #ba003f);
-  border: 1px solid var(--primary-color, #ba003f);
-  padding: 0 16px;
-  height: 36px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: all 0.2s ease;
-}
-
-.prompt-button:hover {
-  background-color: rgba(186, 0, 63, 0.05);
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(186, 0, 63, 0.1);
-}
-
-.prompt-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  color: #aaa;
-  border-color: #e0e0e0;
-  transform: none;
-  box-shadow: none;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 0;
+  margin-top: 4px;
+  text-align: right;
 }
 
 /* 提示词模态框样式 */
@@ -1552,37 +1496,173 @@ textarea.form-control:focus {
   margin-top: 15px;
 }
 
-/* 文本计数器 */
-.text-counter {
-  text-align: right;
-  font-size: 12px;
-  color: #999;
-  margin-top: 4px;
-}
-
-/* 文件上传容器 */
-.file-upload-container {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.file-upload-btn {
-  background-color: #f5f5f5;
-  color: #999;
-  border: 1px solid #ddd;
-  padding: 8px 15px;
+/* 特殊按钮样式 */
+.prompt-button {
+  background-color: white;
+  color: var(--primary-color, #ba003f);
+  border: 1px solid var(--primary-color, #ba003f);
+  padding: 0 16px;
+  height: 36px;
   border-radius: 4px;
-  cursor: not-allowed;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
-  font-size: 14px;
+  transition: all 0.2s ease;
 }
 
-.file-upload-hint {
-  font-size: 13px;
-  color: #999;
-  font-style: italic;
+.prompt-button:hover {
+  background-color: rgba(186, 0, 63, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(186, 0, 63, 0.1);
+}
+
+.prompt-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  color: #aaa;
+  border-color: #e0e0e0;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 添加流式输出相关样式 */
+.streaming-indicator {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 5px 10px;
+  border-radius: 15px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.dot-typing {
+  position: relative;
+  left: -9999px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--primary-color, #ba003f);
+  color: var(--primary-color, #ba003f);
+  box-shadow: 9984px 0 0 0 var(--primary-color, #ba003f), 9999px 0 0 0 var(--primary-color, #ba003f), 10014px 0 0 0 var(--primary-color, #ba003f);
+  animation: dot-typing 1.5s infinite linear;
+}
+
+@keyframes dot-typing {
+  0% {
+    box-shadow: 9984px 0 0 0 var(--primary-color, #ba003f), 9999px 0 0 0 var(--primary-color, #ba003f), 10014px 0 0 0 var(--primary-color, #ba003f);
+  }
+  16.667% {
+    box-shadow: 9984px -10px 0 0 var(--primary-color, #ba003f), 9999px 0 0 0 var(--primary-color, #ba003f), 10014px 0 0 0 var(--primary-color, #ba003f);
+  }
+  33.333% {
+    box-shadow: 9984px 0 0 0 var(--primary-color, #ba003f), 9999px 0 0 0 var(--primary-color, #ba003f), 10014px 0 0 0 var(--primary-color, #ba003f);
+  }
+  50% {
+    box-shadow: 9984px 0 0 0 var(--primary-color, #ba003f), 9999px -10px 0 0 var(--primary-color, #ba003f), 10014px 0 0 0 var(--primary-color, #ba003f);
+  }
+  66.667% {
+    box-shadow: 9984px 0 0 0 var(--primary-color, #ba003f), 9999px 0 0 0 var(--primary-color, #ba003f), 10014px 0 0 0 var(--primary-color, #ba003f);
+  }
+  83.333% {
+    box-shadow: 9984px 0 0 0 var(--primary-color, #ba003f), 9999px 0 0 0 var(--primary-color, #ba003f), 10014px -10px 0 0 var(--primary-color, #ba003f);
+  }
+  100% {
+    box-shadow: 9984px 0 0 0 var(--primary-color, #ba003f), 9999px 0 0 0 var(--primary-color, #ba003f), 10014px 0 0 0 var(--primary-color, #ba003f);
+  }
+}
+
+/* 结果区域相关样式 */
+.right-column {
+  width: 55%;
+  display: flex;
+  flex-direction: column;
+}
+
+.result-section {
+  flex: 1;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 650px;
+}
+
+.result-content-wrapper {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  height: 100%;
+  min-height: 590px;
+}
+
+.note-result {
+  position: relative;
+  flex: 1;
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background-color: #fcfcfc;
+  border-radius: 0 0 8px 8px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.result-textarea {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  border: none;
+  resize: none;
+  outline: none;
+  background-color: #fcfcfc;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #333;
+  overflow-y: auto;
+  border-radius: 0 0 8px 8px;
+  box-shadow: none;
+  font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  transition: background-color 0.3s;
+}
+
+.result-textarea:focus {
+  background-color: #fff;
+}
+
+/* 增加文本高亮样式 */
+.result-textarea::selection {
+  background-color: rgba(186, 0, 63, 0.2);
+  color: #333;
+}
+
+/* 美化滚动条 */
+.result-textarea::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.result-textarea::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.result-textarea::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 4px;
+}
+
+.result-textarea::-webkit-scrollbar-thumb:hover {
+  background: #ccc;
 }
 </style> 

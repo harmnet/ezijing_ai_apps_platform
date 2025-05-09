@@ -25,7 +25,7 @@ const AUTH_PARAMS = {
 // 创建axios实例，使用请求头传递subscription-key
 const apiClient = axios.create({
   baseURL,
-  timeout: 60000, // 60秒超时
+  timeout: 120000, // 120秒超时
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',

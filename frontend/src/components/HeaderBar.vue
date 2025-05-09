@@ -1,7 +1,7 @@
 <template>
   <header class="header">
     <div class="logo-container">
-      <img src="/logo.png" alt="Logo" class="logo" />
+      <img src="/logo.png" alt="Logo" class="logo" @click="goToHomePage" />
       <h1 class="site-title">人工智能应用与高效办公实践教学平台</h1>
     </div>
     <div class="header-right">
@@ -21,8 +21,21 @@
 </template>
 
 <script>
+import { useRouter } from 'vue-router'
+
 export default {
-  name: 'HeaderBar'
+  name: 'HeaderBar',
+  setup() {
+    const router = useRouter()
+    
+    const goToHomePage = () => {
+      router.push('/')
+    }
+    
+    return {
+      goToHomePage
+    }
+  }
 }
 </script>
 
@@ -48,6 +61,12 @@ export default {
 .logo {
   height: 40px;
   margin-right: 10px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.logo:hover {
+  transform: scale(1.05);
 }
 
 .site-title {

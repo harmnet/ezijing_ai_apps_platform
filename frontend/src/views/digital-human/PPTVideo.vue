@@ -1,1884 +1,2136 @@
 <template>
-  <div class="digital-human-ppt-container">
-    <el-card class="main-card">
-      <template #header>
-        <div class="card-header">
-          <h2><el-icon class="header-icon"><VideoCamera /></el-icon> AI数字人微课制作</h2>
-        </div>
-      </template>
-      
-      <el-form :model="formData" label-width="120px" :rules="rules" ref="formRef">
-        <!-- PPT文件上传 -->
-        <el-form-item label="PPT文件" prop="pptFile">
-          <div class="ppt-upload-section">
-            <el-upload
-              v-if="!formData.pptFile"
-              class="upload-box"
-              drag
-              action="#"
-              :http-request="uploadFile"
-              :show-file-list="false"
-              :limit="1"
-              :on-exceed="handleExceed"
-              :on-change="handleFileChange"
-              :auto-upload="false"
-              accept=".ppt,.pptx,.pdf"
-            >
-              <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-              <div class="el-upload__text">
-                拖拽文件到此处或 <em>点击上传</em>
+  <div class="ppt-video-container">
+    <h2 class="page-title">数字人PPT讲解视频生成</h2>
+    
+    <div class="content-wrapper">
+      <!-- 上传部分 -->
+      <div class="upload-section">
+        <h3>1. 上传PPT文件</h3>
+        
+        <div 
+          class="upload-area" 
+          @click="triggerFileInput" 
+          @dragover.prevent 
+          @drop.prevent="handleDrop"
+        >
+          <input 
+            type="file" 
+            ref="fileInput" 
+            style="display: none;" 
+            @change="handleFileChange"
+            accept=".ppt,.pptx"
+          />
+          
+          <div v-if="!selectedFile" class="upload-placeholder">
+            <i class="el-icon-upload"></i>
+            <div class="upload-text">
+              <p>点击或拖拽文件到此处上传</p>
+              <small>支持PPT、PPTX格式，文件大小不超过100MB</small>
               </div>
-              <template #tip>
-                <div class="el-upload__tip">
-                  支持PPT、PPTX、PDF文件，大小不超过10MB
                 </div>
-              </template>
-            </el-upload>
-            
-            <!-- 文件已上传时显示文件信息 -->
-            <div v-if="formData.pptFile" class="ppt-file-info">
-              <div class="file-info-header">
-                <el-icon class="file-icon"><Document /></el-icon>
-                <div class="file-name-wrapper">
-                  <div class="file-name" :title="formData.pptFile.name">{{ formData.pptFile.name }}</div>
-                  <div class="file-size">{{ formatFileSize(formData.pptFile.size) }}</div>
+          
+          <div v-else class="file-info">
+            <div class="file-icon">
+              <i class="el-icon-document"></i>
                 </div>
-                <div class="file-actions">
-                  <el-button type="danger" text @click="removePptFile">
-                    <el-icon><Delete /></el-icon>
-                  </el-button>
+            <div class="file-details">
+              <div class="file-name">{{ selectedFile.name }}</div>
+              <div class="file-size">{{ formatFileSize(selectedFile.size) }}</div>
+              <div class="upload-status">
+                <span :class="statusClass">
+                  <i :class="statusIcon"></i>
+                  {{ uploadStatus }}
+                </span>
                 </div>
-              </div>
-              
               <el-progress 
-                v-if="uploadProgress > 0 && uploadProgress < 100" 
+                v-if="isUploading" 
                 :percentage="uploadProgress" 
-                :format="percentageFormat"
-                class="upload-progress"
-                :stroke-width="8"
-                color="#C10D0C"
-              />
-              
-              <div class="file-type-badge" :class="getFileTypeBadgeClass(formData.pptFile.name)">
-                {{ getFileTypeText(formData.pptFile.name) }}
+                :format="percentFormat"
+              ></el-progress>
               </div>
-            </div>
-          </div>
-        </el-form-item>
-
-        <!-- 讲解文本 -->
-        <el-form-item label="讲解文本" prop="textScript">
-          <el-input
-            v-model="formData.textScript"
-            type="textarea"
-            :rows="6"
-            placeholder="输入讲解文本，如不填写将使用PPT中的备注内容"
-          />
-        </el-form-item>
-
-        <!-- 视频标题 -->
-        <el-form-item label="视频标题" prop="title">
-          <el-input 
-            v-model="formData.title" 
-            placeholder="请输入视频标题"
-            prefix-icon="Document"
-          />
-        </el-form-item>
-
-        <!-- 数字人形象 -->
-        <el-form-item label="数字人形象" prop="virtualHumanId">
-          <div class="radio-option-wrapper">
-            <el-radio-group v-model="formData.virtualHumanId" @change="handleHumanChange" class="human-radio-group">
-              <label 
-                v-for="item in digitalHumans" 
-                :key="item.virtualHumanId" 
-                class="custom-radio-label"
-                :class="{'is-checked': formData.virtualHumanId === item.virtualHumanId}"
+            <div class="file-actions">
+              <el-button 
+                type="danger" 
+                size="small" 
+                circle 
+                @click.stop="removeFile"
+                :disabled="isUploading"
               >
-                <el-radio :label="item.virtualHumanId" class="hidden-radio">{{ item.name }}</el-radio>
-                <div class="custom-radio-content">
-                  {{ item.name }}
-                </div>
-              </label>
-              
-              <!-- 添加不可选择的数字人形象 -->
-              <label class="custom-radio-label disabled-radio">
-                <div class="custom-radio-content disabled-content">
-                  馨馨/女
-                  <el-tag size="small" type="info" effect="plain">即将上线</el-tag>
-                </div>
-              </label>
-              
-              <label class="custom-radio-label disabled-radio">
-                <div class="custom-radio-content disabled-content">
-                  范宇/女
-                  <el-tag size="small" type="info" effect="plain">即将上线</el-tag>
-                </div>
-              </label>
-              
-              <label class="custom-radio-label disabled-radio">
-                <div class="custom-radio-content disabled-content">
-                  博涵/男
-                  <el-tag size="small" type="info" effect="plain">即将上线</el-tag>
-                </div>
-              </label>
-              
-              <label class="custom-radio-label disabled-radio">
-                <div class="custom-radio-content disabled-content">
-                  江峰/男
-                  <el-tag size="small" type="info" effect="plain">即将上线</el-tag>
-                </div>
-              </label>
-              
-              <label class="custom-radio-label disabled-radio">
-                <div class="custom-radio-content disabled-content">
-                  定制形象
-                  <el-tag size="small" type="info" effect="plain">敬请期待</el-tag>
-                </div>
-              </label>
-            </el-radio-group>
-          </div>
-        </el-form-item>
-
-        <!-- 姿势选择 -->
-        <el-form-item label="数字人姿势" prop="virtualHumanPostureId">
-          <div class="radio-option-wrapper">
-            <el-radio-group v-model="formData.virtualHumanPostureId" class="posture-radio-group">
-              <label 
-                v-for="item in postures" 
-                :key="item.postureId" 
-                class="custom-radio-label"
-                :class="{'is-checked': formData.virtualHumanPostureId === item.postureId}"
-              >
-                <el-radio :label="item.postureId" class="hidden-radio">{{ item.name }}</el-radio>
-                <div class="custom-radio-content">
-                  {{ item.name }}
-                </div>
-              </label>
-            </el-radio-group>
-          </div>
-        </el-form-item>
-
-        <!-- 分辨率选择 -->
-        <el-form-item label="视频分辨率" prop="resolution">
-          <div class="radio-option-wrapper">
-            <el-radio-group v-model="formData.resolution" class="resolution-radio-group">
-              <label 
-                v-for="item in resolutions" 
-                :key="item" 
-                class="custom-radio-label"
-                :class="{'is-checked': formData.resolution === item}"
-              >
-                <el-radio :label="item" class="hidden-radio">{{ item }}</el-radio>
-                <div class="custom-radio-content">
-                  {{ item }}
-                </div>
-              </label>
-            </el-radio-group>
-          </div>
-        </el-form-item>
-
-        <!-- 字幕设置 -->
-        <el-form-item label="显示字幕">
-          <el-switch 
-            v-model="formData.showCaption"
-            active-color="#ba003f"
-          />
-        </el-form-item>
-
-        <!-- 转换类型 -->
-        <el-form-item label="PPT转换类型">
-          <div class="radio-option-wrapper">
-            <el-radio-group v-model="formData.convertType" class="convert-radio-group">
-              <label 
-                class="custom-radio-label"
-                :class="{'is-checked': formData.convertType === 'IMG'}"
-              >
-                <el-radio label="IMG" class="hidden-radio">仅保留PPT内容</el-radio>
-                <div class="custom-radio-content">
-                  仅保留PPT内容
-                </div>
-              </label>
-              <label 
-                class="custom-radio-label"
-                :class="{'is-checked': formData.convertType === 'VIDEO'}"
-              >
-                <el-radio label="VIDEO" class="hidden-radio">保留PPT动画效果</el-radio>
-                <div class="custom-radio-content">
-                  保留PPT动画效果
-                </div>
-              </label>
-            </el-radio-group>
-          </div>
-        </el-form-item>
-
-        <!-- 提交按钮 -->
-        <el-form-item class="action-buttons">
-          <el-button 
-            type="danger" 
-            @click="submitForm" 
-            :loading="loading"
-            class="submit-button"
-            size="large"
-          >
-            <el-icon><VideoCamera /></el-icon> 生成讲解视频
-          </el-button>
-          <el-button 
-            @click="resetForm"
-            class="reset-button"
-            size="large"
-          >
-            <el-icon><Refresh /></el-icon> 重置
-          </el-button>
-        </el-form-item>
-      </el-form>
-
-      <!-- 生成结果展示 -->
-      <div v-if="taskId" class="result-container">
-        <el-divider>
-          <el-icon><Check /></el-icon> 生成结果
-        </el-divider>
-        
-        <div class="task-info">
-          <p>任务ID: <span class="task-id">{{ taskId }}</span>
-            <el-button type="danger" size="small" @click="queryTaskStatus" :loading="queryLoading" class="refresh-btn">
-              <el-icon><Refresh /></el-icon> 刷新状态
-            </el-button>
-          </p>
-        </div>
-        
-        <!-- 添加PPT文件和讲解文本信息 -->
-        <div class="ppt-info" v-if="currentTaskDetails && currentTaskDetails.pptUrl">
-          <div class="ppt-details-card">
-            <div class="ppt-details-header">
-              <el-icon class="ppt-icon"><Document /></el-icon>
-              <div class="ppt-info-title">PPT文件信息</div>
-            </div>
-            
-            <div class="ppt-details-content">
-              <div class="info-item">
-                <div class="info-label">文件名:</div>
-                <div class="info-content">
-                  <span class="file-name-full">{{ getFileNameFromUrl(currentTaskDetails.pptUrl) }}</span>
-                  <el-tag size="small" class="file-type-tag" 
-                    :type="getFileTypeTagType(getFileExtension(currentTaskDetails.pptUrl))">
-                    {{ getFileTypeText(getFileNameFromUrl(currentTaskDetails.pptUrl)) }}
-                  </el-tag>
-                </div>
-              </div>
-              
-              <div class="info-item">
-                <div class="info-label">文件地址:</div>
-                <div class="info-content">
-                  <el-button type="primary" link @click="window.open(currentTaskDetails.pptUrl, '_blank')">
-                    <el-icon><Document /></el-icon> 查看PPT文件
-                  </el-button>
-                  <el-button type="success" link @click="downloadPptFile(currentTaskDetails.pptUrl)">
-                    <el-icon><Download /></el-icon> 下载文件
-                  </el-button>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="text-script-card" v-if="currentTaskDetails.textScript">
-            <div class="text-script-header">
-              <el-icon class="text-icon"><ChatLineRound /></el-icon>
-              <div class="text-info-title">讲解文本</div>
-            </div>
-            
-            <div class="text-script-content">
-              {{ currentTaskDetails.textScript }}
+                <i class="el-icon-delete"></i>
+              </el-button>
             </div>
           </div>
         </div>
         
-        <el-alert
-          v-if="taskStatus === 'failed'"
-          title="视频生成失败"
-          type="error"
-          :description="errorMessage"
-          show-icon
-        />
-        
-        <el-alert
-          v-if="taskStatus === 'completed'"
-          title="视频生成成功"
-          type="success"
-          description="PPT讲解视频已生成完成，可以点击下方按钮查看或下载"
-          show-icon
-        />
-        
-        <el-alert
-          v-if="['creating', 'pending', 'processing'].includes(taskStatus)"
-          title="视频生成中"
-          type="info"
-          description="PPT讲解视频正在生成中，请耐心等待"
-          show-icon
-        />
-        
-        <el-progress 
-          v-if="['creating', 'pending', 'processing'].includes(taskStatus)"
-          :percentage="progressPercentage"
-          :indeterminate="true"
-          status="active"
-          :stroke-width="15"
-          color="#ba003f"
-        />
-        
-        <div v-if="taskStatus === 'completed'" class="video-preview">
-          <video v-if="videoUrl" controls :src="videoUrl" class="preview-video"></video>
-          <div class="video-actions">
-            <el-button type="danger" @click="previewVideo" :disabled="!videoUrl">
-              <el-icon><video-play /></el-icon> 查看视频
+        <div class="upload-actions">
+          <div style="display: flex; justify-content: center; width: 100%;">
+            <el-button 
+              type="primary" 
+              @click="uploadFile" 
+              :disabled="!canUpload"
+              :loading="isUploading"
+              style="margin-right: 10px;"
+            >
+              上传文件
             </el-button>
-            <el-button type="success" @click="downloadVideo" :disabled="!videoUrl">
-              <el-icon><download /></el-icon> 下载视频
+            <el-button 
+              type="info" 
+              @click="resetForm"
+              :disabled="isUploading || !selectedFile"
+              style="margin-left: 10px;"
+            >
+              重置
             </el-button>
           </div>
         </div>
       </div>
       
-      <!-- 查询历史任务 -->
-      <div class="history-query-container">
-        <el-divider>
-          <el-icon><History /></el-icon> 最近任务
-        </el-divider>
+      <!-- 修改视频名称样式 -->
+      <el-form-item label="视频名称" style="margin-top: 25px; margin-bottom: 25px;" v-if="uploadedUrl">
+          <el-input 
+          v-model="videoName" 
+          placeholder="请输入视频名称" 
+          :maxlength="50"
+          show-word-limit
+          style="font-size: 16px; font-weight: 500;"
+        >
+          <template #prepend>
+            <div style="background-color: #f56c6c; color: white; padding: 0 10px;">名称</div>
+          </template>
+        </el-input>
+        </el-form-item>
+
+      <!-- 数字人选择部分 -->
+      <div class="digital-humans-section">
+        <h3>2. 选择数字人形象</h3>
         
-        <div class="recent-tasks" v-if="recentTasks.length > 0">
-          <div class="section-header">
-            <h3>
-              <el-icon><History /></el-icon> 最近任务
-            </h3>
+        <div class="digital-human-container" ref="digitalHumansContainer">
+          <div v-if="loadingDigitalHumans" class="loading-container">
+            <el-skeleton :rows="3" animated />
+                </div>
+          <template v-else>
+            <div class="digital-humans-slider">
+              <div class="slider-arrow left" @click="scrollLeft">
+                <i class="el-icon-arrow-left" style="font-size: 18px;"></i>
+              </div>
+              
+              <div class="digital-humans-list" ref="digitalHumansList">
+                <div
+                  v-for="human in digitalHumans"
+                  :key="human.bizId"
+                  class="digital-human-item"
+                  :class="{ 'selected': selectedDigitalHuman && selectedDigitalHuman.bizId === human.bizId }"
+                  @click="selectDigitalHuman(human)"
+                >
+                  <div class="human-image">
+                    <img v-if="human.summaryImage" :src="human.summaryImage" :alt="human.name">
+                    <div v-else class="no-image">无图片</div>
+                </div>
+                  <div class="human-info">
+                    <div class="human-name">{{ human.name }}</div>
+                    <div class="human-desc">{{ human.industry || '未知行业' }}</div>
+                    <div class="human-actions">
+                      <el-button type="text" size="small" @click.stop="viewDigitalHumanVideo(human)">
+                        <i class="el-icon-video-play"></i> 预览
+                      </el-button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="slider-arrow right" @click="scrollRight">
+                <i class="el-icon-arrow-right" style="font-size: 18px;"></i>
+                </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- 隐藏数字人详情数据 -->
+        <div v-if="selectedDigitalHuman && selectedDigitalHuman.detailData" class="human-detail-raw-data" style="display: none;">
+          <h4>数字人详情数据</h4>
+          
+          <!-- 添加关键信息展示区域 -->
+          <div class="key-info-panel">
+            <div class="key-info-item">
+              <span class="key-label">数字人ID (bizId):</span>
+              <span class="key-value">{{ selectedDigitalHuman.bizId }}</span>
+                </div>
+            <div class="key-info-item">
+              <span class="key-label">虚拟人ID (virtualHumanId):</span>
+              <span class="key-value">{{ selectedDigitalHuman.detailData.virtualHumanId }}</span>
+            </div>
+            <div class="key-info-item">
+              <span class="key-label">支持透明背景:</span>
+              <span class="key-value">{{ selectedDigitalHuman.detailData.supportTransparency ? '是' : '否' }}</span>
+            </div>
+            <div class="key-info-item">
+              <span class="key-label">姿势数量:</span>
+              <span class="key-value">{{ selectedDigitalHuman.detailData.postureInfos?.length || 0 }}</span>
+            </div>
+            <div class="key-info-item">
+              <span class="key-label">语音数量:</span>
+              <span class="key-value">{{ selectedDigitalHuman.detailData.voiceInfos?.length || 0 }}</span>
+            </div>
           </div>
           
-          <el-table :data="recentTasks" style="width: 100%" size="small" stripe border>
-            <el-table-column label="任务ID" prop="taskId" width="280" show-overflow-tooltip />
-            <el-table-column label="标题" prop="title" width="120" />
-            <el-table-column label="状态" width="100">
-              <template #default="scope">
-                <el-tag 
-                  :type="getStatusType(scope.row.status)"
-                  size="small"
-                  effect="dark"
-                >
-                  {{ getStatusText(scope.row.status) }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="创建时间" prop="createdAt" width="180" />
-            <el-table-column label="操作">
-              <template #default="scope">
-                <el-button 
-                  size="small" 
-                  @click="previewTaskVideo(scope.row)"
-                  :disabled="scope.row.status !== 'completed' || !scope.row.videoUrl"
-                >
-                  查看视频
-                </el-button>
-                <el-button 
-                  size="small" 
-                  type="info" 
-                  @click="refreshTaskStatus(scope.row.taskId)"
-                  :loading="refreshingTaskIds.has(scope.row.taskId)"
-                >
-                  <el-icon><Refresh /></el-icon> 刷新状态
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
+          <el-collapse>
+            <el-collapse-item title="查看完整数据" name="1">
+              <pre class="raw-data-content">{{ JSON.stringify(selectedDigitalHuman.detailData, null, 2) }}</pre>
+            </el-collapse-item>
+          </el-collapse>
+                </div>
+
+        <!-- 姿势和语音选择区域 -->
+        <div v-if="selectedDigitalHuman" class="selection-container">
+          <h4>选择数字人姿势</h4>
+          <div class="posture-options" style="min-height: 280px;">
+            <div class="slider-container">
+              <div class="slider-arrow left" @click="scrollPostureLeft">
+                <i class="el-icon-arrow-left" style="font-size: 18px;"></i>
+                </div>
+              
+              <div class="posture-list" ref="posturesList">
+                <el-radio-group v-model="selectedPosture" class="posture-radio-group">
+                  <el-radio 
+                    v-for="posture in selectedDigitalHuman.postures" 
+                    :key="posture.bizId || posture.postureId || posture.id"
+                    :label="posture"
+                    class="posture-radio"
+                  >
+                    <div class="posture-radio-content">
+                      <div class="posture-preview" v-if="posture.previewPicture">
+                        <el-image 
+                          :src="posture.previewPicture" 
+                          :alt="posture.name || '姿势预览'"
+                          fit="cover"
+                          style="width: 140px; height: 140px; border-radius: 4px;"
+                        >
+                          <template #error>
+                            <div class="image-placeholder-small">
+                              <i class="el-icon-picture-outline"></i>
+                </div>
+                          </template>
+                        </el-image>
+                      </div>
+                      <div class="posture-info">
+                        <span class="posture-name">{{ posture.name || (posture.type ? `${posture.type}姿态` : '默认姿态') }}</span>
+                      </div>
+                    </div>
+                  </el-radio>
+            </el-radio-group>
+          </div>
+              
+              <div class="slider-arrow right" @click="scrollPostureRight">
+                <i class="el-icon-arrow-right" style="font-size: 18px;"></i>
+                </div>
+          </div>
+          </div>
+
+          <h4>选择数字人语音</h4>
+          <div class="voice-options" style="min-height: 320px;">
+            <div class="slider-container">
+              <div class="slider-arrow left" @click="scrollVoiceLeft">
+                <i class="el-icon-arrow-left" style="font-size: 18px;"></i>
+              </div>
+              
+              <div class="voice-list" ref="voicesList">
+                <el-radio-group v-model="selectedVoice" class="voice-radio-group">
+                  <el-radio 
+                    v-for="voice in selectedDigitalHuman.voiceInfos" 
+                    :key="voice.voiceId || voice.bizId"
+                    :label="voice"
+                    class="voice-radio"
+                  >
+                    <div class="voice-radio-content">
+                      <div class="voice-info-container">
+                        <span class="voice-name">{{ voice.displayName || voice.name || '默认语音' }}</span>
+                        <span class="voice-info">{{ voice.gender === '男' ? '男声' : voice.gender === '女' ? '女声' : '' }} | {{ voice.language || '' }}</span>
+                </div>
+                      <div class="audio-player-container" @click.stop>
+                        <audio-player 
+                          v-if="voice.auditionFile" 
+                          :src="voice.auditionFile" 
+                          class="audio-player"
+                        ></audio-player>
+                </div>
+                    </div>
+                  </el-radio>
+            </el-radio-group>
+          </div>
+              
+              <div class="slider-arrow right" @click="scrollVoiceRight">
+                <i class="el-icon-arrow-right" style="font-size: 18px;"></i>
+        </div>
+            </div>
+          </div>
+                </div>
+              </div>
+              
+      <!-- 请求体内容展示区域(隐藏) -->
+      <div class="request-body-section" v-if="requestBody">
+        <h4>数字人视频请求体</h4>
+        <!-- 隐藏请求地址 -->
+        <div class="request-info" style="display: none;">
+          <div class="request-url">
+            <span class="label">请求地址：</span>
+            <span class="value">https://openapi.xiaoice.com/vh/openapi/video/task/v2/ppt/submit</span>
+            <el-button 
+              type="text" 
+              size="small" 
+              @click="copyRequestUrl" 
+              class="copy-btn"
+            >
+              复制
+                  </el-button>
+                </div>
+              </div>
+            
+        <!-- 隐藏请求体内容 -->
+        <div class="request-body-container" style="display: none;">
+          <div class="request-body-header">
+            <span>请求体内容</span>
+            <el-button 
+              type="text" 
+              size="small" 
+              @click="copyRequestBody" 
+              class="copy-btn"
+            >
+              复制请求体
+            </el-button>
+            </div>
+          <div class="request-body-content">{{ formattedRequestBody }}</div>
+          </div>
+          
+        <!-- 任务结果展示区域 -->
+        <div v-if="taskResult" class="task-result-container">
+          <h4>任务提交结果</h4>
+          <pre class="task-result-content">{{ formattedTaskResult }}</pre>
+            </div>
+            
+        <!-- 任务状态查询结果展示区域 -->
+        <div v-if="taskStatusResult" class="task-status-container">
+          <h4>任务状态查询结果</h4>
+          <div class="task-key-info">
+            <div class="task-key-info-item">
+              <span class="task-key-info-label">任务状态:</span>
+              <span class="task-key-info-value" :class="getStatusClass(taskStatusResult.data?.status)">{{ getStatusText(taskStatusResult.data?.status) }}</span>
+            </div>
+            <div class="task-key-info-item">
+              <span class="task-key-info-label">任务进度:</span>
+              <span class="task-key-info-value">{{ formatProgress(taskStatusResult.data?.progress) }}</span>
+              <span class="task-key-info-progress">
+                <el-progress 
+                  v-if="taskStatusResult.data?.progress"
+                  :percentage="Number(taskStatusResult.data.progress)"
+                  :status="taskStatusResult.data?.status === 'COMPLETED' ? 'success' : 
+                          (taskStatusResult.data?.status === 'ERROR' || taskStatusResult.data?.status === 'error') ? 'exception' : ''"
+                ></el-progress>
+              </span>
+          </div>
+        </div>
+          <pre class="task-status-content" style="display: none;">{{ formattedTaskStatusResult }}</pre>
+          
+          <!-- 添加查看视频按钮 -->
+          <div class="view-video-button" v-if="taskStatusResult.data && taskStatusResult.data.status === 'COMPLETED' && taskStatusResult.data.output_url">
+            <el-button 
+              type="primary" 
+              icon="el-icon-video-play" 
+              @click="viewGeneratedVideo"
+            >
+              查看生成的视频
+            </el-button>
+          </div>
         </div>
       </div>
-    </el-card>
+      
+      <!-- 任务按钮区域(单独显示) -->
+      <div class="submit-task-container" v-if="requestBody" style="margin-top: 20px; display: block;">
+                <el-button 
+          type="success" 
+          @click="submitVideoTask" 
+          :disabled="!requestBody"
+          :loading="submittingTask"
+          class="submit-task-btn"
+        >
+          提交视频生成任务
+                </el-button>
+                <el-button 
+          type="primary" 
+          @click="queryTaskStatus" 
+          :disabled="!taskResult || !taskResult.data"
+          :loading="queryingTaskStatus"
+          class="query-status-btn"
+        >
+          刷新任务状态
+                </el-button>
+        </div>
+      </div>
+          
+    <!-- 视频播放器弹窗 -->
+    <el-dialog
+      title="视频播放"
+      v-model="videoDialogVisible"
+      width="70%"
+      center
+    >
+      <div class="video-player-container">
+        <video
+          v-if="selectedVideoUrl"
+          class="video-player"
+          controls
+          autoplay
+        >
+          <source :src="selectedVideoUrl" type="video/mp4" />
+          您的浏览器不支持视频播放
+        </video>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { 
-  UploadFilled, Download, VideoPlay, Refresh, Search, 
-  VideoCamera, Check, History, List, Picture, 
-  Document, Key, UserFilled, Delete, InfoFilled, ChatLineRound 
-} from '@element-plus/icons-vue'
-import axios from 'axios'
-import { useRoute } from 'vue-router'
+import { ref, reactive, computed, onMounted, watch } from 'vue';
+import axios from 'axios';
+import { ElMessage } from 'element-plus';
+import AudioPlayer from '../../components/AudioPlayer.vue';
 
 export default {
-  name: 'DigitalHumanPPTVideo',
+  name: 'PPTVideo',
   components: {
-    UploadFilled,
-    Download,
-    VideoPlay,
-    Refresh,
-    Search,
-    VideoCamera,
-    Check,
-    History,
-    List,
-    Picture,
-    Document,
-    Key,
-    UserFilled,
-    Delete,
-    InfoFilled,
-    ChatLineRound
+    AudioPlayer
   },
   setup() {
-    const route = useRoute()
+    // 文件上传相关
+    const fileInput = ref(null);
+    const selectedFile = ref(null);
+    const selectedFileName = ref('');
+    const selectedFileSize = ref(0);
+    const uploadStatus = ref('');
+    const uploadProgress = ref(0);
+    const isUploading = ref(false);
+    const uploadedUrl = ref('');
     
-    // 从URL参数获取数字人ID和名称
-    const humanIdFromUrl = route.query.humanId
-    const humanNameFromUrl = route.query.humanName
-    const virtualHumanIdFromUrl = route.query.virtualHumanId
+    // 数字人相关
+    const digitalHumans = ref([]);
+    const loadingDigitalHumans = ref(false);
+    const selectedDigitalHuman = ref(null);
+    const digitalHumansContainer = ref(null);
+    const digitalHumansList = ref(null);
     
-    // 表单数据
-    const formData = reactive({
-      pptFile: null,
-      textScript: '',
-      title: 'PPT讲解视频',
-      virtualHumanId: virtualHumanIdFromUrl || '',
-      virtualHumanPostureId: '',
-      resolution: '480p',
-      showCaption: true,
-      convertType: 'IMG'
-    })
+    // 姿势相关
+    const selectedPosture = ref(null);
+    
+    // 语音相关
+    const voices = ref([]);
+    const loadingVoices = ref(false);
+    const selectedVoice = ref(null);
+    
+    // 视频播放相关
+    const videoDialogVisible = ref(false);
+    const selectedVideoUrl = ref('');
+    
+    // 请求体相关
+    const requestBody = ref(null);
+    
+    // 任务提交相关
+    const submittingTask = ref(false);
+    const taskResult = ref(null);
+    
+    // 查询任务状态相关
+    const queryingTaskStatus = ref(false);
+    const taskStatusResult = ref(null);
+    
+    // 滚动相关
+    const posturesList = ref(null);
+    const voicesList = ref(null);
+    
+    // 视频设置相关
+    const videoName = ref(`数字人演示视频-${new Date().toISOString().slice(0, 10)}`);
+    const scriptContent = ref('');
+    const resolution = ref('720P');
+    
+    // 计算属性
+    const canUpload = computed(() => {
+      return (
+        selectedFile.value && 
+        selectedDigitalHuman.value && 
+        !isUploading.value
+      );
+    });
 
-    // 表单验证规则
-    const rules = {
-      title: [
-        { required: true, message: '请输入视频标题', trigger: 'blur' }
-      ],
-      pptFile: [
-        { required: true, message: '请上传PPT文件', trigger: 'change' }
-      ],
-      textScript: [
-        { required: true, message: '请输入讲解文本', trigger: 'blur' }
-      ]
-    }
+    const statusClass = computed(() => {
+      const statusMap = {
+        '准备上传': 'status-default',
+        '上传中': 'status-info animate-spin',
+        '上传成功': 'status-success',
+        '上传失败': 'status-error'
+      };
+      return statusMap[uploadStatus.value] || 'status-default';
+    });
 
-    // 数据列表
-    const digitalHumans = ref([])
-    const postures = ref([])
-    const resolutions = ref([])
-    const fileList = ref([])
-    const formRef = ref(null)
+    const statusIcon = computed(() => {
+      const iconMap = {
+        '准备上传': 'el-icon-upload2',
+        '上传中': 'el-icon-loading',
+        '上传成功': 'el-icon-check',
+        '上传失败': 'el-icon-close'
+      };
+      return iconMap[uploadStatus.value] || 'el-icon-upload2';
+    });
 
-    // 状态管理
-    const loading = ref(false)
-    const taskId = ref('')
-    const taskStatus = ref('')
-    const videoUrl = ref('')
-    const thumbnailUrl = ref('')
-    const errorMessage = ref('')
-    const progressPercentage = ref(0)
-    let pollInterval = null
+    // 计算属性：是否可以生成请求体
+    const canGenerateRequest = computed(() => {
+      return uploadedUrl.value && 
+             selectedDigitalHuman.value && 
+             selectedPosture.value && 
+             selectedVoice.value;
+    });
+    
+    // 计算属性：格式化的请求体
+    const formattedRequestBody = computed(() => {
+      if (!requestBody.value) return '';
+      return JSON.stringify(requestBody.value, null, 2);
+    });
 
-    // 添加新的响应式变量
-    const queryLoading = ref(false)
-    const historyTaskId = ref('')
-    const recentTasks = ref([])
-    const currentTaskDetails = ref(null)
+    // 任务结果格式化
+    const formattedTaskResult = computed(() => {
+      if (!taskResult.value) return '';
+      return JSON.stringify(taskResult.value, null, 2);
+    });
 
-    // 添加响应式变量
-    const uploadProgress = ref(0)
-    // 跟踪刷新状态的任务ID
-    const refreshingTaskIds = ref(new Set())
+    // 计算属性：格式化任务状态查询结果
+    const formattedTaskStatusResult = computed(() => {
+      return taskStatusResult.value ? JSON.stringify(taskStatusResult.value, null, 2) : '';
+    });
 
-    // 获取数字人列表
-    const getDigitalHumans = async () => {
-      try {
-        const response = await axios.get('/api/v1/digital_human/ppt/humans')
-        if (response.data.code === 0 && response.data.data) {
-          digitalHumans.value = response.data.data
-          
-          // 判断是否有URL传入的数字人ID
-          if (virtualHumanIdFromUrl) {
-            // 直接使用URL传入的virtualHumanId
-            formData.virtualHumanId = virtualHumanIdFromUrl
-            getPostures(formData.virtualHumanId)
-            
-            // 添加提示信息
-            ElMessage.success(`已自动选择数字人${humanNameFromUrl ? ': ' + humanNameFromUrl : ''}`)
-            return
-          } else if (humanIdFromUrl) {
-            // 查找匹配的数字人ID
-            const targetHuman = digitalHumans.value.find(human => human.id === humanIdFromUrl)
-            if (targetHuman) {
-              formData.virtualHumanId = targetHuman.virtualHumanId
-              getPostures(formData.virtualHumanId)
-              
-              // 添加提示信息
-              ElMessage.success(`已自动选择数字人: ${humanNameFromUrl || targetHuman.name}`)
-              return
-            }
-          }
-          
-          // 如果没有匹配的数字人或没有提供ID，设置默认选择第一个数字人
-          if (digitalHumans.value.length > 0) {
-            formData.virtualHumanId = digitalHumans.value[0].virtualHumanId
-            getPostures(formData.virtualHumanId)
-          }
-        }
-      } catch (error) {
-        console.error('获取数字人列表失败:', error)
-        ElMessage.error('获取数字人列表失败')
-      }
-    }
-
-    // 获取姿势列表
-    const getPostures = async (humanId) => {
-      if (!humanId) return
-      
-      try {
-        const response = await axios.get(`/api/v1/digital_human/ppt/postures/${humanId}`)
-        if (response.data.code === 0 && response.data.data) {
-          postures.value = response.data.data
-          
-          // 设置默认选择第一个姿势
-          if (postures.value.length > 0) {
-            formData.virtualHumanPostureId = postures.value[0].postureId
-          }
-        }
-      } catch (error) {
-        console.error('获取姿势列表失败:', error)
-        ElMessage.error('获取姿势列表失败')
-      }
-    }
-
-    // 获取支持的分辨率
-    const getResolutions = async () => {
-      try {
-        const response = await axios.get('/api/v1/digital_human/ppt/resolutions')
-        if (response.data.code === 0 && response.data.data) {
-          // 调整分辨率顺序为480p、720p、1080p
-          const sortedResolutions = ['480p', '720p', '1080p'].filter(res => 
-            response.data.data.includes(res)
-          );
-          
-          // 添加其他可能的分辨率
-          response.data.data.forEach(res => {
-            if (!sortedResolutions.includes(res)) {
-              sortedResolutions.push(res);
-            }
-          });
-          
-          resolutions.value = sortedResolutions;
-          
-          // 设置默认选择480p
-          formData.resolution = '480p';
-        }
-      } catch (error) {
-        console.error('获取支持的分辨率失败:', error)
-        ElMessage.error('获取支持的分辨率失败')
-      }
-    }
-
-    // 监听数字人选择变化
-    const handleHumanChange = (humanId) => {
-      formData.virtualHumanPostureId = '' // 清空姿势选择
-      getPostures(humanId)
-    }
-
-    // 格式化文件大小
-    const formatFileSize = (bytes) => {
-      if (bytes === 0) return '0 B'
-      const k = 1024
-      const sizes = ['B', 'KB', 'MB', 'GB']
-      const i = Math.floor(Math.log(bytes) / Math.log(k))
-      return (bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i]
-    }
-
-    // 百分比格式化
-    const percentageFormat = (percentage) => {
-      return percentage === 100 ? '上传完成' : `${percentage}%`
-    }
-
-    // 获取文件类型
-    const getFileTypeText = (filename) => {
-      const ext = filename.split('.').pop().toLowerCase()
-      if (ext === 'ppt') return 'PPT'
-      if (ext === 'pptx') return 'PPTX'
-      if (ext === 'pdf') return 'PDF'
-      return 'FILE'
-    }
-
-    // 获取文件类型样式
-    const getFileTypeBadgeClass = (filename) => {
-      const ext = filename.split('.').pop().toLowerCase()
-      if (ext === 'ppt' || ext === 'pptx') return 'ppt-badge'
-      if (ext === 'pdf') return 'pdf-badge'
-      return 'file-badge'
-    }
-
-    // 删除PPT文件
-    const removePptFile = () => {
-      formData.pptFile = null
-      fileList.value = []
-      uploadProgress.value = 0
-      // 通知表单验证更新
-      if (formRef.value) {
-        formRef.value.validateField('pptFile')
-      }
-    }
-
-    // 模拟上传进度
-    const simulateUploadProgress = () => {
-      uploadProgress.value = 0
-      const interval = setInterval(() => {
-        if (uploadProgress.value < 95) {
-          uploadProgress.value += 5
-        } else {
-          clearInterval(interval)
-          uploadProgress.value = 100
-        }
-      }, 200)
-    }
-
-    // 处理文件选择
-    const handleFileChange = (file) => {
-      if (file.status === 'ready') {
-        formData.pptFile = file.raw
-        // 模拟上传进度
-        simulateUploadProgress()
-      }
-    }
-
-    // 处理超出文件数量限制
-    const handleExceed = () => {
-      ElMessage.warning('最多只能上传1个文件')
-    }
-
-    // 上传文件方法（自定义上传）
-    const uploadFile = async (options) => {
-      // 在提交表单时统一处理上传，这里不需要实现
-      return true
-    }
-
-    // 提交表单
-    const submitForm = async () => {
-      if (!formRef.value) return
-      
-      await formRef.value.validate(async (valid) => {
-        if (!valid) return
-        
-        // 检查文件是否已选择
-        if (!formData.pptFile) {
-          ElMessage.error('请选择PPT文件')
-          return
-        }
-        
-        loading.value = true
-        
-        try {
-          // 创建FormData对象用于文件上传
-          const formDataObj = new FormData()
-          formDataObj.append('ppt_file', formData.pptFile)
-          formDataObj.append('text_script', formData.textScript || '')
-          formDataObj.append('title', formData.title)
-          formDataObj.append('virtual_human_id', formData.virtualHumanId)
-          formDataObj.append('virtual_human_posture_id', formData.virtualHumanPostureId)
-          formDataObj.append('resolution', formData.resolution)
-          formDataObj.append('show_caption', formData.showCaption)
-          formDataObj.append('convert_type', formData.convertType)
-          
-          // 发送请求
-          const response = await axios.post('/api/v1/digital_human/ppt/generate', formDataObj, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          })
-          
-          if (response.data.code === 0 && response.data.data) {
-            // 获取任务ID
-            const responseData = response.data.data;
-            console.log('任务创建响应:', responseData); // 添加日志，便于调试
-            
-            // 确保使用正确的属性名来获取taskId
-            taskId.value = responseData.task_id || responseData.taskId;
-            taskStatus.value = responseData.status;
-            
-            ElMessage.success('任务创建成功，正在生成视频...');
-            
-            // 开始定时查询任务状态
-            startPollingTaskStatus();
-            
-            // 保存任务记录到本地存储
-            saveTaskToLocal({
-              taskId: taskId.value,
-              title: formData.title,
-              status: taskStatus.value,
-              createdAt: new Date().toLocaleString(),
-              videoUrl: null,
-              textScript: formData.textScript
-            });
-            
-            // 立即更新历史记录，这样可以看到最新创建的任务
-            await loadTaskHistory();
-            
-            // 从历史记录中查找当前任务的详细信息
-            currentTaskDetails.value = recentTasks.value.find(task => task.taskId === taskId.value);
-          } else {
-            ElMessage.error(response.data.message || '任务创建失败');
-          }
-        } catch (error) {
-          console.error('提交表单失败:', error);
-          ElMessage.error('提交表单失败: ' + (error.response?.data?.message || error.message || '未知错误'));
-        } finally {
-          loading.value = false;
-        }
-      });
+    // 格式化进度为百分比
+    const formatProgress = (progress) => {
+      if (!progress && progress !== 0) return '0.00%';
+      return `${Number(progress).toFixed(2)}%`;
     };
 
-    // 重置表单
-    const resetForm = () => {
-      if (formRef.value) {
-        formRef.value.resetFields()
-      }
-      
-      fileList.value = []
-      formData.pptFile = null
-      taskId.value = ''
-      taskStatus.value = ''
-      videoUrl.value = ''
-      thumbnailUrl.value = ''
-      errorMessage.value = ''
-      progressPercentage.value = 0
-      
-      // 停止轮询
-      stopPollingTaskStatus()
-    }
-
-    // 开始轮询任务状态
-    const startPollingTaskStatus = () => {
-      // 先停止已有的轮询
-      stopPollingTaskStatus()
-      
-      // 每5秒查询一次任务状态
-      pollInterval = setInterval(async () => {
-        if (!taskId.value) {
-          stopPollingTaskStatus()
-          return
-        }
-        
-        try {
-          const response = await axios.get(`/api/v1/digital_human/ppt/task/${taskId.value}`)
-          
-          if (response.data.code === 0 && response.data.data) {
-            taskStatus.value = response.data.data.status
-            
-            // 如果任务完成或失败，停止轮询
-            if (taskStatus.value === 'completed') {
-              videoUrl.value = response.data.data.video_url
-              thumbnailUrl.value = response.data.data.thumbnail_url
-              progressPercentage.value = 100
-              stopPollingTaskStatus()
-              ElMessage.success('视频生成成功')
-              
-              // 更新本地存储中的任务状态
-              saveTaskToLocal({
-                taskId: taskId.value,
-                title: formData.title,
-                status: taskStatus.value,
-                createdAt: new Date().toLocaleString(),
-                videoUrl: videoUrl.value
-              })
-            } else if (taskStatus.value === 'failed') {
-              errorMessage.value = response.data.data.error?.message || '生成失败，请重试'
-              progressPercentage.value = 0
-              stopPollingTaskStatus()
-              ElMessage.error('视频生成失败: ' + errorMessage.value)
-              
-              // 更新本地存储中的任务状态
-              saveTaskToLocal({
-                taskId: taskId.value,
-                title: formData.title,
-                status: taskStatus.value,
-                createdAt: new Date().toLocaleString(),
-                videoUrl: null
-              })
-            } else if (taskStatus.value === 'processing') {
-              progressPercentage.value = 60
-              
-              // 更新本地存储中的任务状态
-              saveTaskToLocal({
-                taskId: taskId.value,
-                title: formData.title,
-                status: taskStatus.value,
-                createdAt: new Date().toLocaleString(),
-                videoUrl: null
-              })
-            } else if (taskStatus.value === 'pending') {
-              progressPercentage.value = 30
-              
-              // 更新本地存储中的任务状态
-              saveTaskToLocal({
-                taskId: taskId.value,
-                title: formData.title,
-                status: taskStatus.value,
-                createdAt: new Date().toLocaleString(),
-                videoUrl: null
-              })
-            } else {
-              progressPercentage.value = 10
-            }
-          }
-        } catch (error) {
-          console.error('查询任务状态失败:', error)
-        }
-      }, 5000)
-    }
-
-    // 停止轮询任务状态
-    const stopPollingTaskStatus = () => {
-      if (pollInterval) {
-        clearInterval(pollInterval)
-        pollInterval = null
-      }
-    }
-
-    // 预览视频
-    const previewVideo = () => {
-      if (!videoUrl.value) return
-      
-      // 在新窗口打开视频URL
-      window.open(videoUrl.value, '_blank')
-    }
-
-    // 下载视频
-    const downloadVideo = () => {
-      if (!videoUrl.value) return
-      
-      // 创建下载链接
-      const link = document.createElement('a')
-      link.href = videoUrl.value
-      link.download = `${formData.title || 'PPT讲解视频'}.mp4`
-      link.target = '_blank'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    }
-
-    // 查询任务状态
-    const queryTaskStatus = async () => {
-      queryLoading.value = true
-      
-      try {
-        const response = await axios.get(`/api/v1/digital_human/ppt/task/${taskId.value}`)
-        
-        if (response.data.code === 0 && response.data.data) {
-          ElMessage.success('任务查询成功')
-          const responseData = response.data.data;
-          taskStatus.value = responseData.status;
-          
-          // 如果任务完成，更新视频URL
-          if (taskStatus.value === 'completed') {
-            videoUrl.value = responseData.video_url;
-            thumbnailUrl.value = responseData.thumbnail_url;
-            progressPercentage.value = 100;
-            ElMessage.success('视频已生成完成');
-          } else if (taskStatus.value === 'failed') {
-            errorMessage.value = responseData.error?.message || '生成失败，请重试';
-            progressPercentage.value = 0;
-            ElMessage.error('视频生成失败: ' + errorMessage.value);
-          } else {
-            ElMessage.info(`任务状态: ${getStatusText(taskStatus.value)}`);
-          }
-        } else {
-          ElMessage.error(response.data.message || '任务查询失败')
-        }
-      } catch (error) {
-        console.error('任务查询失败:', error)
-        ElMessage.error('任务查询失败: ' + (error.response?.data?.message || error.message || '未知错误'))
-      } finally {
-        queryLoading.value = false
-      }
-    }
-
-    // 查询历史任务
-    const queryHistoryTask = async () => {
-      if (!historyTaskId.value.trim()) {
-        ElMessage.warning('请输入任务ID')
-        return
-      }
-      
-      loadTaskById(historyTaskId.value.trim())
-    }
-
-    // 加载任务历史记录
-    const loadTaskHistory = async () => {
-      try {
-        // 从API获取历史记录
-        const response = await axios.get('/api/v1/digital_human/ppt/history?limit=10')
-        
-        if (response.data.code === 0 && response.data.data) {
-          // 转换API返回的历史记录为组件需要的格式
-          recentTasks.value = response.data.data.tasks.map(task => ({
-            taskId: task.task_id,
-            title: task.title,
-            status: task.status,
-            createdAt: new Date(task.created_at).toLocaleString(),
-            videoUrl: task.video_url,
-            thumbnailUrl: task.thumbnail_url,
-            pptUrl: task.ppt_url,
-            textScript: task.text_script
-          }))
-        } else {
-          console.error('加载历史记录失败:', response.data.message)
-        }
-      } catch (error) {
-        console.error('加载历史记录失败:', error)
-      }
-    }
-
-    // 根据ID加载任务
-    const loadTaskById = async (id) => {
-      queryLoading.value = true
-      try {
-        const response = await axios.get(`/api/v1/digital_human/ppt/task/${id}`)
-        
-        if (response.data.code === 0 && response.data.data) {
-          // 更新任务信息
-          taskId.value = id
-          taskStatus.value = response.data.data.status
-          
-          // 从历史记录中查找当前任务的详细信息
-          currentTaskDetails.value = recentTasks.value.find(task => task.taskId === id)
-          
-          // 如果任务完成，更新视频URL
-          if (response.data.data.status === 'completed') {
-            videoUrl.value = response.data.data.video_url
-            thumbnailUrl.value = response.data.data.thumbnail_url
-            progressPercentage.value = 100
-          } else if (response.data.data.status === 'failed') {
-            errorMessage.value = response.data.data.error?.message || '生成失败'
-            progressPercentage.value = 0
-          } else if (response.data.data.status === 'processing') {
-            progressPercentage.value = 60
-            startPollingTaskStatus() // 如果任务还在处理中，开始轮询
-          } else if (response.data.data.status === 'pending') {
-            progressPercentage.value = 30
-            startPollingTaskStatus() // 如果任务还在处理中，开始轮询
-          } else {
-            progressPercentage.value = 10
-            startPollingTaskStatus() // 如果任务还在处理中，开始轮询
-          }
-          
-          ElMessage.success('成功加载任务信息')
-          
-          // 滚动到结果区域
-          setTimeout(() => {
-            document.querySelector('.result-container')?.scrollIntoView({ behavior: 'smooth' })
-          }, 100)
-        }
-      } catch (error) {
-        console.error('加载任务失败:', error)
-        ElMessage.error('加载任务失败: ' + (error.response?.data?.message || error.message || '未知错误'))
-      } finally {
-        queryLoading.value = false
-      }
-    }
-    
-    // 查看历史任务视频
-    const previewTaskVideo = (task) => {
-      if (!task.videoUrl) return
-      
-      // 在新窗口打开视频URL
-      window.open(task.videoUrl, '_blank')
-    }
-    
-    // 刷新单个任务状态
-    const refreshTaskStatus = async (taskId) => {
-      // 如果已经在刷新中，则不重复处理
-      if (refreshingTaskIds.value.has(taskId)) {
-        return
-      }
-      
-      try {
-        // 标记该任务正在刷新
-        refreshingTaskIds.value.add(taskId)
-        
-        // 调用API查询任务状态
-        const response = await axios.get(`/api/v1/digital_human/ppt/task/${taskId}`)
-        
-        if (response.data.code === 0 && response.data.data) {
-          // 更新本地任务状态
-          const updatedTask = response.data.data
-          
-          // 查找要更新的任务索引
-          const taskIndex = recentTasks.value.findIndex(task => task.taskId === taskId)
-          
-          if (taskIndex !== -1) {
-            const oldStatus = recentTasks.value[taskIndex].status
-            const newStatus = updatedTask.status
-            
-            // 创建更新后的任务对象
-            const updatedTaskObj = {
-              ...recentTasks.value[taskIndex],
-              status: newStatus,
-              videoUrl: updatedTask.video_url,
-              thumbnailUrl: updatedTask.thumbnail_url,
-              pptUrl: updatedTask.ppt_url
-            }
-            
-            // 更新任务列表中的任务
-            recentTasks.value[taskIndex] = updatedTaskObj
-            
-            // 保存到本地存储
-            saveTasksToLocalStorage()
-            
-            // 显示状态变化的提示
-            if (oldStatus !== newStatus) {
-              ElMessage.success(`任务状态已从"${getStatusText(oldStatus)}"变为"${getStatusText(newStatus)}"`)
-              
-              // 如果当前正在查看此任务，也更新当前任务的状态
-              if (taskId === taskId.value) {
-                taskStatus.value = newStatus
-                if (newStatus === 'completed') {
-                  videoUrl.value = updatedTask.video_url
-                  thumbnailUrl.value = updatedTask.thumbnail_url
-                  progressPercentage.value = 100
-                  // 停止轮询
-                  stopPollingTaskStatus()
-                  ElMessage.success('视频生成成功')
-                } else if (newStatus === 'failed') {
-                  errorMessage.value = updatedTask.error?.message || '生成失败，请重试'
-                  progressPercentage.value = 0
-                  // 停止轮询
-                  stopPollingTaskStatus()
-                  ElMessage.error('视频生成失败: ' + errorMessage.value)
-                }
-              }
-            } else {
-              ElMessage.info(`任务状态未变化，仍为"${getStatusText(newStatus)}"`)
-            }
-          }
-        } else {
-          ElMessage.error('获取任务状态失败: ' + (response.data.message || '未知错误'))
-        }
-      } catch (error) {
-        console.error('刷新任务状态失败:', error)
-        ElMessage.error('刷新任务状态失败: ' + (error.response?.data?.message || error.message || '未知错误'))
-      } finally {
-        // 移除刷新标记
-        refreshingTaskIds.value.delete(taskId)
-      }
-    }
-    
-    // 获取任务状态的显示文本
+    // 获取任务状态对应的状态文本
     const getStatusText = (status) => {
       const statusMap = {
-        'creating': '创建中',
-        'pending': '等待处理',
-        'processing': '处理中',
-        'completed': '已完成',
-        'failed': '失败'
-      }
-      return statusMap[status] || status
-    }
-    
-    // 获取任务状态的标签类型
-    const getStatusType = (status) => {
-      // 所有状态都使用'danger'（紫荆红色）
-      return 'danger';
-    }
-    
-    // 保存任务到本地存储
-    const saveTaskToLocal = (task) => {
+        'COMPLETED': '已完成',
+        'PROCESSING': '处理中',
+        'FAILED': '失败',
+        'ERROR': '错误',
+        'error': '错误',
+        'QUEUED': '排队中',
+        'PENDING': '等待中'
+      };
+      return statusMap[status] || status;
+    };
+
+    // 任务状态样式类
+    const getStatusClass = (status) => {
+      if (!status) return '';
+      if (status === 'COMPLETED') return 'status-completed';
+      if (status === 'PROCESSING' || status === 'QUEUED' || status === 'PENDING') return 'status-processing';
+      return 'status-error';
+    };
+
+    // 生命周期钩子
+    onMounted(() => {
+      fetchDigitalHumans();
+    });
+
+    // 数字人相关方法
+    const fetchDigitalHumans = async () => {
+      loadingDigitalHumans.value = true;
+      
       try {
-        // 获取现有的任务列表
-        let tasks = JSON.parse(localStorage.getItem('pptVideoTasks') || '[]')
+        console.log('开始获取数字人列表...');
+        // 始终请求真实数据
+        const response = await axios.get('/api/v1/digital_human/ppt/humans');
+        console.log('获取数字人列表响应:', response.data);
         
-        // 添加新任务到列表顶部（如果已存在则更新）
-        const existingIndex = tasks.findIndex(t => t.taskId === task.taskId)
-        if (existingIndex >= 0) {
-          tasks[existingIndex] = task
+        if (response.data.code === 200) {
+          digitalHumans.value = response.data.data.records || [];
+          console.log('成功获取数字人列表，数量:', digitalHumans.value.length);
         } else {
-          tasks.unshift(task)
+          throw new Error(response.data.message || '获取数字人列表失败');
+        }
+      } catch (error) {
+        console.error('获取数字人列表出错:', error);
+        ElMessage.error('获取数字人列表失败，请稍后重试');
+        digitalHumans.value = [];
+      } finally {
+        loadingDigitalHumans.value = false;
+      }
+    };
+    
+    const viewDigitalHumanVideo = (human) => {
+      if (human.projectVideo) {
+        selectedVideoUrl.value = human.projectVideo;
+        videoDialogVisible.value = true;
+      } else {
+        ElMessage.info('该数字人暂无演示视频');
+      }
+    };
+    
+    const selectDigitalHuman = (human) => {
+      selectedDigitalHuman.value = human;
+      // 重置姿势和语音选择
+      selectedPosture.value = null;
+      selectedVoice.value = null;
+      // 获取该数字人的姿态列表和详细信息
+      fetchDigitalHumanDetail(human.bizId);
+    };
+    
+    // 获取数字人详细信息
+    const fetchDigitalHumanDetail = async (humanId) => {
+      try {
+        console.log('开始获取数字人详情:', humanId);
+        const response = await axios.get(`/api/v1/digital_human/ppt/human/${humanId}`);
+        console.log('数字人详情API返回数据:', JSON.stringify(response.data, null, 2));
+        
+        if (response.data.code === 200) {
+          // 保存完整的原始数据
+          const humanData = response.data.data;
+          
+          // 获取姿势信息 - 直接使用API返回的数据
+          const postures = humanData.postureInfos || [];
+          console.log('姿势数据列表:', JSON.stringify(postures, null, 2));
+          
+          // 获取语音信息 - 直接使用API返回的数据
+          const voiceInfos = humanData.voiceInfos || [];
+          console.log('语音数据列表:', JSON.stringify(voiceInfos, null, 2));
+          
+          // 更新数字人对象，保存原始数据用于展示
+          selectedDigitalHuman.value = {
+            ...selectedDigitalHuman.value,
+            postures: postures,
+            voiceInfos: voiceInfos,
+            detailData: humanData  // 保存完整的原始数据
+          };
+          
+          // 默认选择第一个姿势和语音，如果有
+          if (postures.length > 0) {
+            selectedPosture.value = postures[0];
+            console.log('默认选择姿势:', JSON.stringify(selectedPosture.value, null, 2));
+          }
+          
+          if (voiceInfos.length > 0) {
+            // 尝试选择与性别匹配的语音
+            const humanGender = humanData.gender || '';
+            const matchingVoice = voiceInfos.find(voice => voice.gender === humanGender);
+            
+            if (matchingVoice) {
+              selectedVoice.value = matchingVoice;
+              console.log('选择性别匹配的语音:', JSON.stringify(matchingVoice, null, 2));
+            } else {
+              selectedVoice.value = voiceInfos[0];
+              console.log('未找到性别匹配的语音，使用第一个:', JSON.stringify(voiceInfos[0], null, 2));
+            }
+          }
+          
+          console.log('更新后的数字人数据:', JSON.stringify(selectedDigitalHuman.value, null, 2));
+          ElMessage.success(`成功获取"${selectedDigitalHuman.value.name}"的详细信息`);
+        } else {
+          ElMessage.error(`获取数字人详情失败: ${response.data.message || '未知错误'}`);
+        }
+      } catch (error) {
+        console.error('获取数字人详情信息失败:', error);
+        ElMessage.error('获取数字人详情失败，请稍后重试');
+      }
+    };
+    
+    // 获取可用的语音列表
+    const fetchVoices = async () => {
+      loadingVoices.value = true;
+      selectedVoice.value = null;
+      
+      try {
+        const response = await axios.get('/api/v1/digital_human/ppt/voices');
+        if (response.data.code === 0) {
+          voices.value = response.data.data || [];
+          
+          // 如果有可用的语音，默认选择第一个
+          if (voices.value.length > 0) {
+            selectedVoice.value = voices.value[0];
+        } else {
+            createDefaultVoices();
+          }
+        } else {
+          throw new Error(response.data.message || '获取语音列表失败');
+        }
+      } catch (error) {
+        console.error('获取语音列表失败:', error);
+        ElMessage.warning('获取语音列表失败，将使用默认语音');
+        createDefaultVoices();
+      } finally {
+        loadingVoices.value = false;
+      }
+    };
+    
+    // 创建默认语音列表作为备用
+    const createDefaultVoices = () => {
+      voices.value = [
+        {
+          voiceId: "default_voice_id_1",
+          name: "默认中文女声",
+          language: "中文",
+          supportInteractive: true
+        },
+        {
+          voiceId: "default_voice_id_2",
+          name: "默认中文男声",
+          language: "中文",
+          supportInteractive: true
+        },
+        {
+          voiceId: "default_voice_id_3",
+          name: "默认英文女声",
+          language: "英文",
+          supportInteractive: true
+        }
+      ];
+      
+      // 默认选择第一个语音
+      selectedVoice.value = voices.value[0];
+    };
+    
+    // 文件上传相关方法
+    const triggerFileInput = () => {
+      fileInput.value.click();
+    };
+    
+    const handleFileChange = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        validateAndSetFile(file);
+      }
+    };
+    
+    const handleDrop = (event) => {
+      const file = event.dataTransfer.files[0];
+      if (file) {
+        validateAndSetFile(file);
+      }
+    };
+    
+    const validateAndSetFile = (file) => {
+      // 验证文件类型 - 放宽类型检查
+      const allowedTypes = [
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'application/octet-stream', // 添加通用二进制文件类型
+        'application/powerpoint',
+        'application/mspowerpoint',
+        'application/x-mspowerpoint'
+      ];
+      const fileExt = file.name.split('.').pop().toLowerCase();
+      
+      // 只通过文件扩展名判断，放宽类型检查
+      if (!['ppt', 'pptx'].includes(fileExt)) {
+        ElMessage.error('只支持上传PPT文件(.ppt, .pptx)');
+        return;
+      }
+      
+      // 验证文件大小 (100MB)
+      const maxSize = 100 * 1024 * 1024;
+      if (file.size > maxSize) {
+        ElMessage.error('文件大小不能超过100MB');
+        return;
+      }
+      
+      selectedFile.value = file;
+      uploadStatus.value = '准备上传';
+      uploadProgress.value = 0;
+      uploadedUrl.value = '';
+      
+      console.log('文件已验证通过:', file.name, '类型:', file.type, '扩展名:', fileExt);
+    };
+    
+    const uploadFile = async () => {
+      if (!selectedFile.value) {
+        ElMessage.warning('请选择PPT文件');
+        return;
+      }
+      
+      if (!selectedDigitalHuman.value) {
+        ElMessage.warning('请选择数字人');
+        return;
+      }
+      
+      isUploading.value = true;
+      uploadStatus.value = '上传中';
+      uploadProgress.value = 0;
+      
+      // 真实上传逻辑
+      try {
+        const formData = new FormData();
+        formData.append('file', selectedFile.value);
+        formData.append('digitalHumanId', selectedDigitalHuman.value.bizId);
+        
+        console.log('开始上传文件:', selectedFile.value.name);
+        console.log('文件类型:', selectedFile.value.type);
+        console.log('文件大小:', selectedFile.value.size);
+        
+        const response = await axios.post('/api/v1/digital_human/ppt/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          onUploadProgress: (progressEvent) => {
+            uploadProgress.value = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+          },
+          // 增加超时时间，处理大文件
+          timeout: 120000 // 2分钟超时
+        });
+        
+        console.log('上传响应:', response.data);
+        
+        if (response.data.code === 0) {
+          uploadStatus.value = '上传成功';
+          uploadedUrl.value = response.data.data.url;
+          } else {
+          throw new Error(response.data.message || '上传失败');
+          }
+        } catch (error) {
+        console.error('上传文件失败:', error);
+        uploadStatus.value = '上传失败';
+        
+        // 提供更详细的错误信息
+        let errorMsg = '文件上传失败';
+        if (error.response) {
+          errorMsg += `: ${error.response.status} ${error.response.statusText}`;
+          console.error('错误详情:', error.response.data);
+        } else if (error.request) {
+          errorMsg += ': 服务器未响应，请检查网络连接';
+        } else if (error.message) {
+          errorMsg += `: ${error.message}`;
         }
         
-        // 只保留最近10个任务
-        tasks = tasks.slice(0, 10)
-        
-        // 保存到localStorage
-        localStorage.setItem('pptVideoTasks', JSON.stringify(tasks))
-        
-        // 更新最近任务列表
-        loadRecentTasks()
-      } catch (error) {
-        console.error('保存任务到本地存储失败:', error)
+        ElMessage.error(errorMsg);
+        } finally {
+        isUploading.value = false;
       }
-    }
+    };
     
-    // 从本地存储加载最近任务
-    const loadRecentTasks = () => {
-      try {
-        const tasks = JSON.parse(localStorage.getItem('pptVideoTasks') || '[]')
-        recentTasks.value = tasks
-      } catch (error) {
-        console.error('从本地存储加载任务失败:', error)
-        recentTasks.value = []
+    // 公共辅助方法
+    const removeFile = () => {
+      selectedFile.value = null;
+      uploadStatus.value = '';
+      uploadProgress.value = 0;
+      uploadedUrl.value = '';
+      // 重置文件输入框，允许重新选择同一个文件
+      fileInput.value.value = '';
+    };
+    
+    const resetForm = () => {
+      removeFile();
+      selectedDigitalHuman.value = null;
+    };
+    
+    const copyUrl = () => {
+      if (uploadedUrl.value) {
+        navigator.clipboard.writeText(uploadedUrl.value)
+          .then(() => {
+            ElMessage.success('已复制到剪贴板');
+          })
+          .catch(() => {
+            ElMessage.error('复制失败，请手动复制');
+          });
       }
-    }
+    };
+    
+    const percentFormat = (percent) => {
+      return `${percent}%`;
+    };
+    
+    const formatFileSize = (bytes) => {
+      if (bytes === 0) return '0 B';
+      
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+    
+    const scrollLeft = () => {
+      if (digitalHumansList.value) {
+        digitalHumansList.value.scrollBy({ left: -200, behavior: 'smooth' });
+      }
+    };
+    
+    const scrollRight = () => {
+      if (digitalHumansList.value) {
+        digitalHumansList.value.scrollBy({ left: 200, behavior: 'smooth' });
+      }
+    };
 
-    // 组件挂载时
-    onMounted(() => {
-      // 获取初始数据
-      getDigitalHumans()
-      getResolutions()
-      loadRecentTasks() // 加载最近任务
-      
-      // 如果URL中有taskId参数，则加载该任务
-      const urlTaskId = new URLSearchParams(window.location.search).get('taskId')
-      if (urlTaskId) {
-        historyTaskId.value = urlTaskId
-        queryHistoryTask()
+    // 滚动姿势列表
+    const scrollPostureLeft = () => {
+      if (posturesList.value) {
+        posturesList.value.scrollBy({ left: -200, behavior: 'smooth' });
+      }
+    };
+    
+    const scrollPostureRight = () => {
+      if (posturesList.value) {
+        posturesList.value.scrollBy({ left: 200, behavior: 'smooth' });
+      }
+    };
+    
+    // 滚动语音列表
+    const scrollVoiceLeft = () => {
+      if (voicesList.value) {
+        voicesList.value.scrollBy({ left: -200, behavior: 'smooth' });
+      }
+    };
+    
+    const scrollVoiceRight = () => {
+      if (voicesList.value) {
+        voicesList.value.scrollBy({ left: 200, behavior: 'smooth' });
+      }
+    };
+
+    // 生成请求体
+    const generateRequestBody = () => {
+      if (!uploadedUrl.value || !selectedDigitalHuman.value || !selectedPosture.value || !selectedVoice.value) {
+        ElMessage.warning('请确保所有必要信息已完成');
+        return null;
       }
       
-      // 从API加载历史记录
-      loadTaskHistory()
+      // 获取数字人相关ID
+      const virtualHumanId = selectedDigitalHuman.value.bizId || "";
+      const virtualHumanPostureId = selectedPosture.value.bizId || selectedPosture.value.postureId || "";
+      const voiceId = selectedVoice.value.voiceId || selectedVoice.value.bizId || "";
       
-      // 开始自动刷新任务状态
-      startAutoRefreshAllTasks()
-    })
-
-    // 在beforeUnmount中清除所有定时器
-    onBeforeUnmount(() => {
-      // 停止轮询
-      stopPollingTaskStatus()
-      
-      // 停止任务列表刷新
-      stopAutoRefreshAllTasks()
-    })
-    
-    // 定时刷新所有任务的定时器
-    let refreshAllTasksInterval = null
-    
-    // 开始定时刷新所有任务状态
-    const startAutoRefreshAllTasks = () => {
-      // 先停止已有的定时器
-      stopAutoRefreshAllTasks()
-      
-      // 每30秒刷新一次所有任务状态
-      refreshAllTasksInterval = setInterval(async () => {
-        try {
-          // 调用历史记录API获取最新状态
-          const response = await axios.get('/api/v1/digital_human/ppt/history?limit=10')
-          
-          if (response.data.code === 0 && response.data.data) {
-            // 更新本地任务列表
-            recentTasks.value = response.data.data.tasks.map(task => ({
-              taskId: task.task_id,
-              title: task.title,
-              status: task.status,
-              createdAt: new Date(task.created_at).toLocaleString(),
-              videoUrl: task.video_url,
-              thumbnailUrl: task.thumbnail_url,
-              pptUrl: task.ppt_url,
-              textScript: task.text_script
-            }))
-            
-            // 如果当前正在查看的任务也在列表中，更新它的状态
-            if (taskId.value) {
-              const currentTask = response.data.data.tasks.find(task => task.task_id === taskId.value)
-              if (currentTask) {
-                taskStatus.value = currentTask.status
-                
-                // 如果任务完成，更新视频URL
-                if (currentTask.status === 'completed') {
-                  videoUrl.value = currentTask.video_url
-                  thumbnailUrl.value = currentTask.thumbnail_url
-                  progressPercentage.value = 100
-                  
-                  // 停止查询当前任务的轮询
-                  stopPollingTaskStatus()
-                } else if (currentTask.status === 'failed') {
-                  errorMessage.value = '生成失败，请重试'
-                  progressPercentage.value = 0
-                  
-                  // 停止查询当前任务的轮询
-                  stopPollingTaskStatus()
-                } else if (currentTask.status === 'processing') {
-                  progressPercentage.value = 60
-                } else if (currentTask.status === 'pending') {
-                  progressPercentage.value = 30
+      // 创建符合后端要求的请求体
+      const body = {
+        outputVideoName: videoName.value || `数字人演示视频-${new Date().toISOString().slice(0, 10)}`,
+        width: 1920,
+        height: 1080,
+        pptUrl: uploadedUrl.value,
+        convertType: "VIDEO",
+        virtualHumanId: virtualHumanId,
+        virtualHumanPostureId: virtualHumanPostureId,
+        voiceId: voiceId,
+        showCaption: true,
+        creationDetail: {
+          scenes: [
+            {
+              virtualHuman: {
+                attributes: {
+                  width: 344,
+                  height: 1080,
+                  x: 1517,
+                  y: 309,
+                  forceMattingType: 0
+                },
+                virtualHumanId: virtualHumanId,
+                virtualHumanPostureId: virtualHumanPostureId,
+                zIndex: 20
+              },
+              tts: {
+                voiceId: voiceId,
+                rate: 1,
+                pitch: 1,
+                volume: 50
+              },
+              voiceText: "PPT中设置了取备注文本，此字段无效，字幕坐标不传时默认居中",
+              caption: {
+                topRight: true,
+                topLeft: false,
+                topCenter: true,
+                zIndex: 60,
+                attributes: {
+                  visible: true,
+                  fontColor: "#333333",
+                  spacing: 1,
+                  italic: false,
+                  underline: false,
+                  bold: true,
+                  y: 1000,
+                  fontSize: 44
                 }
               }
             }
+          ]
+        },
+        pptInfo: {
+          pptUrl: uploadedUrl.value,
+          convertType: "VIDEO",
+          getText: true,
+          singlePageSecond: 5,
+          attributes: {
+            width: 1920,
+            height: 1080,
+            x: 0,
+            y: 0
           }
-        } catch (error) {
-          console.error('自动刷新任务状态失败:', error)
         }
-      }, 30000) // 30秒刷新一次
-    }
-    
-    // 停止定时刷新所有任务状态
-    const stopAutoRefreshAllTasks = () => {
-      if (refreshAllTasksInterval) {
-        clearInterval(refreshAllTasksInterval)
-        refreshAllTasksInterval = null
+      };
+      
+      requestBody.value = body;
+      return body;
+    };
+
+    // 每当选择改变时，尝试生成请求体
+    watch([uploadedUrl, selectedDigitalHuman, selectedPosture, selectedVoice], () => {
+      if (canGenerateRequest.value) {
+        generateRequestBody();
+      } else {
+        requestBody.value = null;
       }
-    }
+    });
     
-    // 保存所有任务到本地存储
-    const saveTasksToLocalStorage = () => {
+    // 复制请求地址
+    const copyRequestUrl = () => {
+      navigator.clipboard.writeText('https://openapi.xiaoice.com/vh/openapi/video/task/v2/ppt/submit')
+        .then(() => {
+          ElMessage.success('请求地址已复制到剪贴板');
+        })
+        .catch(() => {
+          ElMessage.error('复制失败，请手动复制');
+        });
+    };
+    
+    // 复制请求体
+    const copyRequestBody = () => {
+      if (requestBody.value) {
+        navigator.clipboard.writeText(JSON.stringify(requestBody.value, null, 2))
+          .then(() => {
+            ElMessage.success('请求体已复制到剪贴板');
+          })
+          .catch(() => {
+            ElMessage.error('复制失败，请手动复制');
+          });
+      }
+    };
+
+    // 提交视频生成任务
+    const submitVideoTask = async () => {
+      if (!requestBody.value) {
+        ElMessage.warning('请先选择文件并设置所有必要参数');
+        return;
+      }
+      
+      submittingTask.value = true;
+      
       try {
-        localStorage.setItem('pptVideoTasks', JSON.stringify(recentTasks.value.slice(0, 10)))
+        const response = await axios.post('/api/v1/digital_human/ppt/submit_task', requestBody.value);
+        if (response.status === 200 && response.data) {
+          ElMessage.success('提交任务成功！');
+          taskResult.value = response.data;
+          // 自动查询一次状态
+          setTimeout(queryTaskStatus, 1000);
+          } else {
+          ElMessage.error(`提交任务失败: ${response.data?.message || '未知错误'}`);
+        }
       } catch (error) {
-        console.error('保存任务到本地存储失败:', error)
+        console.error('提交任务错误:', error);
+        ElMessage.error(`提交任务错误: ${error.response?.data?.message || error.message || '未知错误'}`);
+      } finally {
+        submittingTask.value = false;
       }
-    }
+    };
 
-    // 手动刷新所有任务
-    const refreshAllTasksNow = async () => {
-      if (recentTasks.value.length === 0) {
-        ElMessage.info('没有需要刷新的任务')
-        return
+    // 查询任务状态方法
+    const queryTaskStatus = async () => {
+      if (!taskResult.value || !taskResult.value.data) {
+        ElMessage.warning('请先提交任务获取任务ID');
+        return;
       }
       
-      ElMessage.info('正在刷新所有任务状态...')
+      const taskId = taskResult.value.data;
+      queryingTaskStatus.value = true;
       
-      // 重新加载历史记录来刷新任务状态
-      await loadTaskHistory()
-      
-      ElMessage.success('任务状态已更新')
-    }
-
-    // 从URL中获取文件名
-    const getFileNameFromUrl = (url) => {
-      if (!url) return '未知文件'
       try {
-        // 尝试解码URL
-        const decodedUrl = decodeURIComponent(url)
-        // 获取最后一个斜杠后面的内容作为文件名
-        const fileName = decodedUrl.split('/').pop()
-        // 如果文件名中包含下划线或特定标记，尝试提取原始文件名
-        if (fileName.includes('_')) {
-          // 提取最后一个下划线后的内容，这通常是原始文件名
-          const parts = fileName.split('_')
-          return parts[parts.length - 1]
+        // 通过后端API代理查询任务状态
+        const response = await axios.get(
+          `/api/v1/digital_human/ppt/task/${taskId}`,
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        
+        taskStatusResult.value = response.data;
+        
+        // 检查响应中是否包含错误信息
+        if (response.data.data && response.data.data.status === 'error') {
+          console.error('任务状态查询返回错误:', response.data.data.error);
+          ElMessage.warning('查询任务状态返回错误，请查看详细信息');
+          } else {
+          ElMessage.success('任务状态查询成功');
+          
+          // 检查任务是否已完成
+          if (response.data.data && response.data.data.status === 'COMPLETED' && response.data.data.output_url) {
+            ElMessage.success('视频已生成完成，可以点击"查看视频"按钮观看');
+          }
         }
-        return fileName
-      } catch (e) {
-        console.error('解析URL文件名失败:', e)
-        return '未知文件'
+      } catch (error) {
+        console.error('查询任务状态失败:', error);
+        taskStatusResult.value = {
+          error: true,
+          message: error.message || '查询任务状态失败',
+          response: error.response ? error.response.data : null
+        };
+        ElMessage.error('查询任务状态失败，请查看详细信息');
+      } finally {
+        queryingTaskStatus.value = false;
       }
-    }
+    };
 
-    // 获取文件扩展名
-    const getFileExtension = (filename) => {
-      if (!filename) return ''
-      try {
-        const name = getFileNameFromUrl(filename)
-        const parts = name.split('.')
-        if (parts.length > 1) {
-          return parts[parts.length - 1].toLowerCase()
-        }
-        return ''
-      } catch (e) {
-        return ''
+    // 添加打开生成视频的方法
+    const viewGeneratedVideo = () => {
+      if (taskStatusResult.value && 
+          taskStatusResult.value.data && 
+          taskStatusResult.value.data.status === 'COMPLETED' && 
+          taskStatusResult.value.data.output_url) {
+        selectedVideoUrl.value = taskStatusResult.value.data.output_url;
+        videoDialogVisible.value = true;
+      } else {
+        ElMessage.warning('视频尚未生成完成或未找到视频URL');
       }
-    }
-
-    // 获取文件类型对应的Tag类型
-    const getFileTypeTagType = (extension) => {
-      if (extension === 'ppt' || extension === 'pptx') return 'danger'
-      if (extension === 'pdf') return 'warning'
-      return 'info'
-    }
-
-    // 下载PPT文件
-    const downloadPptFile = (url) => {
-      if (!url) return
-      const link = document.createElement('a')
-      link.href = url
-      link.download = getFileNameFromUrl(url)
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    }
+    };
 
     return {
-      formData,
-      rules,
-      digitalHumans,
-      postures,
-      resolutions,
-      fileList,
-      formRef,
-      loading,
-      taskId,
-      taskStatus,
-      videoUrl,
-      thumbnailUrl,
-      errorMessage,
-      progressPercentage,
-      queryLoading,
-      historyTaskId,
-      recentTasks,
-      currentTaskDetails,
+      // 引用
+      fileInput,
+      digitalHumansContainer,
+      digitalHumansList,
+      posturesList,
+      voicesList,
+      // 状态
+      selectedFile,
+      selectedFileName,
+      selectedFileSize,
+      uploadStatus,
       uploadProgress,
-      refreshingTaskIds,
-      handleHumanChange,
-      handleFileChange,
-      handleExceed,
-      uploadFile,
-      submitForm,
-      resetForm,
-      previewVideo,
-      downloadVideo,
-      queryTaskStatus,
-      queryHistoryTask,
+      isUploading,
+      uploadedUrl,
+      digitalHumans,
+      loadingDigitalHumans,
+      selectedDigitalHuman,
+      selectedPosture,
+      selectedVoice,
+      videoName,
+      videoDialogVisible,
+      selectedVideoUrl,
+      requestBody,
+      submittingTask,
+      taskResult,
+      queryingTaskStatus,
+      taskStatusResult,
+      // 计算属性
+      canUpload,
+      statusClass,
+      statusIcon,
+      canGenerateRequest,
+      formattedRequestBody,
+      formattedTaskResult,
+      formattedTaskStatusResult,
+      // 格式化函数
+      formatProgress,
       getStatusText,
-      getStatusType,
-      previewTaskVideo,
-      refreshTaskStatus,
-      refreshAllTasksNow,
+      getStatusClass,
+      // 方法
+      fetchDigitalHumans,
+      viewDigitalHumanVideo,
+      selectDigitalHuman,
+      fetchDigitalHumanDetail,
+      fetchVoices,
+      triggerFileInput,
+      handleFileChange,
+      handleDrop,
+      validateAndSetFile,
+      uploadFile,
+      removeFile,
+      resetForm,
+      copyUrl,
+      percentFormat,
       formatFileSize,
-      percentageFormat,
-      getFileTypeText,
-      getFileTypeBadgeClass,
-      removePptFile,
-      simulateUploadProgress,
-      getFileNameFromUrl,
-      getFileExtension,
-      getFileTypeTagType,
-      downloadPptFile
-    }
+      scrollLeft,
+      scrollRight,
+      scrollPostureLeft,
+      scrollPostureRight,
+      scrollVoiceLeft,
+      scrollVoiceRight,
+      generateRequestBody,
+      copyRequestUrl,
+      copyRequestBody,
+      submitVideoTask,
+      queryTaskStatus,
+      viewGeneratedVideo
+    };
   }
-}
+};
 </script>
 
 <style scoped>
-.digital-human-ppt-container {
+.ppt-video-container {
   padding: 20px;
+}
+
+.page-title {
+  margin-bottom: 30px;
+  font-size: 24px;
+  color: #303133;
+}
+
+.upload-section {
+  margin-bottom: 30px;
+}
+
+.upload-area {
+  border: 2px dashed #dcdfe6;
+  border-radius: 8px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
   background-color: #f9f9f9;
 }
 
-.main-card {
-  max-width: 900px;
-  margin: 0 auto;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 2px solid #ba003f;
-  padding-bottom: 10px;
-}
-
-.card-header h2 {
-  color: #ba003f;
-  display: flex;
-  align-items: center;
-  margin: 0;
-}
-
-.header-icon {
-  margin-right: 8px;
-  font-size: 24px;
-}
-
-.upload-box {
-  width: 100%;
-  border: 2px dashed #dcdfe6;
-  border-radius: 8px;
-  transition: all 0.3s;
-  max-height: 180px;
-  overflow: hidden;
-}
-
-.upload-box:hover {
-  border-color: #ba003f;
-}
-
-.result-container {
-  margin-top: 30px;
-  background-color: #f8f9fa;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.video-preview {
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.preview-video {
-  width: 100%;
-  max-width: 640px;
-  margin-bottom: 15px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.video-actions {
-  margin-top: 15px;
-  display: flex;
-  gap: 15px;
-}
-
-:deep(.el-progress-bar__inner) {
-  transition: width 0.6s ease;
-}
-
-.task-info {
-  margin-bottom: 15px;
-  display: flex;
-  align-items: center;
-  background-color: #f8f9fa;
-  padding: 10px 15px;
-  border-radius: 4px;
-  border-left: 3px solid #ba003f;
-}
-
-.task-id {
-  font-weight: bold;
-  color: #ba003f;
-  margin-left: 5px;
-}
-
-.refresh-btn {
-  margin-left: 10px;
-}
-
-.history-query-container {
-  margin-top: 30px;
-  background-color: #f8f9fa;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.recent-tasks {
-  margin-top: 20px;
-}
-
-.recent-tasks h3 {
-  margin-bottom: 15px;
-  font-size: 16px;
-  color: #303133;
-  border-left: 3px solid #ba003f;
-  padding-left: 10px;
-  display: flex;
-  align-items: center;
-}
-
-.recent-tasks h3 .el-icon {
-  margin-right: 5px;
-  color: #ba003f;
-}
-
-:deep(.el-table) {
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
-}
-
-:deep(.el-table__row) {
-  cursor: pointer;
-}
-
-:deep(.el-table__row:hover) {
+.upload-area:hover {
+  border-color: #409eff;
   background-color: #f5f7fa;
 }
 
-:deep(.el-form-item__label) {
-  font-weight: 500;
-}
-
-:deep(.el-divider__text) {
-  background-color: #f8f9fa;
-  color: #ba003f;
-  font-weight: bold;
+.upload-placeholder {
   display: flex;
-  align-items: center;
-}
-
-:deep(.el-divider__text .el-icon) {
-  margin-right: 5px;
-}
-
-.radio-option-wrapper {
-  width: 100%;
-  padding: 15px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-}
-
-.human-radio-group,
-.posture-radio-group,
-.resolution-radio-group,
-.convert-radio-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 8px;
-}
-
-.custom-radio-label {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
-  min-width: unset;
-  margin-right: 0;
-}
-
-.custom-radio-label input[type="radio"] {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.custom-radio-content {
-  width: auto;
-  padding: 8px 16px;
-  background: #ffffff;
-  border: 1px solid #e9ecef;
-  border-radius: 20px;
-  font-size: 14px;
-  color: #C10D0C;
-  transition: all 0.3s;
-  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  white-space: nowrap;
 }
 
-.custom-radio-label:hover .custom-radio-content {
-  border-color: #C10D0C;
-  box-shadow: 0 2px 8px rgba(193, 13, 12, 0.2);
+.upload-placeholder i {
+  font-size: 48px;
+  color: #909399;
+  margin-bottom: 16px;
 }
 
-.custom-radio-label.is-checked .custom-radio-content {
-  background: #C10D0C;
-  border-color: #C10D0C;
-  color: white;
+.upload-text p {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: #606266;
+}
+
+.upload-text small {
+  color: #909399;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  text-align: left;
+}
+
+.file-icon {
+  font-size: 40px;
+  color: #e6a23c;
+  margin-right: 16px;
+}
+
+.file-details {
+  flex: 1;
+}
+
+.file-name {
   font-weight: bold;
-  box-shadow: 0 2px 8px rgba(193, 13, 12, 0.3);
+  margin-bottom: 4px;
+  word-break: break-all;
 }
 
-.hidden-radio {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-  overflow: hidden;
+.file-size {
+  color: #909399;
+  font-size: 14px;
+}
+
+.file-actions {
+  margin-left: 16px;
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  color: #f56c6c;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.remove-btn:hover {
+  background-color: rgba(245, 108, 108, 0.1);
+}
+
+.status-container {
+  margin: 20px 0;
+  padding: 12px;
+  border-radius: 4px;
+  background-color: #f5f7fa;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.status-indicator i {
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+/* 添加上传动画 */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.animate-spin i {
+  animation: spin 1s linear infinite;
+}
+
+.status-default { /* 默认/选择文件后的状态 */
+  color: #909399;
+}
+
+.status-info {
+  color: #409eff;
+}
+
+.status-success {
+  color: #67c23a;
+}
+
+.status-error {
+  color: #f56c6c;
+}
+
+.progress-bar {
+  margin-top: 12px;
 }
 
 .action-buttons {
   display: flex;
   justify-content: center;
-  margin-top: 30px;
-  gap: 20px;
+  gap: 16px;
+  margin: 24px 0;
 }
 
-.submit-button {
-  background-color: #C10D0C;
-  border-color: #C10D0C;
-  padding: 15px 40px;
+.url-section {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 4px;
+  background-color: #ecf5ff;
+  border: 1px solid #d9ecff;
+}
+
+.url-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
   font-weight: bold;
-  font-size: 18px;
-  min-width: 400px;
-  height: 60px;
+  color: #409eff;
 }
 
-.reset-button {
-  height: 60px;
-  padding: 15px 30px;
-  font-size: 16px;
+.url-header i {
+  margin-right: 8px;
 }
 
-.submit-button:hover {
-  background-color: #d4185b;
-  border-color: #d4185b;
+.url-input {
+  margin-bottom: 8px;
 }
 
-:deep(.el-radio__input.is-checked .el-radio__inner) {
-  border-color: #C10D0C;
-  background: #C10D0C;
-}
-
-:deep(.el-radio__input.is-checked + .el-radio__label) {
-  color: #C10D0C;
-}
-
-:deep(.el-input-group__prepend .el-icon),
-:deep(.el-input__prefix-inner .el-icon) {
-  color: #ba003f;
-}
-
-:deep(.el-textarea__inner) {
-  min-height: 120px !important;
-}
-
-:deep(.el-switch.is-checked .el-switch__core) {
-  border-color: #C10D0C !important;
-  background-color: #C10D0C !important;
-}
-
-/* 修复进度条颜色 */
-.el-progress :deep(.el-progress-bar__inner) {
-  background-color: #C10D0C !important;
-}
-
-/* 强化单选框选中状态样式 */
-.el-radio-group :deep(.el-radio.is-checked) .human-radio-item,
-.el-radio-group :deep(.el-radio.is-checked) .posture-radio-item,
-.el-radio-group :deep(.el-radio.is-checked) .resolution-radio-item,
-.el-radio-group :deep(.el-radio.is-checked) .convert-radio-item,
-.el-radio-group :deep(.el-radio.is-checked) .human-option,
-.el-radio-group :deep(.el-radio.is-checked) .posture-option,
-.el-radio-group :deep(.el-radio.is-checked) .resolution-option,
-.el-radio-group :deep(.el-radio.is-checked) .convert-option {
-  /* 这些样式已被替换，可以删除 */
-}
-
-/* 禁用的单选框样式 */
-.disabled-radio {
-  cursor: not-allowed;
-  opacity: 0.8;
-}
-
-.disabled-content {
-  background: #f0f0f0;
-  border-color: #dcdcdc;
+.url-note {
+  font-size: 13px;
   color: #909399;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  margin-top: 8px;
 }
 
-.disabled-radio:hover .disabled-content {
-  border-color: #dcdcdc;
-  box-shadow: none;
-}
-
-.ppt-info {
-  margin: 15px 0;
-  padding: 15px;
-  background-color: #f8f9fa;
+/* 数字人和语音共享样式 */
+.digital-human-section {
+  margin: 30px 0;
+  padding: 20px;
   border-radius: 8px;
-  border-left: 3px solid #C10D0C;
-}
-
-.info-item {
-  margin-bottom: 10px;
-  display: flex;
-}
-
-.info-label {
-  font-weight: bold;
-  min-width: 100px;
-  color: #606266;
-}
-
-.info-content {
-  flex: 1;
-}
-
-.text-content {
-  padding: 10px;
-  background-color: #ffffff;
-  border-radius: 4px;
-  border: 1px solid #e6e6e6;
-  max-height: 150px;
-  overflow-y: auto;
-  white-space: pre-wrap;
-}
-
-.ppt-upload-section {
-  width: 100%;
-}
-
-.ppt-file-info {
-  width: 100%;
-  border: 2px solid #e6e6e6;
-  border-radius: 8px;
-  padding: 15px;
-  position: relative;
   background-color: #f9f9f9;
-  transition: all 0.3s;
-}
-
-.ppt-file-info:hover {
-  border-color: #C10D0C;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-}
-
-.file-info-header {
-  display: flex;
-  align-items: center;
-}
-
-.file-icon {
-  font-size: 32px;
-  color: #C10D0C;
-  margin-right: 15px;
-}
-
-.file-name-wrapper {
-  flex: 1;
-  overflow: hidden;
-}
-
-.file-name {
-  font-weight: bold;
-  font-size: 16px;
-  color: #333;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.file-size {
-  color: #606266;
-  font-size: 14px;
-  margin-top: 5px;
-}
-
-.file-actions {
-  margin-left: 10px;
-}
-
-.upload-progress {
-  margin-top: 15px;
-}
-
-.file-type-badge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: bold;
-  color: white;
-}
-
-.ppt-badge {
-  background-color: #C10D0C;
-}
-
-.pdf-badge {
-  background-color: #e74c3c;
-}
-
-.file-badge {
-  background-color: #3498db;
+  border: 1px solid #ebeef5;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .section-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 18px;
   color: #303133;
-  border-left: 3px solid #C10D0C;
-  padding-left: 10px;
+}
+
+.loading-indicator {
   display: flex;
   align-items: center;
+  color: #909399;
+  font-size: 14px;
 }
 
-.section-header .el-icon {
-  margin-right: 5px;
-  color: #C10D0C;
+.loading-indicator i {
+  margin-right: 8px;
 }
 
-.table-file-info {
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  text-align: center;
+}
+
+/* 数字人列表滑动容器样式 */
+.digital-humans-slider {
   display: flex;
   align-items: center;
-  gap: 5px;
+  position: relative;
 }
 
-.file-name-short {
-  max-width: 120px;
+.digital-humans-list {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 10px 0;
+  /* 隐藏滚动条但保持功能 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.digital-humans-list::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.slider-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  z-index: 2;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.slider-arrow.left {
+  left: 5px;
+}
+
+.slider-arrow.right {
+  right: 5px;
+}
+
+.digital-human-item {
+  flex: 0 0 120px; /* 减小宽度 */
+  margin-right: 10px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.digital-human-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.digital-human-item.selected {
+  border: 2px solid #409eff;
+}
+
+.human-image {
+  height: 100px; /* 减小图片高度 */
+  width: 100%;
+  overflow: hidden;
+}
+
+.human-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.human-info {
+  padding: 6px;
+}
+
+.human-name {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 2px;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  display: inline-block;
 }
 
-.tooltip-file-info {
-  padding: 5px;
-  max-width: 300px;
-}
-
-.tooltip-file-buttons {
-  margin-top: 8px;
-  display: flex;
-  gap: 10px;
-}
-
-.no-file {
+.human-desc {
+  font-size: 10px;
   color: #909399;
-  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.ppt-details-card, .text-script-card {
-  background-color: #ffffff;
+.human-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.human-actions .el-button--text {
+  padding: 2px;
+  font-size: 10px;
+}
+
+/* 视频播放器 */
+.video-player-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.video-player {
+  width: 100%;
+  max-height: 70vh;
+  border-radius: 4px;
+}
+
+/* 数字人详细信息样式 */
+.digital-human-details {
+  margin-top: 20px;
+  padding: 16px;
   border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
-  margin-bottom: 15px;
-  overflow: hidden;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.digital-human-details h4 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 16px;
+  color: #303133;
+}
+
+/* 请求体相关样式 */
+.request-generator-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.generate-btn {
+  padding: 10px 24px;
+}
+
+.request-body-section {
+  margin-top: 30px;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
   border: 1px solid #ebeef5;
 }
 
-.ppt-details-header, .text-script-header {
+.request-body-section h4 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 16px;
+  color: #303133;
+}
+
+.request-info {
+  margin-bottom: 16px;
+  padding: 12px;
+  background-color: #ecf5ff;
+  border-radius: 4px;
+}
+
+.request-url {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.request-url .label {
+  font-weight: bold;
+  margin-right: 8px;
+  color: #303133;
+}
+
+.request-url .value {
+  font-family: monospace;
+  color: #409eff;
+  word-break: break-all;
+}
+
+.copy-btn {
+  margin-left: 8px;
+}
+
+.request-body-container {
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.request-body-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
   background-color: #f5f7fa;
-  padding: 12px 15px;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid #dcdfe6;
+}
+
+.request-body-content {
+  margin: 0;
+  padding: 16px;
+  background-color: #ffffff;
+  color: #606266;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* 添加任务提交相关样式 */
+.submit-task-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.submit-task-btn,
+.query-status-btn {
+  padding: 12px 20px;
+  font-size: 16px;
+  background-color: #f56c6c !important; /* 紫荆红色 */
+  border-color: #f56c6c !important; /* 紫荆红色边框 */
+}
+
+.submit-task-btn:hover,
+.query-status-btn:hover {
+  background-color: #f78989 !important; /* 紫荆红色浅色 */
+  border-color: #f78989 !important;
+}
+
+.task-result-container {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 8px;
+  background-color: #f0f9eb;
+  border: 1px solid #e1f3d8;
+}
+
+.task-result-container h4 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 16px;
+  color: #67c23a;
+}
+
+.task-result-content {
+  margin: 0;
+  padding: 16px;
+  background-color: #ffffff;
+  color: #606266;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+}
+
+.task-status-container {
+  margin-top: 20px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+/* 添加任务状态关键信息样式 */
+.task-key-info {
+  margin: 15px 0;
+  padding: 15px;
+  background-color: #f0f9eb;
+  border-radius: 8px;
+  border: 1px solid #e1f3d8;
+}
+
+.task-key-info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.task-key-info-label {
+  font-weight: bold;
+  min-width: 100px;
+  color: #303133;
+}
+
+.task-key-info-value {
+  color: #409eff;
+  font-weight: 500;
+}
+
+.task-key-info-value.status-completed {
+  color: #67c23a;
+}
+
+.task-key-info-value.status-error {
+  color: #f56c6c;
+}
+
+.task-key-info-value.status-processing {
+  color: #e6a23c;
+}
+
+.task-key-info-progress {
+  margin-left: 15px;
+  flex: 1;
+}
+
+.task-status-content {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 12px;
+  background-color: #ffffff;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  color: #333;
+}
+
+.query-status-btn {
+  margin-left: 10px;
+}
+
+.view-video-button {
+  margin-top: 20px;
+  text-align: center;
+}
+
+/* 添加姿势和语音选择的样式 */
+.posture-selection-section,
+.voice-selection-section {
+  margin-top: 25px;
+  margin-bottom: 25px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #ebeef5;
+}
+
+.posture-selection-section h4,
+.voice-selection-section h4 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 16px;
+  color: #303133;
+}
+
+.posture-options,
+.voice-options {
+  width: 100%;
+}
+
+.posture-radio-group,
+.voice-radio-group {
+  display: flex;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.posture-radio,
+.voice-radio {
+  margin: 0 15px 15px 0 !important;
+  min-width: 300px; /* 进一步增加语音选项的宽度到300px */
+  flex: 0 0 auto;
+}
+
+.posture-radio .el-radio__label,
+.voice-radio .el-radio__label {
+  width: 100%;
+  min-width: 200px;
+  padding-left: 10px;
+  padding-bottom: 10px;
+}
+
+.posture-radio-content,
+.voice-radio-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border: 1px solid #dcdfe6;
+  border-radius: 8px;
+  padding: 15px;
+  transition: all 0.3s;
+  background-color: white;
+  height: auto;
+  min-height: 200px; /* 再次增加姿势选项的高度 */
+}
+
+.posture-radio-content:hover,
+.voice-radio-content:hover {
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  border-color: #f56c6c; /* 改为紫荆红色 */
+}
+
+.posture-radio-content {
+  justify-content: space-between;
+  text-align: center;
+}
+
+.voice-radio-content {
+  height: auto;
+  min-height: 240px; /* 再次增加语音选项的高度 */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: center;
+}
+
+.posture-preview {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px; /* 增加间距 */
+}
+
+.posture-preview img {
+  width: 140px; /* 增加图片尺寸 */
+  height: 140px; /* 增加图片尺寸 */
+  object-fit: cover;
+}
+
+.posture-info {
+  padding: 8px 0;
+  text-align: center;
+}
+
+.posture-name {
+  font-weight: 500;
+  color: #303133;
+  display: block;
+  text-align: center;
+  font-size: 14px; /* 增加字体大小 */
+}
+
+.voice-info-container {
+  margin-bottom: 15px; /* 增加间距 */
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border: 1px dashed #e4e7ed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 80px;
+  justify-content: center;
+}
+
+.voice-name {
+  font-weight: 500;
+  color: #303133;
+  display: block;
+  margin-bottom: 10px; /* 增加间距 */
+  font-size: 16px; /* 增加字体大小 */
+  text-align: center;
+}
+
+.voice-info {
+  font-size: 14px; /* 增加字体大小 */
+  color: #606266;
+  display: block;
+  line-height: 1.4; /* 增加行高 */
+  text-align: center;
+}
+
+.audio-player-container {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 15px; /* 增加内边距 */
+  margin-top: auto;
+  text-align: center;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.audio-player {
+  width: 100%;
+  height: 45px; /* 增加音频播放器高度 */
+}
+
+/* 原始数据显示区域样式 */
+.human-details-section {
+  margin-top: 25px;
+  margin-bottom: 25px;
+  padding: 20px;
+  background-color: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #e4e7ed;
+}
+
+.human-details-section h4 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 16px;
+  color: #303133;
+}
+
+.details-container {
+  width: 100%;
+}
+
+.details-content {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 12px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+  border: 1px solid #e4e7ed;
+}
+
+.human-detail-raw-data {
+  margin: 20px 0;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  padding: 15px;
+}
+
+.human-detail-raw-data h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: #333;
+}
+
+.raw-data-content {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  color: #444;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 400px;
+  overflow-y: auto;
+  background-color: #f7f7f7;
+  padding: 12px;
+  border-radius: 4px;
+  border: 1px solid #dcdfe6;
+}
+
+/* 添加关键信息面板样式 */
+.key-info-panel {
+  margin: 10px 0 15px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.key-info-item {
+  margin-bottom: 8px;
   display: flex;
   align-items: center;
 }
 
-.ppt-icon, .text-icon {
-  font-size: 18px;
-  margin-right: 8px;
-  color: #C10D0C;
+.key-info-item:last-child {
+  margin-bottom: 0;
 }
 
-.ppt-info-title, .text-info-title {
+.key-label {
   font-weight: bold;
-  color: #303133;
-  font-size: 16px;
-}
-
-.ppt-details-content {
-  padding: 15px;
-}
-
-.text-script-content {
-  padding: 15px;
-  white-space: pre-wrap;
-  line-height: 1.5;
-  max-height: 200px;
-  overflow-y: auto;
+  min-width: 180px;
   color: #606266;
-  background-color: #f9f9f9;
-  border-radius: 0 0 8px 8px;
 }
 
-.file-name-full {
-  margin-right: 10px;
+.key-value {
+  font-family: 'Courier New', Courier, monospace;
+  color: #409eff;
   word-break: break-all;
 }
 
-.file-type-tag {
-  vertical-align: middle;
+.image-placeholder-small {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f7fa;
+  border: 1px dashed #dcdfe6;
+  border-radius: 4px;
+}
+
+/* 修复语音选择问题，确保正确的z-index */
+.el-radio {
+  z-index: 0;
+}
+
+.el-radio__input {
+  z-index: 1;
+}
+
+/* 滑动容器样式 */
+.slider-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
+
+.posture-list,
+.voice-list {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 10px 0;
+  width: calc(100% - 80px);
+  /* 隐藏滚动条但保持功能 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.posture-list {
+  min-height: 250px;
+  height: auto;
+}
+
+.voice-list {
+  min-height: 300px;
+  height: auto;
+}
+
+.posture-list::-webkit-scrollbar,
+.voice-list::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* 确保Radio选中样式正确 */
+.el-radio.is-bordered.is-checked {
+  border-color: #409eff;
+}
+
+/* 设置选择区域的边距 */
+.posture-options,
+.voice-options {
+  margin-bottom: 20px;
+}
+
+/* 设置按钮区域样式 */
+.submit-task-container {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 25px;
+  margin-bottom: 25px;
+}
+
+.submit-task-btn,
+.query-status-btn {
+  padding: 12px 20px;
+  font-size: 16px;
+}
+
+.submit-task-btn {
+  min-width: 180px;
+}
+
+.query-status-btn {
+  min-width: 150px;
+}
+
+/* 确保任务状态区域样式正确 */
+.task-result-container,
+.task-status-container {
+  margin-top: 25px;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #e1f3d8;
+}
+
+.task-result-container h4,
+.task-status-container h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+.task-result-content,
+.task-status-content {
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: white;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  padding: 15px;
+  font-family: monospace;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* 确保图标显示正确 */
+.el-icon-delete:before {
+  content: "\e6d7";
+}
+
+.el-icon-arrow-left:before {
+  content: "\e6dc";
+}
+
+.el-icon-arrow-right:before {
+  content: "\e6dd";
+}
+
+/* 添加图标基础样式 */
+[class^="el-icon-"], [class*=" el-icon-"] {
+  font-family: 'element-icons' !important;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 </style>

@@ -43,28 +43,23 @@
         <div class="examples-section">
           <div class="section-header">
             <h3 class="section-title">
-              <i class="ri-lightbulb-flash-line"></i>
+              <i class="ri-lightbulb-line"></i>
               示例主题
             </h3>
           </div>
           
-          <div class="example-cards">
-            <div class="example-card" v-for="(example, index) in examples" :key="index" @click="useExample(example)">
-              <div class="example-icon">
-                <i class="ri-article-line"></i>
-              </div>
-              <div class="example-info">
-                <h4>{{ example.title }}</h4>
-                <p>{{ example.description }}</p>
-              </div>
+          <div class="examples-list">
+            <div v-for="(example, index) in examples" :key="index" class="example-item" @click="useExample(example)">
+              <h4>{{ example.title }}</h4>
+              <p>{{ example.description }}</p>
             </div>
           </div>
         </div>
       </div>
       
-      <!-- 右侧：论文大纲结果 -->
+      <!-- 右侧：生成结果展示 -->
       <div class="right-column">
-        <!-- 结果展示部分 -->
+        <!-- 大纲生成结果 -->
         <div class="result-section" v-if="outlineContent || isGenerating">
           <div class="section-header">
             <h3 class="section-title">
@@ -73,6 +68,10 @@
               <small v-if="outlineContent">{{ formData.query }}</small>
             </h3>
             <div class="result-actions" v-if="outlineContent">
+              <button class="action-button" @click="generateFullPaper" :disabled="isGeneratingPaper">
+                <i class="ri-file-text-line"></i>
+                {{ isGeneratingPaper ? '生成中...' : '生成完整论文' }}
+              </button>
               <button class="action-button" @click="copyOutline">
                 <i class="ri-file-copy-line"></i>
                 复制
@@ -92,7 +91,45 @@
             </div>
             
             <!-- 大纲内容 -->
-            <div v-if="outlineContent && !isGenerating" class="outline-content markdown-body" v-html="formattedOutlineContent"></div>
+            <div v-if="outlineContent && !isGenerating" class="outline-content markdown-body">
+              <div v-html="formattedOutlineContent"></div>
+              <pre class="markdown-source" style="display: none;">{{ outlineContent }}</pre>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 完整论文内容显示区域 -->
+        <div class="result-section" v-if="paperContent && !isGeneratingPaper" style="margin-top: 20px;">
+          <div class="section-header">
+            <h3 class="section-title">
+              <i class="ri-article-line"></i>
+              完整论文
+              <small v-if="paperContent">{{ formData.query }}</small>
+            </h3>
+            <div class="result-actions" v-if="paperContent">
+              <button class="action-button" @click="copyPaper">
+                <i class="ri-file-copy-line"></i>
+                复制
+              </button>
+              <button class="action-button" @click="downloadPaper">
+                <i class="ri-download-line"></i>
+                下载
+              </button>
+            </div>
+          </div>
+          
+          <div class="result-content-wrapper">
+            <!-- 加载动画 -->
+            <div v-if="isGeneratingPaper" class="loading-overlay">
+              <div class="loading-spinner"></div>
+              <div class="loading-text">正在生成完整论文，请稍候...</div>
+            </div>
+            
+            <!-- 论文内容 -->
+            <div v-if="paperContent && !isGeneratingPaper" class="paper-content markdown-body">
+              <div v-html="formattedPaperContent"></div>
+              <pre class="markdown-source" style="display: none;">{{ paperContent }}</pre>
+            </div>
           </div>
         </div>
         
@@ -110,7 +147,7 @@
     <!-- 创作小贴士弹窗 -->
     <el-dialog
       title="论文大纲编写小贴士"
-      :visible.sync="showTipsDialog"
+      v-model:visible="showTipsDialog"
       width="550px"
       custom-class="tips-dialog"
     >
@@ -142,7 +179,8 @@
 <script>
 import axios from 'axios'
 import { marked } from 'marked'
-import 'github-markdown-css/github-markdown-light.css'
+import DOMPurify from 'dompurify'
+import 'github-markdown-css/github-markdown.css'
 
 export default {
   name: 'PaperOutline',
@@ -157,27 +195,54 @@ export default {
         ]
       },
       outlineContent: '',
-      formattedOutlineContent: '',
+      paperContent: '',
       isGenerating: false,
+      isGeneratingPaper: false,
       showTipsDialog: false,
       examples: [
         { 
-          title: '人工智能在医疗领域的应用', 
-          description: '探讨人工智能技术如何在医疗诊断、药物研发、健康管理等方面的应用及未来发展趋势。'
+          title: '人工智能在医疗领域的应用及挑战', 
+          description: '探讨AI技术如何改变医疗诊断、药物研发、精准医疗等领域，以及所面临的数据隐私、伦理和技术限制问题。'
         },
         { 
-          title: '可持续发展与环境保护', 
-          description: '分析当前环境问题、可持续发展战略及其对全球气候变化的影响。'
+          title: '可持续发展与绿色能源技术的未来趋势', 
+          description: '分析可再生能源技术的最新进展，包括太阳能、风能、氢能等在应对气候变化和实现碳中和目标中的作用。'
         },
         { 
-          title: '区块链技术与金融创新', 
-          description: '研究区块链如何改变传统金融体系，带来的机遇与挑战。'
+          title: '数字经济时代的隐私保护与数据安全', 
+          description: '研究大数据环境下个人隐私保护的理论框架、技术手段和法律法规，以及企业数据治理的最佳实践。'
         },
         { 
-          title: '远程教育的发展与挑战', 
-          description: '探讨数字时代远程教育的发展历程、现状、面临的问题及未来趋势。'
+          title: '全球气候变化对生物多样性的影响研究', 
+          description: '分析气候变暖、极端天气等因素如何影响生态系统平衡和物种多样性，以及相应的保护策略和国际合作。'
         }
       ]
+    }
+  },
+  computed: {
+    // 将大纲内容转换为HTML
+    formattedOutlineContent() {
+      if (!this.outlineContent) return ''
+      // 确保outlineContent是字符串类型
+      let content = this.outlineContent
+      if (typeof content !== 'string') {
+        console.error('formattedOutlineContent: outlineContent非字符串类型:', typeof content, content)
+        content = String(content) // 尝试转换为字符串
+      }
+      const rawHtml = marked(content)
+      return DOMPurify.sanitize(rawHtml)
+    },
+    // 将论文内容转换为HTML
+    formattedPaperContent() {
+      if (!this.paperContent) return ''
+      // 确保paperContent是字符串类型
+      let content = this.paperContent
+      if (typeof content !== 'string') {
+        console.error('formattedPaperContent: paperContent非字符串类型:', typeof content, content)
+        content = String(content) // 尝试转换为字符串
+      }
+      const rawHtml = marked(content)
+      return DOMPurify.sanitize(rawHtml)
     }
   },
   methods: {
@@ -189,12 +254,11 @@ export default {
 
       this.isGenerating = true
       this.outlineContent = ''
-      this.formattedOutlineContent = ''
 
       console.log('开始请求论文大纲API, 主题:', this.formData.query)
 
       try {
-        const response = await axios.post('/api/v1/academic/paper_outline', {
+        const response = await axios.post('/api/academic/paper_outline', {
           query: this.formData.query
         })
 
@@ -202,111 +266,23 @@ export default {
         console.log('API响应数据:', response.data)
 
         if (response.data.status === 'success') {
-          this.outlineContent = this.parseOutlineContent(response.data.data || '')
-          this.formattedOutlineContent = this.formatOutlineContent(this.outlineContent)
-          this.$message.success('已获取API原始响应')
+          this.outlineContent = response.data.data || ''
+          this.$message.success('大纲生成成功')
         } else {
           console.error('API返回错误状态:', response.data.message)
-          this.outlineContent = `错误信息: ${response.data.message}\n\n详细信息: ${JSON.stringify(response.data, null, 2)}`
-          this.formattedOutlineContent = `<pre>${this.outlineContent}</pre>`
           this.$message.error(response.data.message || '生成论文大纲失败')
         }
       } catch (error) {
         console.error('API请求错误:', error)
-        this.outlineContent = `请求错误: ${error.message}\n\n${error.response ? JSON.stringify(error.response.data, null, 2) : ''}`
-        this.formattedOutlineContent = `<pre>${this.outlineContent}</pre>`
         this.$message.error(`请求失败: ${error.message}`)
       } finally {
         this.isGenerating = false
       }
     },
     
-    parseOutlineContent(content) {
-      console.log('原始内容:', typeof content, content ? content.length : 0)
-      
-      if (typeof content === 'string') {
-        if (content.includes('data: ') || content.includes('event:')) {
-          return this.parseSSEContent(content)
-        }
-        
-        try {
-          const jsonContent = JSON.parse(content)
-          if (jsonContent.raw && jsonContent.raw.data) {
-            return this.formatOutlineContent(jsonContent.raw.data)
-          }
-          if (jsonContent.actionContent) {
-            return this.formatOutlineContent(jsonContent.actionContent)
-          }
-          return `<pre>${JSON.stringify(jsonContent, null, 2)}</pre>`
-        } catch (e) {
-          return this.formatOutlineContent(content)
-        }
-      }
-      
-      if (typeof content === 'object' && content !== null) {
-        if (content.raw && content.raw.data) {
-          return this.formatOutlineContent(content.raw.data)
-        }
-        if (content.actionContent) {
-          return this.formatOutlineContent(content.actionContent)
-        }
-        return `<pre>${JSON.stringify(content, null, 2)}</pre>`
-      }
-      
-      return content || '未获取到有效内容'
-    },
-    
-    parseSSEContent(sseText) {
-      console.log('解析SSE格式内容')
-      
-      const lines = sseText.split('\n')
-      let result = '<div class="sse-debug">'
-      
-      lines.forEach(line => {
-        if (line.startsWith('data: ')) {
-          try {
-            const data = JSON.parse(line.substring(6))
-            result += `<div class="sse-message">`
-            
-            if (data.raw && data.raw.data) {
-              result += `<div class="content">${this.formatOutlineContent(data.raw.data)}</div>`
-            } else if (data.actionContent && data.actionContent !== '执行完成') {
-              result += `<div class="content">${this.formatOutlineContent(data.actionContent)}</div>`
-            } else {
-              result += `<pre class="metadata">${JSON.stringify(data, null, 2)}</pre>`
-            }
-            
-            result += `</div>`
-          } catch (e) {
-            result += `<div class="error">解析SSE数据出错: ${e.message}</div>`
-          }
-        } else if (line.startsWith('event: ')) {
-          result += `<div class="event-type">${line.substring(7)}</div>`
-        }
-      })
-      
-      result += '</div>'
-      return result
-    },
-    
-    formatOutlineContent(content) {
-      if (!content) return ''
-      
-      if (content.includes('#') || content.includes('-') || content.includes('*')) {
-        try {
-          return marked(content)
-        } catch (e) {
-          return content
-        }
-      }
-      
-      return content
-    },
-    
     resetForm() {
       this.formData.query = ''
       this.outlineContent = ''
-      this.formattedOutlineContent = ''
     },
     
     useExample(example) {
@@ -315,8 +291,9 @@ export default {
     
     copyOutline() {
       try {
+        // 直接复制原始的Markdown内容
         navigator.clipboard.writeText(this.outlineContent)
-        this.$message.success('已复制到剪贴板')
+        this.$message.success('已复制Markdown格式的大纲内容')
       } catch (error) {
         console.error('复制到剪贴板失败:', error)
         this.$message.error('复制失败，请手动复制')
@@ -328,7 +305,7 @@ export default {
         const element = document.createElement('a')
         const file = new Blob([this.outlineContent], { type: 'text/plain' })
         element.href = URL.createObjectURL(file)
-        element.download = `论文大纲_${this.formData.query.substring(0, 20)}.txt`
+        element.download = `论文大纲_${this.formData.query.substring(0, 20)}.md`
         document.body.appendChild(element)
         element.click()
         document.body.removeChild(element)
@@ -342,40 +319,67 @@ export default {
       this.showTipsDialog = true
     },
     
-    generateDefaultOutline() {
-      return `# ${this.formData.query}论文大纲
+    // 从大纲生成完整论文
+    async generateFullPaper() {
+      if (!this.outlineContent) {
+        this.$message.warning('请先生成论文大纲')
+        return
+      }
 
-## 一、引言
-1.1 研究背景与意义
-1.2 问题陈述与研究目标
-1.3 研究方法与论文结构
+      this.isGeneratingPaper = true
+      this.paperContent = ''
 
-## 二、文献综述
-2.1 核心概念界定
-2.2 国内外研究现状
-2.3 现有研究的局限性
+      console.log('开始请求生成完整论文API, 主题:', this.formData.query)
 
-## 三、理论框架
-3.1 基础理论
-3.2 研究假设
-3.3 分析模型
+      try {
+        const response = await axios.post('/api/academic/paper_from_outline', {
+          query: this.formData.query,
+          outline: this.outlineContent
+        })
 
-## 四、研究方法
-4.1 研究设计
-4.2 数据收集
-4.3 分析方法
+        console.log('API响应状态:', response.status)
+        console.log('API响应数据:', response.data)
 
-## 五、分析与讨论
-5.1 数据分析结果
-5.2 主要发现
-5.3 理论与实践意义
-
-## 六、结论与建议
-6.1 研究结论
-6.2 研究局限性
-6.3 未来研究方向
-
-## 参考文献`;
+        if (response.data.status === 'success') {
+          this.paperContent = response.data.data || ''
+          this.$message.success('论文生成成功')
+        } else {
+          console.error('API返回错误状态:', response.data.message)
+          this.$message.error(response.data.message || '生成完整论文失败')
+        }
+      } catch (error) {
+        console.error('API请求错误:', error)
+        this.$message.error(`请求失败: ${error.message}`)
+      } finally {
+        this.isGeneratingPaper = false
+      }
+    },
+    
+    // 复制生成的论文内容
+    copyPaper() {
+      try {
+        navigator.clipboard.writeText(this.paperContent)
+        this.$message.success('已复制Markdown格式的论文内容')
+      } catch (error) {
+        console.error('复制到剪贴板失败:', error)
+        this.$message.error('复制失败，请手动复制')
+      }
+    },
+    
+    // 下载生成的论文
+    downloadPaper() {
+      try {
+        const element = document.createElement('a')
+        const file = new Blob([this.paperContent], { type: 'text/plain' })
+        element.href = URL.createObjectURL(file)
+        element.download = `论文_${this.formData.query.substring(0, 20)}.md`
+        document.body.appendChild(element)
+        element.click()
+        document.body.removeChild(element)
+      } catch (error) {
+        console.error('下载文件失败:', error)
+        this.$message.error('下载失败，请稍后重试')
+      }
     }
   }
 }
@@ -466,7 +470,7 @@ export default {
 
 .section-title {
   font-size: 18px;
-  color: #333;
+  color: #c62828; /* 紫荆红色 */
   margin: 0;
   display: flex;
   align-items: center;
@@ -576,61 +580,68 @@ export default {
   height: 100%;
 }
 
-/* 示例卡片样式 */
-.example-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+/* 示例论文主题部分 */
+.examples-section {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 15px 20px; /* 减少上下内边距 */
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
-.example-card {
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 16px;
-  cursor: pointer;
-  transition: all 0.2s;
+.section-header {
+  margin-bottom: 12px; /* 减少标题与内容间距 */
   display: flex;
-  align-items: flex-start;
-  border: 1px solid #eee;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.example-card:hover {
-  background-color: #f2f2f2;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-}
-
-.example-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background-color: rgba(186, 0, 63, 0.1);
+.section-title {
+  font-size: 18px;
+  color: #c62828; /* 紫荆红色 */
+  margin: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-right: 12px;
-  flex-shrink: 0;
 }
 
-.example-icon i {
-  font-size: 20px;
+.section-title i {
+  margin-right: 8px;
   color: var(--primary-color, #ba003f);
 }
 
-.example-info {
-  flex: 1;
+/* 修改为网格布局的选择项 */
+.examples-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-top: 15px;
 }
 
-.example-info h4 {
-  font-size: 15px;
-  margin: 0 0 6px;
-  color: #333;
+.example-item {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 1px solid #e0e0e0;
 }
 
-.example-info p {
-  font-size: 12px;
+.example-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #f0f0f0;
+}
+
+.example-item h4 {
+  color: #ba003f;
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+.example-item p {
   color: #666;
   margin: 0;
+  font-size: 14px;
   line-height: 1.4;
 }
 
@@ -704,6 +715,68 @@ export default {
   border-radius: 4px;
   border: 1px solid #eee;
   background-color: #fafafa;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+}
+
+.outline-content pre {
+  background-color: #f6f8fa;
+  border-radius: 3px;
+  padding: 16px;
+  overflow: auto;
+}
+
+.outline-content code {
+  font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
+  font-size: 85%;
+  padding: 0.2em 0.4em;
+  margin: 0;
+  background-color: rgba(27, 31, 35, 0.05);
+  border-radius: 3px;
+}
+
+/* 隐藏原始Markdown源码，但保留用于复制 */
+.markdown-source {
+  display: none;
+}
+
+/* 调整Markdown渲染后的样式 */
+:deep(.markdown-body) {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+:deep(.markdown-body h1) {
+  font-size: 24px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eaecef;
+}
+
+:deep(.markdown-body h2) {
+  font-size: 20px;
+  margin-top: 24px;
+  margin-bottom: 16px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #eaecef;
+}
+
+:deep(.markdown-body h3) {
+  font-size: 16px;
+  margin-top: 20px;
+  margin-bottom: 12px;
+}
+
+:deep(.markdown-body p) {
+  margin-bottom: 12px;
+}
+
+:deep(.markdown-body ul, .markdown-body ol) {
+  padding-left: 20px;
+  margin-bottom: 12px;
+}
+
+:deep(.markdown-body li) {
+  margin-bottom: 4px;
 }
 
 /* 空状态样式 */

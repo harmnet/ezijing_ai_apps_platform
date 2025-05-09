@@ -5,11 +5,18 @@
         <ul>
           <!-- AI对话 -->
           <li class="menu-item" :class="{ active: activePage === 'ai-chat' }">
-            <router-link to="/ai-chat" class="menu-link" @click="setActivePage('ai-chat')" 
-              @mouseenter="showTooltip($event, 'AI对话')" @mouseleave="hideTooltip">
-              <i class="ri-chat-3-line"></i>
-              <span v-if="!isCollapsed" class="menu-text">AI对话</span>
-            </router-link>
+            <div class="menu-group">
+              <router-link to="/ai-chat" class="menu-link" @click="setActivePage('ai-chat')" 
+                @mouseenter="showTooltip($event, 'AI对话')" @mouseleave="hideTooltip">
+                <i class="ri-chat-3-line"></i>
+                <span v-if="!isCollapsed" class="menu-text">AI对话</span>
+              </router-link>
+              <div v-if="!isCollapsed" class="submenu">
+                <router-link to="/ai-chat" class="submenu-link" @click="setActivePage('ai-chat')">
+                  常规对话
+                </router-link>
+              </div>
+            </div>
           </li>
           
           <!-- 提示词工程 -->
@@ -20,13 +27,31 @@
               <span v-if="!isCollapsed" class="menu-text">提示词工程</span>
             </router-link>
           </li>
+
+          <!-- 基础业务场景AI应用实战 -->
+          <li class="menu-item" :class="{ active: activePage === 'practical-scenario' }">
+            <router-link to="/practical-scenario" class="menu-link" @click="setActivePage('practical-scenario')"
+              @mouseenter="showTooltip($event, '基础业务场景AI应用实战')" @mouseleave="hideTooltip">
+              <i class="ri-briefcase-4-line"></i>
+              <span v-if="!isCollapsed" class="menu-text">基础业务场景AI应用实战</span>
+            </router-link>
+          </li>
           
-          <!-- AI应用典型场景 -->
+          <!-- 人工智能应用综合案例集 -->
+          <li class="menu-item" :class="{ active: activePage === 'ai-case-studies' }">
+            <router-link to="/ai-case-studies" class="menu-link" @click="setActivePage('ai-case-studies')"
+              @mouseenter="showTooltip($event, '人工智能应用综合案例集')" @mouseleave="hideTooltip">
+              <i class="ri-book-2-line"></i>
+              <span v-if="!isCollapsed" class="menu-text">人工智能应用综合案例集</span>
+            </router-link>
+          </li>
+          
+          <!-- 企业岗位AI技能地图（原AI应用典型场景，顺序下移） -->
           <li class="menu-item" :class="{ active: activePage === 'ai-scenarios' }">
             <router-link to="/ai-scenarios" class="menu-link" @click="setActivePage('ai-scenarios')"
-              @mouseenter="showTooltip($event, 'AI应用典型场景')" @mouseleave="hideTooltip">
+              @mouseenter="showTooltip($event, '企业岗位AI技能地图')" @mouseleave="hideTooltip">
               <i class="ri-lightbulb-line"></i>
-              <span v-if="!isCollapsed" class="menu-text">AI应用典型场景</span>
+              <span v-if="!isCollapsed" class="menu-text">企业岗位AI技能地图</span>
             </router-link>
           </li>
           
@@ -51,14 +76,14 @@
           <!-- 视频创作中心 -->
           <li class="menu-item" :class="{ active: activePage === 'video-creation' }">
             <router-link to="/video-creation" class="menu-link" @click="setActivePage('video-creation')"
-              @mouseenter="showTooltip($event, '视频创作中心')" @mouseleave="hideTooltip">
+              @mouseenter="showTooltip($event, '音视频创作中心')" @mouseleave="hideTooltip">
               <i class="ri-movie-line"></i>
-              <span v-if="!isCollapsed" class="menu-text">视频创作中心</span>
+              <span v-if="!isCollapsed" class="menu-text">音视频创作中心</span>
             </router-link>
           </li>
           
           <!-- 数字人中心 -->
-          <li class="menu-item" :class="{ active: activePage === 'digital-human' }">
+          <li class="menu-item" :class="{ active: activePage === 'digital-human' }" v-if="false">
             <router-link to="/digital-human" class="menu-link" @click="setActivePage('digital-human')"
               @mouseenter="showTooltip($event, '数字人中心')" @mouseleave="hideTooltip">
               <i class="ri-user-smile-line"></i>
@@ -75,12 +100,30 @@
             </router-link>
           </li>
           
+          <!-- 专业生产力提升中心 -->
+          <li class="menu-item" :class="{ active: activePage === 'productivity-center' }">
+            <router-link to="/productivity-center" class="menu-link" @click="setActivePage('productivity-center')"
+              @mouseenter="showTooltip($event, '专业生产力提升中心')" @mouseleave="hideTooltip">
+              <i class="ri-rocket-line"></i>
+              <span v-if="!isCollapsed" class="menu-text">专业生产力提升中心</span>
+            </router-link>
+          </li>
+          
           <!-- AI基础理论与教学 -->
           <li class="menu-item" :class="{ active: activePage === 'ai-theory' }">
             <router-link to="/ai-theory" class="menu-link" @click="setActivePage('ai-theory')"
               @mouseenter="showTooltip($event, 'AI基础理论与教学')" @mouseleave="hideTooltip">
               <i class="ri-book-open-line"></i>
               <span v-if="!isCollapsed" class="menu-text">AI基础理论与教学</span>
+            </router-link>
+          </li>
+          
+          <!-- AI应用案例智能设计 -->
+          <li class="menu-item" :class="{ active: activePage === 'ai-app-design' }" v-if="false">
+            <router-link to="/ai-app-design" class="menu-link" @click="setActivePage('ai-app-design')"
+              @mouseenter="showTooltip($event, 'AI应用案例智能设计')" @mouseleave="hideTooltip">
+              <i class="ri-apps-line"></i>
+              <span v-if="!isCollapsed" class="menu-text">AI应用案例智能设计</span>
             </router-link>
           </li>
         </ul>
@@ -130,6 +173,11 @@ export default {
         activePage.value = 'ai-chat';
       } else if (path.startsWith('/prompt-engineering')) {
         activePage.value = 'prompt-engineering';
+      } else if (path.includes('/ai-scenarios/marketing-campaign') || 
+                 path.includes('/ai-scenarios/customer-feedback') || 
+                 path.includes('/ai-scenarios/product-requirement')) {
+        // 这些特定的业务场景路径应该对应到"基础业务场景AI应用实战"菜单
+        activePage.value = 'practical-scenario';
       } else if (path.startsWith('/ai-scenarios')) {
         activePage.value = 'ai-scenarios';
       } else if (path.startsWith('/text-creation')) {
@@ -144,6 +192,14 @@ export default {
         activePage.value = 'ai-office';
       } else if (path.startsWith('/ai-theory')) {
         activePage.value = 'ai-theory';
+      } else if (path.startsWith('/ai-case-studies')) {
+        activePage.value = 'ai-case-studies';
+      } else if (path.startsWith('/ai-app-design')) {
+        activePage.value = 'ai-app-design';
+      } else if (path.startsWith('/practical-scenario')) {
+        activePage.value = 'practical-scenario';
+      } else if (path.startsWith('/productivity-center')) {
+        activePage.value = 'productivity-center';
       }
     };
 
@@ -277,5 +333,31 @@ export default {
   border-width: 5px;
   border-style: solid;
   border-color: transparent #333 transparent transparent;
+}
+
+.menu-group {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.submenu {
+  margin-left: 20px;
+  margin-top: 5px;
+  display: flex;
+  flex-direction: column;
+}
+
+.submenu-link {
+  color: var(--text-light);
+  text-decoration: none;
+  font-size: 0.85rem;
+  padding: 5px 0;
+  transition: color var(--transition-speed);
+}
+
+.submenu-link:hover,
+.submenu-link.active {
+  color: var(--primary-color);
 }
 </style> 

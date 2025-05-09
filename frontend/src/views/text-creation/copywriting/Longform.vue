@@ -1,12 +1,13 @@
 <template>
-  <div class="longform-article-page">
+  <div class="longform-article-page text-creation-page">
     <div class="page-header">
       <div class="page-nav">
         <h2>长文章生成</h2>
       </div>
       <div class="page-actions">
-        <button class="action-btn" title="创作小贴士" @click="showTips">
-          <i class="ri-lightbulb-line"></i>
+        <button class="learn-button" title="知识学习" @click="showTips">
+          <i class="ri-book-open-line"></i>
+          知识学习
         </button>
       </div>
     </div>
@@ -235,83 +236,85 @@
           <div class="example-carousel">
             <div class="example-cards" ref="exampleCarousel" :style="{transform: `translateX(${exampleTranslateX}px)`}">
               <div class="example-card" v-for="(example, index) in examples" :key="index" @click="loadExample(example.id)">
-                <div class="example-icon">
-                  <!-- 使用固定的紫荆红色SVG图标，确保一定能显示 -->
-                  <svg v-if="example.id === 'academic1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 学术论文/教育图标 -->
-                    <path d="M12 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
-                    <path d="M3 6h18"></path>
-                    <path d="M8 14h8"></path>
-                    <path d="M8 18h5"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'report1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 经济/报告图标 -->
-                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                    <path d="M8 7l3 3 3-3 3 3"></path>
-                    <path d="M8 11l3 3 3-3 3 3"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'review1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 文学评论图标 -->
-                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'research1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 生物多样性/环保研究图标 -->
-                    <path d="M5 3v4M19 3v4"></path>
-                    <path d="M9 3v4M15 3v4"></path>
-                    <path d="M12 12c.5 5 4 6 4 6-1.5.5-2 1.5-2 1.5.5 1.5 2 1.5 2 1.5-1 1-3.5.5-3.5.5s-2 2-5.5 1.5c0 0 1-1 .5-2 0 0-1 .5-2.5-1 0 0 2.5 0 4-2 1.5-2 3-2 3-6"></path>
-                    <path d="M10.5 8.5c0 1-1 2-2 2-.75 0-1.5-.25-1.5-1S8 8 9 8"></path>
-                    <path d="M13.5 8.5c0 1 1 2 2 2 .75 0 1.5-.25 1.5-1S16 8 15 8"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'tech1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 区块链/技术图标 -->
-                    <path d="M1 8h7M14 8h1.5M8 8h6M1 16h1.5M7 16h2.5M12 16h7"></path>
-                    <path d="M7 8a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-6a2 2 0 0 1-2-2v-8z"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'medical1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 医疗/卫生图标 -->
-                    <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"></path>
-                    <path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"></path>
-                    <path d="M22 10 A2 2 0 0 1 20 12 A2 2 0 0 1 18 10 A2 2 0 0 1 22 10 z"></path>
-                    <path d="M14 13.5V12"></path>
-                    <path d="M10 13.5V13"></path>
-                    <path d="M14 17.5V17"></path>
-                    <path d="M10 17.5V17"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'history1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 历史/文化图标 -->
-                    <path d="M12 8L7 13M12 8L17 13M12 8V20M4 19V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14"></path>
-                    <path d="M3 19h18"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'philosophy1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 哲学/思想图标 -->
-                    <path d="M2 12h5M9 12h5M16 12h5"></path>
-                    <path d="M12 2v20"></path>
-                    <path d="M8 17a5 5 0 1 0 8 0"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'marketing1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 营销/社交媒体图标 -->
-                    <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'psychology1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 心理学/心理健康图标 -->
-                    <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"></path>
-                    <path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-1"></path>
-                    <path d="M18 8a6 6 0 0 0-6-6 6 6 0 0 0-6 6"></path>
-                    <path d="M12 9v6"></path>
-                    <path d="M9 12h6"></path>
-                  </svg>
-                  <svg v-else xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 默认文档图标 -->
-                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                  </svg>
-                </div>
-                <div class="example-info">
-                  <span class="example-title">{{example.title}}</span>
-                  <span class="example-desc">{{example.type}}</span>
+                <div class="example-card-header">
+                  <div class="example-icon">
+                    <!-- 使用固定的紫荆红色SVG图标，确保一定能显示 -->
+                    <svg v-if="example.id === 'academic1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 学术论文/教育图标 -->
+                      <path d="M12 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                      <path d="M3 6h18"></path>
+                      <path d="M8 14h8"></path>
+                      <path d="M8 18h5"></path>
+                    </svg>
+                    <svg v-else-if="example.id === 'report1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 经济/报告图标 -->
+                      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                      <path d="M8 7l3 3 3-3 3 3"></path>
+                      <path d="M8 11l3 3 3-3 3 3"></path>
+                    </svg>
+                    <svg v-else-if="example.id === 'review1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 文学评论图标 -->
+                      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                    </svg>
+                    <svg v-else-if="example.id === 'research1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 生物多样性/环保研究图标 -->
+                      <path d="M5 3v4M19 3v4"></path>
+                      <path d="M9 3v4M15 3v4"></path>
+                      <path d="M12 12c.5 5 4 6 4 6-1.5.5-2 1.5-2 1.5.5 1.5 2 1.5 2 1.5-1 1-3.5.5-3.5.5s-2 2-5.5 1.5c0 0 1-1 .5-2 0 0-1 .5-2.5-1 0 0 2.5 0 4-2 1.5-2 3-2 3-6"></path>
+                      <path d="M10.5 8.5c0 1-1 2-2 2-.75 0-1.5-.25-1.5-1S8 8 9 8"></path>
+                      <path d="M13.5 8.5c0 1 1 2 2 2 .75 0 1.5-.25 1.5-1S16 8 15 8"></path>
+                    </svg>
+                    <svg v-else-if="example.id === 'tech1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 区块链/技术图标 -->
+                      <path d="M1 8h7M14 8h1.5M8 8h6M1 16h1.5M7 16h2.5M12 16h7"></path>
+                      <path d="M7 8a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-6a2 2 0 0 1-2-2v-8z"></path>
+                    </svg>
+                    <svg v-else-if="example.id === 'medical1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 医疗/卫生图标 -->
+                      <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"></path>
+                      <path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"></path>
+                      <path d="M22 10 A2 2 0 0 1 20 12 A2 2 0 0 1 18 10 A2 2 0 0 1 22 10 z"></path>
+                      <path d="M14 13.5V12"></path>
+                      <path d="M10 13.5V13"></path>
+                      <path d="M14 17.5V17"></path>
+                      <path d="M10 17.5V17"></path>
+                    </svg>
+                    <svg v-else-if="example.id === 'history1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 历史/文化图标 -->
+                      <path d="M12 8L7 13M12 8L17 13M12 8V20M4 19V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14"></path>
+                      <path d="M3 19h18"></path>
+                    </svg>
+                    <svg v-else-if="example.id === 'philosophy1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 哲学/思想图标 -->
+                      <path d="M2 12h5M9 12h5M16 12h5"></path>
+                      <path d="M12 2v20"></path>
+                      <path d="M8 17a5 5 0 1 0 8 0"></path>
+                    </svg>
+                    <svg v-else-if="example.id === 'marketing1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 营销/社交媒体图标 -->
+                      <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"></path>
+                    </svg>
+                    <svg v-else-if="example.id === 'psychology1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 心理学/心理健康图标 -->
+                      <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"></path>
+                      <path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-1"></path>
+                      <path d="M18 8a6 6 0 0 0-6-6 6 6 0 0 0-6 6"></path>
+                      <path d="M12 9v6"></path>
+                      <path d="M9 12h6"></path>
+                    </svg>
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 默认文档图标 -->
+                      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                  </div>
+                  <div class="example-info">
+                    <span class="example-title">{{example.title}}</span>
+                    <span class="example-desc">{{example.type}}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -351,42 +354,96 @@
             
             <div v-if="!generatedNote && !isGenerating" class="empty-result">
               <div class="empty-content">
-                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgZmlsbC1vcGFjaXR5PSIuMDgiIGZpbGw9IiNEOEQ4RDgiIGN4PSI2NCIgY3k9IjY0IiByPSI2NCIvPjxwYXRoIGQ9Ik00MS41OTkgNDkuODhjMS4xIDAgMiAuOSAyIDJ2MzIuMjRjMCAxLjEtLjkgMi0yIDJoLTguOTdhLjk3Ljk3IDAgMDEtLjk1LS45NSAwIDAgMCAwLS4wNCAwIDAgMCAwLS4wM3YtMjkuNTFjMC0xLjk5IDEuNjItMy42MiAzLjYyLTMuNjJsMCAwUTQxLjU5OCA0OS44OTggNDEuNTk5IDQ5Ljg4ek04Ni4wNyA0OS44OGMxLjEgMCAyIC45IDIgMnYzMi4yNGMwIDEuMS0uOSAyLTIgMmgtOC45N3MtLjk2LS43OS0uOTYtLjk2VjUyLjgyYzAtMS42MiAxLjMyLTIuOTUgMi45NS0yLjk1bDAgMGg2Ljk4ek02NC4wNyA0Ni44M2MxLjMxIDAgMi4zNyAxLjA2IDIuMzcgMi4zN3YzNC44OGMwIDEuMzEtMS4wNiAyLjM3LTIuMzcgMi4zN2gtOS43YTIuMzcgMi4zNyAwIDAxLTIuMzctMi4zN1Y0OS4yYzAtMS4zMSAxLjA2LTIuMzcgMi4zNy0yLjM3bDAgMGg5LjciIGZpbGw9IiNFMUUxRTEiLz48cGF0aCBkPSJNMzIuNjMgNjkuNzVjMCAyLjYgMi4xMSA0LjcxIDQuNzEgNC43MXMyLjYtMi4xMSA0LjctNC43MS0yLjExLTQuNzEtNC43LTQuNzEtNC43MSAyLjExLTQuNzEgNC43MXpNODcuMDMgNjkuNzVjMCAyLjYtMi4xMSA0LjcxLTQuNzEgNC43MXMtNC43MS0yLjExLTQuNzEtNC43MSAyLjExLTQuNzEgNC43MS00LjcxIDQuNzEgMi4xMSA0LjcxIDQuNzF6TTY0LjQgNjcuMzhjMCAzLjczLTMuMDIgNi43NS02Ljc1IDYuNzVzLTYuNzYtMy4wMi02Ljc2LTYuNzUgMy4wMy02Ljc2IDYuNzYtNi43NiA2Ljc1IDMuMDMgNi43NSA2Ljc2eiIgZmlsbD0iI0JBMDA0MCIgZmlsbC1vcGFjaXR5PSIuNSIvPjwvZz48L3N2Zz4=" class="empty-image" alt="暂无数据" />
+                <img src="@/assets/images/no_data.png" class="empty-image" alt="暂无数据" />
                 <p class="empty-message">暂无长文内容，请点击"生成长文"按钮开始创作</p>
               </div>
             </div>
             
             <div v-else-if="generatedNote" class="note-result" :class="{'blur-content': isGenerating}">
-              <textarea v-model="generatedNote" class="result-textarea" readonly></textarea>
+              <!-- 移除原始的textarea展示 -->
+              <!-- <textarea v-model="generatedNote" class="result-textarea" readonly></textarea> -->
+              
+              <!-- 模拟Word文档界面 -->
+              <div class="word-document">
+                <div class="word-toolbar">
+                  <div class="toolbar-group">
+                    <button class="toolbar-btn" title="保存为PDF" @click="saveAsPdf">
+                      <i class="ri-file-pdf-line"></i>
+                    </button>
+                    <button class="toolbar-btn" title="打印文档" @click="printDocument">
+                      <i class="ri-printer-line"></i>
+                    </button>
+                  </div>
+                  <div class="toolbar-group">
+                    <button class="toolbar-btn" title="粗体" @click="applyFormat('bold')">
+                      <i class="ri-bold"></i>
+                    </button>
+                    <button class="toolbar-btn" title="斜体" @click="applyFormat('italic')">
+                      <i class="ri-italic"></i>
+                    </button>
+                    <button class="toolbar-btn" title="下划线" @click="applyFormat('underline')">
+                      <i class="ri-underline"></i>
+                    </button>
+                  </div>
+                  <div class="toolbar-group">
+                    <button class="toolbar-btn" title="左对齐" @click="applyAlign('left')">
+                      <i class="ri-align-left"></i>
+                    </button>
+                    <button class="toolbar-btn" title="居中对齐" @click="applyAlign('center')">
+                      <i class="ri-align-center"></i>
+                    </button>
+                    <button class="toolbar-btn" title="右对齐" @click="applyAlign('right')">
+                      <i class="ri-align-right"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="word-page">
+                  <div class="word-content">
+                    <div v-html="wordFormattedContent"></div>
+                  </div>
+                  <!-- 添加页脚和页码 -->
+                  <div class="word-footer">
+                    <div class="word-page-number">第 1 页</div>
+                    <div class="word-document-title">{{ noteTitle || '长文章' }}</div>
+                  </div>
+                </div>
+                <!-- 添加状态栏 -->
+                <div class="word-statusbar">
+                  <div class="word-statusbar-item">100%</div>
+                  <div class="word-statusbar-item">编辑</div>
+                  <div class="word-statusbar-item">
+                    <i class="ri-check-line"></i> 已保存
+                  </div>
+                  <div class="word-statusbar-item">
+                    {{ new Date().toLocaleDateString('zh-CN') }}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
     
-    <!-- 创作小贴士模态框 -->
-    <div class="modal" v-if="showTipsModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3><i class="ri-lightbulb-line"></i> 创作小贴士</h3>
-          <button class="close-btn" @click="showTipsModal = false">
-            <i class="ri-close-line"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <ul class="tips-list">
-            <li>📄 标题要明确 - 使用具体、明确的标题，能够准确传达文章的主题和焦点</li>
-            <li>📚 合理结构 - 良好的文章结构包括引言、主体和结论，有助于读者理解文章内容</li>
-            <li>🔍 深入研究 - 进行充分的研究和资料收集，确保论点有可靠的支持</li>
-            <li>📑 清晰论点 - 确保每个段落都有明确的中心思想，并与整体论点相关</li>
-            <li>🧩 逻辑连贯 - 使用适当的过渡词和连接词，确保段落之间和观点之间的逻辑连贯</li>
-            <li>📊 数据支持 - 使用相关数据、统计资料和引用来支持你的论点</li>
-            <li>✍️ 语言精准 - 使用准确、专业的术语和表达方式，避免模糊不清的描述</li>
-            <li>🔄 修改完善 - 写完初稿后进行多次修改，关注语法、拼写、逻辑和结构</li>
-          </ul>
+    <!-- 替换为知识学习抽屉组件 -->
+    <el-drawer
+      v-model="showTipsModal"
+      title="AI长文档编写知识指南"
+      direction="rtl"
+      size="30%"
+      :destroy-on-close="false"
+      class="knowledge-drawer"
+    >
+      <div class="knowledge-content">
+        <div v-for="(item, index) in aiLongformKnowledge" :key="index" class="knowledge-section">
+          <h3 class="knowledge-subtitle">
+            <i :class="item.icon" class="knowledge-icon"></i>
+            {{ item.subtitle }}
+          </h3>
+          <div class="knowledge-text" v-html="formatMarkdown(item.text)"></div>
         </div>
       </div>
-    </div>
+    </el-drawer>
 
     <!-- 提示词模态框 -->
     <div class="modal" v-if="showPromptModal">
@@ -420,232 +477,78 @@
 
 <script>
 import axios from 'axios';
+import { longformExamples, longformExampleData } from '@/views/example_data.js';
+import { documentStructureKnowledge, aiLongformKnowledge } from '@/views/Knowledge_data.js';
+import '@/assets/css/text-creation-common.css'; // 引入统一CSS样式文件
+import { ElDrawer } from 'element-plus';
 
 export default {
   name: 'Longform',
+  components: {
+    ElDrawer
+  },
   data() {
     return {
-      // 表单数据
+      // 输入参数
       noteType: 'product-review',
       noteTitle: '',
       targetAudience: '',
       description: '',
-      writingStyle: 'friendly',
+      writingStyle: 'professional',
       contentType: 'informative',
       articleLength: 'medium',
       citationStandard: 'none',
       keywords: '',
-      specialRequirements: '',
-      
-      // 内容元素选项
-      includeAbstract: true,
-      includeTableOfContents: true,
+      includeAbstract: false,
+      includeTableOfContents: false,
       includeIntroduction: true,
       includeMethodology: false,
       includeLiteratureReview: false,
-      includeAnalysis: true,
-      includeResults: true,
+      includeAnalysis: false,
+      includeResults: false,
       includeConclusion: true,
       includeReferences: false,
       includeAppendix: false,
+      specialRequirements: '',
       
-      // 结果内容
-      isGenerating: false,
-      loadingText: '正在生成长文内容，请耐心等待...',
-      generatedNote: '',
-      lastUsedPrompt: null,
+      // 使用导入的案例数据替换自定义的对象
+      exampleData: longformExampleData,
       
-      // 模态框控制
-      showTipsModal: false,
-      showPromptModal: false,
-      
-      // 模型选择 - 默认使用火山引擎V3
+      // 模型选择
       selectedModel: 'deepseek-v3-vol',
-      modelList: [],
-      
-      // 轮播控制
-      currentExampleIndex: 0,
-      exampleTranslateX: 0,
-      isLastPage: false,
-      
-      // 示例数据
-      examples: [
-        { id: 'academic1', title: '人工智能在教育领域的应用前景', type: '学术论文', icon: 'ri-article-line' },
-        { id: 'report1', title: '2023年全球经济发展趋势报告', type: '商业报告', icon: 'ri-bar-chart-line' },
-        { id: 'review1', title: '文学作品分析：《百年孤独》的叙事结构', type: '文学评论', icon: 'ri-book-open-line' },
-        { id: 'research1', title: '气候变化对生物多样性的影响研究', type: '研究论文', icon: 'ri-leaf-line' },
-        { id: 'tech1', title: '区块链技术在供应链管理中的应用', type: '技术分析', icon: 'ri-link-m-line' },
-        { id: 'medical1', title: '新冠疫情后的全球公共卫生体系建设', type: '医学论文', icon: 'ri-heart-pulse-line' },
-        { id: 'history1', title: '丝绸之路与东西方文化交流', type: '历史研究', icon: 'ri-road-map-line' },
-        { id: 'philosophy1', title: '东西方哲学思想比较研究', type: '哲学论文', icon: 'ri-mind-map-line' },
-        { id: 'marketing1', title: '社交媒体时代的品牌营销策略', type: '营销分析', icon: 'ri-advertisement-line' },
-        { id: 'psychology1', title: '童年创伤对成人心理健康的长期影响', type: '心理学研究', icon: 'ri-psychotherapy-line' }
+      modelList: [
+        { id: 'deepseek-v3-vol', name: 'DeepSeek-V3' },
+        { id: 'llama3-8b', name: 'Llama3-8B' },
+        { id: 'qwen-max', name: 'Qwen-Max' }
       ],
       
-      // 示例数据模板
-      exampleData: {
-        'academic1': {
-          noteType: 'product-review',
-          noteTitle: '人工智能在教育领域的应用前景',
-          targetAudience: '教育工作者、教育技术研究人员、政策制定者',
-          description: '探讨人工智能技术在教育领域的当前应用状况、潜在发展方向及可能带来的教育变革',
-          writingStyle: 'professional',
-          contentType: 'informative',
-          articleLength: 'long',
-          citationStandard: 'apa',
-          includeAbstract: true,
-          includeTableOfContents: true,
-          includeIntroduction: true,
-          includeMethodology: true,
-          includeLiteratureReview: true,
-          includeAnalysis: true,
-          includeReferences: true
-        },
-        'report1': {
-          noteType: 'lifestyle',
-          noteTitle: '2023年全球经济发展趋势报告',
-          targetAudience: '企业决策者、投资者、经济学研究人员',
-          description: '分析2023年全球经济形势、主要经济体表现、新兴市场变化及未来发展预测',
-          writingStyle: 'professional',
-          contentType: 'informative',
-          articleLength: 'long',
-          citationStandard: 'mla',
-          includeAbstract: true,
-          includeTableOfContents: true,
-          includeIntroduction: true,
-          includeAnalysis: true,
-          includeConclusion: true
-        },
-        'review1': {
-          noteType: 'travel',
-          noteTitle: '文学作品分析：《百年孤独》的叙事结构',
-          targetAudience: '文学爱好者、文学研究者、大学生',
-          description: '分析加西亚·马尔克斯《百年孤独》中的叙事手法、时间结构及魔幻现实主义表现',
-          writingStyle: 'professional',
-          contentType: 'argumentative',
-          articleLength: 'medium',
-          citationStandard: 'mla',
-          includeAbstract: false,
-          includeIntroduction: true,
-          includeLiteratureReview: true,
-          includeAnalysis: true,
-          includeConclusion: true,
-          includeReferences: true
-        },
-        'research1': {
-          noteType: 'lifestyle',
-          noteTitle: '气候变化对生物多样性的影响研究',
-          targetAudience: '环保工作者、生物学研究人员、政策制定者',
-          description: '研究全球气候变化对不同生态系统中生物多样性的影响、应对策略及未来挑战',
-          writingStyle: 'professional',
-          contentType: 'informative',
-          articleLength: 'long',
-          citationStandard: 'apa',
-          includeAbstract: true,
-          includeTableOfContents: true,
-          includeIntroduction: true,
-          includeMethodology: true,
-          includeResults: true,
-          includeAnalysis: true,
-          includeConclusion: true,
-          includeReferences: true
-        },
-        'tech1': {
-          noteType: 'fashion',
-          noteTitle: '区块链技术在供应链管理中的应用',
-          targetAudience: '企业技术主管、供应链管理人员、IT从业者',
-          description: '探讨区块链技术如何改善供应链透明度、追溯性和效率，分析实施案例和未来发展',
-          writingStyle: 'professional',
-          contentType: 'informative',
-          articleLength: 'medium',
-          citationStandard: 'harvard',
-          includeAbstract: true,
-          includeIntroduction: true,
-          includeAnalysis: true,
-          includeConclusion: true
-        },
-        'medical1': {
-          noteType: 'beauty',
-          noteTitle: '新冠疫情后的全球公共卫生体系建设',
-          targetAudience: '公共卫生专业人士、政策制定者、医疗工作者',
-          description: '分析新冠疫情暴露的全球公共卫生体系问题、各国应对措施及未来体系建设方向',
-          writingStyle: 'professional',
-          contentType: 'argumentative',
-          articleLength: 'long',
-          citationStandard: 'apa',
-          includeAbstract: true,
-          includeTableOfContents: true,
-          includeIntroduction: true,
-          includeLiteratureReview: true,
-          includeAnalysis: true,
-          includeConclusion: true,
-          includeReferences: true
-        },
-        'history1': {
-          noteType: 'travel',
-          noteTitle: '丝绸之路与东西方文化交流',
-          targetAudience: '历史爱好者、文化研究学者、大学生',
-          description: '考察丝绸之路的历史发展、贸易路线及其对东西方文化、艺术、宗教等方面的影响',
-          writingStyle: 'professional',
-          contentType: 'narrative',
-          articleLength: 'long',
-          citationStandard: 'chicago',
-          includeAbstract: true,
-          includeIntroduction: true,
-          includeAnalysis: true,
-          includeConclusion: true,
-          includeReferences: true
-        },
-        'philosophy1': {
-          noteType: 'lifestyle',
-          noteTitle: '东西方哲学思想比较研究',
-          targetAudience: '哲学研究者、文化爱好者、大学生',
-          description: '比较分析东西方主要哲学流派的核心思想、价值观念和世界观差异及其文化根源',
-          writingStyle: 'professional',
-          contentType: 'argumentative',
-          articleLength: 'long',
-          citationStandard: 'mla',
-          includeAbstract: true,
-          includeTableOfContents: true,
-          includeIntroduction: true,
-          includeLiteratureReview: true,
-          includeAnalysis: true,
-          includeConclusion: true,
-          includeReferences: true
-        },
-        'marketing1': {
-          noteType: 'product-review',
-          noteTitle: '社交媒体时代的品牌营销策略',
-          targetAudience: '市场营销人员、品牌管理者、企业决策者',
-          description: '分析社交媒体环境下品牌营销的新特点、成功案例及有效策略',
-          writingStyle: 'professional',
-          contentType: 'informative',
-          articleLength: 'medium',
-          citationStandard: 'apa',
-          includeAbstract: true,
-          includeIntroduction: true,
-          includeAnalysis: true,
-          includeConclusion: true
-        },
-        'psychology1': {
-          noteType: 'lifestyle',
-          noteTitle: '童年创伤对成人心理健康的长期影响',
-          targetAudience: '心理健康工作者、社会工作者、心理学研究人员',
-          description: '研究童年期创伤经历对成人心理健康状况的影响机制、表现形式及干预策略',
-          writingStyle: 'professional',
-          contentType: 'informative',
-          articleLength: 'long',
-          citationStandard: 'apa',
-          includeAbstract: true,
-          includeTableOfContents: true,
-          includeIntroduction: true,
-          includeMethodology: true,
-          includeResults: true,
-          includeAnalysis: true,
-          includeConclusion: true,
-          includeReferences: true
-        }
-      }
+      // 生成结果
+      generatedNote: '',
+      isGenerating: false,
+      loadingText: '正在生成长文，请稍候...',
+      loadingTexts: [
+        '正在构思文章结构...',
+        '正在整理关键信息...',
+        '正在润色语言表达...',
+        '正在完善内容细节...',
+        '正在进行最终检查...'
+      ],
+      loadingInterval: null,
+      lastUsedPrompt: null,
+      
+      // 提示词模态框
+      showPromptModal: false,
+      
+      // 知识学习模态框
+      showTipsModal: false,
+      aiLongformKnowledge: aiLongformKnowledge,
+      
+      // 案例轮播
+      examples: longformExamples,
+      currentExampleIndex: 0,
+      exampleTranslateX: 0,
+      carouselItemWidth: 0,
+      isLastPage: false
     };
   },
   mounted() {
@@ -665,6 +568,11 @@ export default {
       
       // 当滚动到最大滚动距离的90%以上时，认为是最后一页
       return Math.abs(this.exampleTranslateX) >= maxScrollX * 0.9;
+    },
+    // Word风格的格式化内容
+    wordFormattedContent() {
+      if (!this.generatedNote) return '';
+      return this.parseMarkdown(this.generatedNote);
     }
   },
   methods: {
@@ -677,20 +585,25 @@ export default {
         console.log('获取模型列表响应:', response.data);
         
         if (response.data && response.data.status === 'success') {
-          // 不做过滤，获取所有可用模型
-          this.modelList = response.data.data || [];
-          console.log('可用模型列表:', this.modelList);
+          // 过滤模型，只保留火山引擎和豆包模型
+          const allModels = response.data.data || [];
+          this.modelList = allModels.filter(model => 
+            model.id.includes('vol') || // 火山引擎模型
+            model.id === 'doubao'      // 豆包模型
+          );
+          
+          console.log('过滤后的可用模型列表:', this.modelList);
           
           // 如果没有模型，添加默认模型
           if (this.modelList.length === 0) {
             console.log('未找到可用模型，使用默认模型');
-            this.modelList.push({ id: 'deepseek-v3-vol', name: '火山引擎 DeepSeek V3' });
+            this.setupDefaultModels();
           }
           
           // 默认选择火山引擎V3或第一个可用模型
           if (!this.selectedModel) {
-            const volcanoModel = this.modelList.find(model => model.id === 'deepseek-v3-vol');
-            this.selectedModel = volcanoModel ? volcanoModel.id : (this.modelList[0] ? this.modelList[0].id : 'deepseek-v3-vol');
+            const volcanoV3Model = this.modelList.find(model => model.id === 'deepseek-v3-vol');
+            this.selectedModel = volcanoV3Model ? volcanoV3Model.id : (this.modelList[0] ? this.modelList[0].id : 'deepseek-v3-vol');
             console.log('已选择模型:', this.selectedModel);
           }
         } else {
@@ -711,13 +624,11 @@ export default {
     setupDefaultModels() {
       console.log('使用默认模型列表');
       this.modelList = [
-        { id: 'deepseek-v3-vol', name: '火山引擎 DeepSeek V3' },
-        { id: 'deepseek-r1-vol', name: 'DeepSeek-R1（火山引擎）' },
-        { id: 'deepseek-r1-sf', name: 'DeepSeek-R1（硅基流动）' },
-        { id: 'deepseek-v3-sf', name: 'DeepSeek-V3（硅基流动）' },
-        { id: 'qwq-32b', name: '通义千问-32B（硅基流动）' }
+        { id: 'deepseek-v3', name: '火山引擎 DeepSeek V3' },
+        { id: 'deepseek-r1-vol', name: '火山引擎 DeepSeek R1' },
+        { id: 'doubao', name: '豆包' }
       ];
-      this.selectedModel = 'deepseek-v3-vol';
+      this.selectedModel = 'deepseek-v3';
     },
     
     // 生成长文的方法
@@ -733,111 +644,127 @@ export default {
       try {
         // 构建提示词
         const prompt = this.generatePrompt();
+        console.log('完整提示词:', prompt);
         
-        // 构建API请求
-        const systemMessage = "你是一位专业的学术文章和长文创作专家，能够根据用户要求创作出结构清晰、内容专业的高质量长文。";
-        const userMessage = prompt;
-        
-        const apiMessages = [
-          { role: "system", content: systemMessage },
-          { role: "user", content: userMessage }
+        // 保存提示词以便之后查看
+        this.lastUsedPrompt = [
+          { role: "system", content: "你是一位专业的学术文章和长文创作专家，能够根据用户要求创作出结构清晰、内容专业的高质量长文。" },
+          { role: "user", content: prompt }
         ];
-        
-        // 保存apiMessages供后续显示
-        this.lastUsedPrompt = apiMessages;
         
         this.loadingText = '正在生成长文内容，请耐心等待...';
         
         // 确保选择了模型
         if (!this.selectedModel) {
-          this.selectedModel = 'deepseek-v3-vol';
+          this.selectedModel = 'deepseek-v3';
           console.log('未选择模型，已自动选择默认模型');
         }
         
-        // 调用API (增加timeout和重试逻辑)
-        console.log('开始调用API，模型:', this.selectedModel);
+        // 将模型 deepseek-v3-vol 转换为 deepseek-v3（适配新API）
+        let apiModel = this.selectedModel;
+        if (apiModel === 'deepseek-v3-vol') {
+          apiModel = 'deepseek-v3';
+        }
         
-        let maxRetries = 2;
-        let retryCount = 0;
-        let response;
+        console.log('使用API模型:', apiModel);
         
-        while (retryCount <= maxRetries) {
-          try {
-            if (retryCount > 0) {
-              this.loadingText = `正在重试生成 (${retryCount}/${maxRetries})...`;
-              console.log(`尝试第${retryCount}次重试...`);
-            }
-            
-            response = await axios.post('/api/v1/llm/chat', {
-              model: this.selectedModel,
-              messages: apiMessages,
-              temperature: 0.7,
-              top_p: 0.95,
-              max_tokens: 4000
-            }, { 
-              timeout: 60000 // 设置60秒超时
-            });
-            
-            // 如果成功获取响应，跳出重试循环
+        // 准备API参数
+        const messages = [{ role: 'user', content: prompt }];
+        
+        // 构建API请求参数
+        const apiParams = {
+          model: apiModel,
+          messages: messages,
+          stream: true,
+          temperature: 0.7,
+          max_tokens: 4000
+        };
+        
+        console.log('API请求参数:', JSON.stringify(apiParams));
+        
+        // 发送流式请求
+        const response = await fetch('/api/v1/v1/deepseek_volcano/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream'
+          },
+          body: JSON.stringify(apiParams)
+        });
+        
+        console.log('收到响应, 状态码:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`服务器返回错误: ${response.status}`);
+        }
+        
+        // 处理流式响应
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        
+        // 读取流数据
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) {
+            console.log('流式响应完成');
             break;
-          } catch (error) {
-            console.error(`API调用失败 (尝试 ${retryCount+1}/${maxRetries+1}):`, error.message);
-            
-            if (retryCount === maxRetries) {
-              // 所有重试都失败了，抛出最后一个错误
-              throw error;
+          }
+          
+          // 解码二进制数据
+          const decoded = decoder.decode(value, { stream: true });
+          buffer += decoded;
+          
+          // 处理收到的数据
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop() || '';
+          
+          for (const line of lines) {
+            if (line.trim() === '') continue;
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') {
+                console.log('收到结束标志');
+                continue;
+              }
+              
+              try {
+                const parsed = JSON.parse(data);
+                
+                // 处理错误消息
+                if (parsed.error) {
+                  console.error("API错误:", parsed.error);
+                  throw new Error(parsed.error.message || '生成文案失败');
+                }
+                
+                // 处理火山引擎返回的delta格式数据
+                if (parsed.choices && parsed.choices.length > 0 && parsed.choices[0].delta) {
+                  const delta = parsed.choices[0].delta;
+                  
+                  // 处理内容增量
+                  if (delta.content) {
+                    // 累加收到的内容
+                    this.generatedNote += delta.content;
+                    // 添加自动滚动到最新内容
+                    this.$nextTick(() => {
+                      this.scrollToLatestContent();
+                    });
+                  }
+                }
+              } catch (e) {
+                console.error('解析流式数据失败:', e, data);
+              }
             }
-            
-            // 增加重试次数并继续
-            retryCount++;
-            // 等待一段时间再重试 (1秒)
-            await new Promise(resolve => setTimeout(resolve, 1000));
           }
         }
         
-        // 日志记录API响应状态
-        console.log('API响应状态:', response.status);
-        console.log('API响应数据:', response.data);
+        console.log('成功获取长文内容');
+        // 添加成功提示
+        this.$message ? this.$message.success('长文生成成功！') : alert('长文生成成功！');
         
-        if (response.data && response.data.status === 'success') {
-          // 从响应中提取生成的内容
-          let content = '';
-          
-          if (response.data.data && response.data.data.choices && response.data.data.choices.length > 0) {
-            // 火山引擎格式
-            const message = response.data.data.choices[0].message;
-            content = message.content || '';
-            console.log('使用火山引擎响应格式');
-          } else if (response.data.data && response.data.data.response) {
-            // 硅基流动格式
-            content = response.data.data.response || '';
-            console.log('使用硅基流动响应格式');
-          } else if (response.data.data && typeof response.data.data === 'string') {
-            // 直接返回字符串
-            content = response.data.data;
-            console.log('使用字符串响应格式');
-          } else if (response.data.content) {
-            // 直接包含在内容字段
-            content = response.data.content;
-            console.log('使用content字段响应格式');
-          }
-          
-          if (content) {
-            this.generatedNote = content;
-            console.log('成功获取长文内容');
-            // 添加成功提示
-            this.$message ? this.$message.success('长文生成成功！') : alert('长文生成成功！');
-          } else {
-            console.error('API返回成功，但无法提取内容:', response.data);
-            throw new Error('无法从API响应中提取内容');
-          }
-        } else {
-          // 处理API响应不成功的情况
-          console.error('API返回不成功状态:', response.data);
-          throw new Error(response.data?.message || '服务器返回错误');
-        }
       } catch (error) {
-        console.error('生成长文出错，详细错误:', error);
+        console.error(`API调用失败:`, error);
         
         // 更详细的错误日志
         if (error.response) {
@@ -1012,21 +939,21 @@ export default {
       this.keywords = '';
       this.specialRequirements = '';
       
-      this.includeAbstract = true;
-      this.includeTableOfContents = true;
-      this.includeIntroduction = true;
+      this.includeAbstract = false;
+      this.includeTableOfContents = false;
+      this.includeIntroduction = false;
       this.includeMethodology = false;
       this.includeLiteratureReview = false;
-      this.includeAnalysis = true;
-      this.includeResults = true;
-      this.includeConclusion = true;
+      this.includeAnalysis = false;
+      this.includeResults = false;
+      this.includeConclusion = false;
       this.includeReferences = false;
       this.includeAppendix = false;
       
       this.generatedNote = '';
     },
     
-    // 显示创作小贴士
+    // 显示知识学习内容
     showTips() {
       this.showTipsModal = true;
     },
@@ -1123,6 +1050,13 @@ export default {
     
     // 加载示例数据
     loadExample(exampleId) {
+      // 确保exampleData和对应的示例ID存在
+      if (!this.exampleData || !this.exampleData[exampleId]) {
+        console.error(`案例数据不存在: ${exampleId}`);
+        this.$message ? this.$message.error(`案例数据不存在: ${exampleId}`) : alert(`案例数据不存在: ${exampleId}`);
+        return;
+      }
+      
       const example = this.exampleData[exampleId];
       if (example) {
         this.noteType = example.noteType;
@@ -1146,808 +1080,283 @@ export default {
         this.includeReferences = example.includeReferences || false;
         this.includeAppendix = example.includeAppendix || false;
       }
-    }
+    },
+    
+    // 将markdown转换为Word样式的HTML内容
+    parseMarkdown(markdown) {
+      if (!markdown) return '';
+      
+      // 提取文档标题（如果存在）
+      let documentTitle = this.noteTitle || '长文章';
+      let contentWithoutTitle = markdown;
+      
+      // 检查第一行是否是一级标题
+      const titleMatch = markdown.match(/^# (.+)$/m);
+      if (titleMatch) {
+        documentTitle = titleMatch[1];
+        // 移除第一个标题，稍后会在封面添加
+        contentWithoutTitle = markdown.replace(/^# .+$/m, '');
+      }
+      
+      // 创建封面
+      let html = `
+        <div class="word-cover">
+          <div class="word-cover-title">${documentTitle}</div>
+          <div class="word-cover-subtitle">${this.getNoteTypeName()} - ${this.getContentTypeName()}</div>
+          <div class="word-cover-date">${new Date().toLocaleDateString('zh-CN')}</div>
+          <div class="word-cover-author">AI助手生成</div>
+        </div>
+        <div class="word-page-break"></div>
+      `;
+      
+      // 处理正文内容
+      html += contentWithoutTitle
+        // 处理一级标题
+        .replace(/^# (.*$)/gm, '<div class="word-heading word-heading-1">$1</div>')
+        // 处理二级标题
+        .replace(/^## (.*$)/gm, '<div class="word-heading word-heading-2">$1</div>')
+        // 处理三级标题
+        .replace(/^### (.*$)/gm, '<div class="word-heading word-heading-3">$1</div>')
+        // 处理四级标题
+        .replace(/^#### (.*$)/gm, '<div class="word-heading word-heading-4">$1</div>')
+        // 处理无序列表
+        .replace(/^[\*\-] (.*$)/gm, '<div class="word-list-item"><span class="word-bullet">•</span>$1</div>')
+        // 处理带编号的列表
+        .replace(/^(\d+)\. (.*$)/gm, '<div class="word-list-item"><span class="word-number">$1.</span>$2</div>')
+        // 处理粗体
+        .replace(/\*\*(.*?)\*\*/g, '<span class="word-bold">$1</span>')
+        // 处理斜体
+        .replace(/\*(.*?)\*/g, '<span class="word-italic">$1</span>')
+        // 处理代码块
+        .replace(/```([\s\S]*?)```/g, '<div class="word-code-block">$1</div>')
+        // 处理行内代码
+        .replace(/`(.*?)`/g, '<span class="word-inline-code">$1</span>')
+        // 处理分隔线
+        .replace(/^---$/gm, '<hr class="word-hr">')
+        // 处理引用块
+        .replace(/^> (.*$)/gm, '<div class="word-blockquote">$1</div>')
+        // 处理普通段落：找到不是标题和列表项的内容行
+        .replace(/^(?!#|[\*\-]|\d+\.|>)(.+)$/gm, '<div class="word-paragraph">$1</div>')
+        // 处理空行
+        .replace(/^\s*$/gm, '<div class="word-paragraph-spacing"></div>');
+
+      return html;
+    },
+    
+    // 获取长文类型的中文名称
+    getNoteTypeName() {
+      switch (this.noteType) {
+        case 'product-review': return '产品测评';
+        case 'lifestyle': return '生活方式';
+        case 'travel': return '旅行游记';
+        case 'food': return '美食分享';
+        case 'fashion': return '穿搭分享';
+        case 'beauty': return '美妆心得';
+        default: return this.noteType;
+      }
+    },
+    
+    // 获取内容类型的中文名称
+    getContentTypeName() {
+      switch (this.contentType) {
+        case 'informative': return '信息类';
+        case 'educational': return '教育类';
+        case 'persuasive': return '说服类';
+        case 'narrative': return '叙事类';
+        case 'descriptive': return '描述类';
+        case 'argumentative': return '论证类';
+        default: return this.contentType;
+      }
+    },
+    
+    // 打印文档
+    printDocument() {
+      // 创建一个新的打印窗口，只包含文档内容
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        this.$message ? this.$message.error('无法打开打印窗口，请检查浏览器的弹窗设置') : alert('无法打开打印窗口，请检查浏览器的弹窗设置');
+        return;
+      }
+
+      // 添加样式和内容
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>${this.noteTitle || '长文章'}</title>
+            <style>
+              @media print {
+                body {
+                  font-family: 'Calibri', 'Microsoft YaHei', sans-serif;
+                  margin: 0;
+                  padding: 20mm;
+                }
+                
+                /* 复制所有word-相关的样式... */
+                .word-heading-1 {
+                  font-size: 24px;
+                  font-weight: bold;
+                  margin-top: 24px;
+                  color: #2b579a;
+                  border-bottom: 1px solid #e0e0e0;
+                  padding-bottom: 8px;
+                }
+                
+                .word-heading-2 {
+                  font-size: 20px;
+                  font-weight: bold;
+                  margin-top: 20px;
+                  color: #2b579a;
+                }
+                
+                .word-heading-3 {
+                  font-size: 16px;
+                  font-weight: bold;
+                  margin-top: 16px;
+                }
+                
+                .word-paragraph {
+                  font-size: 14px;
+                  line-height: 1.5;
+                  margin-bottom: 8px;
+                  text-align: justify;
+                }
+                
+                .word-list-item {
+                  font-size: 14px;
+                  line-height: 1.5;
+                  margin-bottom: 6px;
+                  padding-left: 24px;
+                  position: relative;
+                }
+                
+                /* 其他样式... */
+              }
+            </style>
+          </head>
+          <body>
+            ${this.wordFormattedContent}
+          </body>
+        </html>
+      `);
+      
+      printWindow.document.close();
+      
+      // 等待样式加载完成后打印
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
+    },
+    
+    // 保存为PDF
+    saveAsPdf() {
+      this.$message ? this.$message.info('准备将文档保存为PDF...') : alert('准备将文档保存为PDF...');
+      
+      // 实际产品中，可以使用html2pdf.js或jspdf等库进行PDF转换
+      // 这里简化为使用打印功能的"另存为PDF"选项
+      this.printDocument();
+      
+      this.$message ? this.$message.success('请通过浏览器的打印功能选择"另存为PDF"选项') : alert('请通过浏览器的打印功能选择"另存为PDF"选项');
+    },
+    
+    // 格式应用函数（实际环境中这些按钮只是样式展示，并不会有实际功能）
+    applyFormat(format) {
+      // 在实际的Word中，这些按钮会修改选中的文本样式
+      // 这里只是模拟界面，不需要实际功能
+      console.log(`应用${format}格式`);
+    },
+    
+    // 对齐应用函数
+    applyAlign(align) {
+      // 在实际的Word中，这些按钮会修改段落对齐方式
+      // 这里只是模拟界面，不需要实际功能
+      console.log(`应用${align}对齐`);
+    },
+    
+    // 格式化Markdown文本
+    formatMarkdown(text) {
+      if (!text) return '';
+      
+      // 处理加粗文本 **文本**
+      text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      
+      // 处理列表 - 项目
+      text = text.replace(/^- (.*?)$/gm, '<li>$1</li>');
+      text = text.replace(/<li>.*?<\/li>(\n|$)+/g, function(match) {
+        return '<ul class="knowledge-list">' + match + '</ul>';
+      });
+      
+      // 处理换行
+      text = text.replace(/\n\n/g, '<br><br>');
+      
+      return text;
+    },
+    
+    // 添加此方法以自动滚动到最新内容
+    scrollToLatestContent() {
+      const wordContent = document.querySelector('.word-content');
+      if (wordContent) {
+        const wordPage = document.querySelector('.word-page');
+        if (wordPage) {
+          // 确保滚动到可以看到最新内容的位置
+          wordPage.scrollTop = wordPage.scrollHeight;
+        }
+      }
+    },
   },
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('resize', this.updateCarouselPosition);
   }
 };
 </script>
 
-<style scoped>
+<style>
+@import '@/assets/css/text-creation-common.css';
+
+/* 删除与text-creation-common.css重复的样式 */
+
+/* 特定于Longform组件的样式 */
 .longform-article-page {
-  padding: 0;
-  margin-top: -40px;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding: 0;
-}
-
-.page-nav h2 {
-  font-size: 24px;
-  color: #333;
-  margin: 0;
-}
-
-.page-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.action-btn {
-  background: none;
-  border: none;
-  color: #666;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s;
-}
-
-.action-btn:hover {
-  background-color: #f5f5f5;
-  color: var(--primary-color, #ba003f);
-  transform: scale(1.1);
-  box-shadow: 0 2px 6px rgba(186, 0, 63, 0.2);
-}
-
-/* 主要内容区域 - 使用两列布局 */
-.main-container {
-  display: flex;
-  gap: 20px;
-  min-height: calc(100vh - 120px);
-}
-
-/* 左侧：输入参数 */
-.input-section {
-  width: 45%;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.section-title {
-  font-size: 18px;
-  color: #333;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.section-title i {
-  color: var(--primary-color, #ba003f);
-}
-
-.form-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.form-group {
-  flex: 1;
-  margin-bottom: 16px;
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.form-group:hover label {
-  color: var(--primary-color, #ba003f);
-}
-
-/* 标签动画效果 */
-.form-group label {
-  transition: color 0.3s ease;
-  font-weight: 500;
-  display: block;
-  margin-bottom: 6px;
-}
-
-/* 焦点状态下整个表单组的效果 */
-.form-group:focus-within {
-  transform: translateY(-2px);
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #444;
-  font-size: 14px;
-}
-
-.required:after {
-  content: " *";
-  color: var(--primary-color, #ba003f);
-}
-
-.form-control {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.form-control:focus {
-  border-color: var(--primary-color, #ba003f);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-/* 下拉菜单的自定义样式 */
-select.form-control {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
-  background-repeat: no-repeat;
-  background-position: calc(100% - 12px) center;
-  background-size: 12px;
-  padding-right: 32px;
-  cursor: pointer;
-  transition: all 0.3s;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-select.form-control:hover {
-  border-color: #bbb;
-  background-color: #f9f9f9;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-}
-
-select.form-control:focus {
-  border-color: var(--primary-color, #ba003f);
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23ba003f' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
-}
-
-/* 优化下拉选项样式 */
-select.form-control option {
-  padding: 10px;
-  font-size: 14px;
-}
-
-/* 禁用状态样式 */
-select.form-control:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #f5f5f5;
-}
-
-/* 文本区域样式优化 */
-textarea.form-control {
-  min-height: 100px;
-  line-height: 1.5;
-  resize: vertical;
-  background-color: #fafafa;
-  transition: all 0.3s ease;
-}
-
-textarea.form-control:focus {
-  background-color: #fff;
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-/* 复选框样式 */
-.checkbox-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 10px;
-}
-
-.checkbox-container {
-  display: flex;
-  align-items: center;
-  background-color: #f9f9f9;
-  padding: 8px 14px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid transparent;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
-  position: relative;
-}
-
-.checkbox-container:hover {
-  background-color: #f0f0f0;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
-}
-
-.checkbox-container input {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-  height: 0;
-  width: 0;
-}
-
-.checkbox-container span {
-  padding-left: 24px;
-  position: relative;
-  font-weight: 500;
-  color: #555;
-}
-
-.checkbox-container span:before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  background-color: #fff;
-  transition: all 0.2s ease;
-}
-
-.checkbox-container input:checked + span:before {
-  background-color: var(--primary-color, #ba003f);
-  border-color: var(--primary-color, #ba003f);
-}
-
-.checkbox-container input:checked + span:after {
-  content: '';
-  position: absolute;
-  left: 6px;
-  top: 3px;
-  width: 6px;
-  height: 10px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-.checkbox-container input:focus + span:before {
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-.checkbox-container:active {
-  transform: scale(0.98);
-}
-
-/* 操作按钮 */
-.action-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 15px;
-}
-
-.btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  height: 44px;
-  padding: 0 16px;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  border: none;
-}
-
-.btn:active {
-  transform: scale(0.96);
-}
-
-.btn i {
-  font-size: 16px;
-}
-
-.btn-primary {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  flex: 1;
-}
-
-.btn-primary:hover {
-  background-color: #d4004c;
-  box-shadow: 0 4px 12px rgba(186, 0, 63, 0.3);
-  transform: translateY(-2px);
-}
-
-.btn-primary:disabled {
-  background-color: #e0e0e0;
-  color: #999;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.btn-secondary {
-  background-color: #f5f5f5;
-  color: #666;
-}
-
-.btn-secondary:hover {
-  background-color: #eaeaea;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-/* 右侧：输出内容 */
-.right-column {
-  width: 55%;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* 示例区域 */
-.examples-section {
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 12px 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  margin-bottom: 0;
-  transition: all 0.3s;
-}
-
-.examples-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.carousel-controls {
-  display: flex;
-  gap: 10px;
-}
-
-.carousel-control {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid #ddd;
-  background-color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: #666;
-}
-
-.carousel-control:hover:not(.disabled):not(:disabled) {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  border-color: var(--primary-color, #ba003f);
-  transform: scale(1.05);
-}
-
-.carousel-control.disabled,
-.carousel-control:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.carousel-control i {
-  font-size: 18px;
-}
-
-.example-carousel {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  padding-bottom: 5px;
-}
-
-.example-cards {
-  display: flex;
-  transition: transform 0.3s ease;
-  padding: 8px 0;
-  gap: 0;
-}
-
-.example-card {
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 12px;
-  margin-right: 15px;
-  width: 200px;
-  min-width: 200px;
-  max-width: 200px;
-  height: 150px;
-  min-height: 150px;
-  max-height: 150px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.3s;
-  background-color: #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  overflow: hidden;
-  box-sizing: border-box;
-}
-
-.example-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(186, 0, 63, 0.15);
-  border-color: var(--primary-color, #ba003f);
-}
-
-.example-icon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background-color: rgba(186, 0, 63, 0.1);
-  margin-bottom: 12px;
-}
-
-.example-icon svg {
-  width: 32px;
-  height: 32px;
-  color: #BA003F;
-}
-
-.example-info {
-  display: flex;
-  flex-direction: column;
-  text-align: center;
-  overflow: hidden;
   width: 100%;
 }
 
-.example-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 5px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.example-desc {
-  font-size: 12px;
-  color: #888;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-/* 结果区域 */
+/* 结果区域样式 */
 .result-section {
-  flex: 1;
-  background-color: #fff;
+  background-color: white;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 15px;
-  border-bottom: 1px solid #eee;
-  background-color: #fff;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.section-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-}
-
-.section-title {
-  display: flex;
-  align-items: center;
-  color: #333;
-  font-size: 16px;
-  margin: 0;
-  font-weight: 600;
-}
-
-.section-title i {
-  margin-right: 8px;
-  font-size: 20px;
-  color: var(--primary-color, #ba003f);
-}
-
-.result-content-wrapper {
-  position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 300px;
-}
-
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.9);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-}
-
-.loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 3px solid rgba(186, 0, 63, 0.1);
-  border-radius: 50%;
-  border-top-color: var(--primary-color, #ba003f);
-  animation: spin 1s linear infinite;
-  margin-bottom: 15px;
-}
-
-.loading-text {
-  font-size: 14px;
-  color: #666;
-}
-
-.empty-result {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-  text-align: center;
-}
-
-.empty-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.empty-image {
-  width: 120px;
-  height: 120px;
+  padding-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   margin-bottom: 20px;
 }
 
-.empty-message {
-  margin: 0 0 20px;
-  font-size: 16px;
-  color: #666;
-}
-
-.note-result {
-  flex: 1;
-  padding: 15px;
-  overflow: hidden;
+/* 长文章页面特定样式 */
+.checkbox-container {
   display: flex;
-  height: 100%;
-}
-
-.result-textarea {
-  width: 100%;
-  height: 100%;
-  min-height: 300px;
-  padding: 15px;
-  border: 1px solid #eee;
-  border-radius: 6px;
-  font-size: 15px;
-  line-height: 1.6;
-  color: #333;
-  resize: none;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
   background-color: #f9f9f9;
-  outline: none;
-  overflow-y: auto;
-  transition: border-color 0.3s;
+  border: 1px solid #eee;
 }
 
-.result-textarea:focus {
-  border-color: var(--primary-color, #ba003f);
-}
-
-.blur-content {
-  filter: blur(1px);
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* 模态框 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
-  border-radius: 10px;
-  max-width: 600px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: #666;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.tips-list {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
-.tips-list li {
-  margin-bottom: 12px;
-  padding-left: 20px;
-  position: relative;
-  line-height: 1.5;
-}
-
-.tips-list li:before {
-  content: "•";
-  position: absolute;
-  left: 0;
-  color: var(--primary-color, #ba003f);
-  font-weight: bold;
-}
-
-/* 响应式调整 */
-@media (max-width: 1200px) {
-  .main-container {
-    flex-direction: column;
-  }
-  
-  .input-section, .right-column {
-    width: 100%;
-  }
-}
-
-/* 新增公众号风格按钮样式 */
-.primary-button {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  border: none;
-  padding: 0 16px;
-  height: 36px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: all 0.2s ease;
-}
-
-.primary-button:hover {
-  background-color: #d4004c;
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(186, 0, 63, 0.2);
-}
-
-.primary-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #ccc;
-  color: #666;
-  transform: none;
-  box-shadow: none;
-}
-
-.secondary-button {
+.checkbox-container:hover {
   background-color: #f5f5f5;
-  color: #666;
-  border: 1px solid #e0e0e0;
-  padding: 0 16px;
-  height: 36px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: all 0.2s ease;
-}
-
-.secondary-button:hover {
-  background-color: #eaeaea;
+  border-color: #ddd;
   transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.secondary-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #f5f5f5;
-  color: #aaa;
-  transform: none;
-  box-shadow: none;
+.checkbox-container input {
+  margin-right: 8px;
 }
 
+/* 删除重复的section-title样式 */
+
+/* 保留Word文档模拟样式 */
 .prompt-button {
   background-color: white;
   color: var(--primary-color, #ba003f);
@@ -1980,10 +1389,27 @@ textarea.form-control:focus {
   box-shadow: none;
 }
 
+/* 添加回action-buttons样式，但设置margin-top为0，保持与结果区域一致 */
 .action-buttons {
   display: flex;
   gap: 8px;
-  margin-top: 0;
+  margin-top: 15px;
+}
+
+/* 添加旋转动画效果 */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinning {
+  animation: spin 1.5s linear infinite;
+  display: inline-block;
+}
+
+.blur-content {
+  filter: blur(2px);
 }
 
 /* 提示词模态框样式 */
@@ -2033,5 +1459,376 @@ textarea.form-control:focus {
   display: flex;
   justify-content: flex-end;
   margin-top: 15px;
+}
+
+/* Word文档样式 */
+.note-result {
+  padding: 0;
+  overflow-y: auto;
+  max-height: 700px;
+  background-color: white; /* 改为白色背景 */
+  margin-bottom: 40px; /* 增加底部间距，与左侧表单对齐 */
+  border-radius: 8px;
+}
+
+/* Word模拟样式 */
+.word-document {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: white; /* 修改为白色背景 */
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px; /* 增加底部间距 */
+}
+
+.word-toolbar {
+  display: flex;
+  background-color: #2b579a;
+  padding: 8px 16px;
+  gap: 20px;
+}
+
+.toolbar-group {
+  display: flex;
+  gap: 4px;
+}
+
+.toolbar-btn {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.toolbar-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.word-page {
+  background-color: white; /* 改为白色背景 */
+  padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.word-content {
+  width: 100%;
+  max-width: 800px;
+  min-height: 1120px; /* A4尺寸高度模拟 */
+  background-color: white;
+  padding: 60px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+  position: relative;
+  margin-bottom: 20px; /* 添加底部间距 */
+}
+
+/* 添加页脚和页码样式 */
+.word-footer {
+  position: absolute;
+  bottom: 20px; /* 增加距底部距离 */
+  width: 100%;
+  max-width: 680px; /* 调整宽度与内容区匹配 */
+  display: flex;
+  justify-content: space-between;
+  padding: 0;
+  color: #777;
+  font-size: 12px;
+  font-family: 'Calibri', 'Microsoft YaHei', sans-serif;
+}
+
+.word-page-number {
+  text-align: left;
+}
+
+.word-document-title {
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+
+/* 添加Word状态栏样式 */
+.word-statusbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  background-color: white; /* 改为白色背景 */
+  border-top: 1px solid #e0e0e0;
+  padding: 4px 16px;
+  gap: 24px;
+  font-size: 12px;
+  color: #666;
+  height: 24px;
+}
+
+.word-statusbar-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.word-statusbar-item i {
+  font-size: 14px;
+  color: #2b579a;
+}
+
+/* Word封面样式 */
+.word-cover {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 800px;
+  text-align: center;
+  position: relative;
+  background-color: white; /* 确保封面背景为白色 */
+}
+
+.word-cover-title {
+  font-size: 32px;
+  font-weight: bold;
+  color: #2b579a;
+  margin-bottom: 16px;
+  max-width: 80%;
+}
+
+.word-cover-subtitle {
+  font-size: 18px;
+  color: #666;
+  margin-bottom: 24px;
+}
+
+.word-cover-date {
+  position: absolute;
+  bottom: 100px;
+  font-size: 14px;
+  color: #777;
+}
+
+.word-cover-author {
+  position: absolute;
+  bottom: 70px;
+  font-size: 14px;
+  color: #777;
+}
+
+.word-page-break {
+  page-break-after: always;
+  margin: 30px 0;
+  border-bottom: 1px dashed #eee;
+  width: 100%;
+}
+
+/* Word内容样式 */
+.word-heading {
+  font-family: 'Calibri', 'Microsoft YaHei', sans-serif;
+  color: #333;
+  margin-bottom: 10px;
+  page-break-after: avoid;
+}
+
+.word-heading-1 {
+  font-size: 24px;
+  font-weight: bold;
+  margin-top: 24px;
+  color: #2b579a;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 8px;
+}
+
+.word-heading-2 {
+  font-size: 20px;
+  font-weight: bold;
+  margin-top: 20px;
+  color: #2b579a;
+}
+
+.word-heading-3 {
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 16px;
+}
+
+.word-heading-4 {
+  font-size: 14px;
+  font-weight: bold;
+  margin-top: 12px;
+}
+
+.word-paragraph {
+  font-family: 'Calibri', 'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 8px;
+  text-align: justify;
+}
+
+.word-paragraph-spacing {
+  height: 12px;
+}
+
+.word-list-item {
+  font-family: 'Calibri', 'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 6px;
+  padding-left: 24px;
+  position: relative;
+}
+
+.word-bullet, .word-number {
+  position: absolute;
+  left: 0;
+}
+
+.word-bold {
+  font-weight: bold;
+}
+
+.word-italic {
+  font-style: italic;
+}
+
+.word-code-block {
+  font-family: 'Consolas', 'Courier New', monospace;
+  background-color: #f8f8f8;
+  padding: 12px;
+  margin: 12px 0;
+  border-radius: 4px;
+  border-left: 3px solid #2b579a;
+  white-space: pre-wrap;
+  font-size: 13px;
+  color: #333;
+  line-height: 1.5;
+}
+
+.word-inline-code {
+  font-family: 'Consolas', 'Courier New', monospace;
+  background-color: #f5f5f5;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 0.9em;
+  color: #d63384;
+}
+
+.word-blockquote {
+  border-left: 3px solid #2b579a;
+  padding: 8px 16px;
+  margin: 12px 0;
+  background-color: #f9f9f9;
+  color: #555;
+  font-style: italic;
+}
+
+.word-hr {
+  border: none;
+  border-bottom: 1px solid #e0e0e0;
+  margin: 16px 0;
+}
+
+@media print {
+  .word-document {
+    box-shadow: none;
+  }
+  
+  .word-toolbar, .word-statusbar {
+    display: none;
+  }
+  
+  .word-page {
+    padding: 0;
+  }
+  
+  .word-content {
+    box-shadow: none;
+  }
+}
+
+/* 添加知识学习抽屉的样式 */
+.knowledge-drawer {
+  font-family: 'Microsoft YaHei', sans-serif;
+}
+
+:deep(.el-drawer__header) {
+  margin-bottom: 20px;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+  color: var(--primary-color, #ba003f);
+  font-weight: bold;
+}
+
+:deep(.el-drawer__body) {
+  padding: 0;
+  overflow-y: auto;
+}
+
+.knowledge-content {
+  padding: 0 20px 30px;
+}
+
+.knowledge-section {
+  margin-bottom: 25px;
+}
+
+.knowledge-subtitle {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #eee;
+  color: var(--primary-color, #ba003f);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.knowledge-icon {
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+.knowledge-text {
+  line-height: 1.6;
+  color: #333;
+  font-size: 14px;
+}
+
+.knowledge-text strong {
+  color: var(--primary-color, #ba003f);
+  font-weight: 600;
+}
+
+.knowledge-list {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.knowledge-list li {
+  margin-bottom: 8px;
+}
+
+.result-content-wrapper {
+  position: relative;
+  height: 100%;
+  border-radius: 8px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 580px; /* 设置最小高度，确保有足够空间显示内容 */
+  margin-bottom: 40px; /* 增加底部边距，与左侧表单底部对齐 */
 }
 </style> 

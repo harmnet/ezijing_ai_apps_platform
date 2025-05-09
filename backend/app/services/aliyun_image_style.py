@@ -22,7 +22,7 @@ from app.services.aliyun_oss_service import upload_image
 
 # 阿里云API配置
 DASHSCOPE_API_CONFIG = {
-    "api_key": os.environ.get("DASHSCOPE_API_KEY", "sk-0bd59db1b4454d14b499421707900051"),
+    "api_key": os.environ.get("DASHSCOPE_API_KEY", "sk-1f4bdb8a73ee47809ee148a977c39737"),
     "base_url": "https://dashscope.aliyuncs.com/api/v1/services/aigc/image2image/image-synthesis",
     "task_url": "https://dashscope.aliyuncs.com/api/v1/tasks/",
     "model": "wanx2.1-imageedit"

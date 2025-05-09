@@ -1,12 +1,13 @@
 <template>
-  <div class="document-structure-page">
+  <div class="document-structure-page text-creation-page">
     <div class="page-header">
       <div class="page-nav">
         <h2>文档结构撰写</h2>
       </div>
       <div class="page-actions">
-        <button class="action-btn" title="创作小贴士" @click="showTips">
+        <button class="learn-button" @click="showTips">
           <i class="ri-lightbulb-line"></i>
+          知识学习
         </button>
       </div>
     </div>
@@ -172,17 +173,17 @@
       <div class="right-column">
         <!-- 参考案例部分 -->
         <div class="examples-section">
-          <div class="examples-header">
+          <div class="section-header">
             <h3 class="section-title">
               <i class="ri-lightbulb-flash-line"></i>
               参考案例
             </h3>
             <!-- 添加轮播控制按钮 -->
             <div class="carousel-controls">
-              <button class="carousel-control prev" @click="prevExample" :class="{ 'disabled': currentExampleIndex <= 0 }">
+              <button type="button" class="carousel-control prev" @click="prevExample($event)" :class="{ 'disabled': currentExampleIndex <= 0 }">
                 <i class="ri-arrow-left-s-line"></i>
               </button>
-              <button class="carousel-control next" @click="nextExample" :class="{ 'disabled': isLastPage }">
+              <button type="button" class="carousel-control next" @click="nextExample($event)" :class="{ 'disabled': isLastPage }">
                 <i class="ri-arrow-right-s-line"></i>
               </button>
             </div>
@@ -191,12 +192,14 @@
           <div class="example-carousel">
             <div class="example-cards" ref="exampleCarousel">
               <div class="example-card" v-for="(example, index) in examples" :key="index" @click="loadExample(index)">
-                <div class="example-icon">
-                  <i :class="example.icon"></i>
-                </div>
-                <div class="example-info">
-                  <span class="example-title">{{ example.title }}</span>
-                  <span class="example-desc">{{ example.desc }}</span>
+                <div class="example-card-header">
+                  <div class="example-icon">
+                    <i :class="example.icon"></i>
+                  </div>
+                  <div class="example-info">
+                    <span class="example-title">{{ example.title }}</span>
+                    <span class="example-desc">{{ example.desc }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -229,7 +232,7 @@
           
           <div class="result-content-wrapper">
             <!-- 加载动画 -->
-            <div v-if="isLoading" class="loading-overlay">
+            <div v-if="isLoading && !isStreaming" class="loading-overlay">
               <div class="loading-steps">
                 <div v-for="(step, index) in steps" :key="step.id" 
                      class="step-item" 
@@ -259,51 +262,108 @@
             
             <div v-if="!generatedStructure" class="empty-result">
               <div class="empty-content">
-                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgZmlsbC1vcGFjaXR5PSIuMDgiIGZpbGw9IiNEOEQ4RDgiIGN4PSI2NCIgY3k9IjY0IiByPSI2NCIvPjxwYXRoIGQ9Ik00MS41OTkgNDkuODhjMS4xIDAgMiAuOSAyIDJ2MzIuMjRjMCAxLjEtLjkgMi0yIDJoLTguOTdhLjk3Ljk3IDAgMDEtLjk1LS45NSAwIDAgMCAwLS4wNCAwIDAgMCAwLS4wM3YtMjkuNTFjMC0xLjk5IDEuNjItMy42MiAzLjYyLTMuNjJsMCAwUTQxLjU5OCA0OS44OTggNDEuNTk5IDQ5Ljg4ek04Ni4wNyA0OS44OGMxLjEgMCAyIC45IDIgMnYzMi4yNGMwIDEuMS0uOSAyLTIgMmgtOC45N3MtLjk2LS43OS0uOTYtLjk2VjUyLjgyYzAtMS42MiAxLjMyLTIuOTUgMi45NS0yLjk1bDAgMGg2Ljk4ek02NC4wNyA0Ni44M2MxLjMxIDAgMi4zNyAxLjA2IDIuMzcgMi4zN3YzNC44OGMwIDEuMzEtMS4wNiAyLjM3LTIuMzcgMi4zN2gtOS43YTIuMzcgMi4zNyAwIDAxLTIuMzctMi4zN1Y0OS4yYzAtMS4zMSAxLjA2LTIuMzcgMi4zNy0yLjM3bDAgMGg5LjciIGZpbGw9IiNFMUUxRTEiLz48cGF0aCBkPSJNMzIuNjMgNjkuNzVjMCAyLjYgMi4xMSA0LjcxIDQuNzEgNC43MXMyLjYtMi4xMSA0LjctNC43MS0yLjExLTQuNzEtNC43LTQuNzEtNC43MSAyLjExLTQuNzEgNC43MXpNODcuMDMgNjkuNzVjMCAyLjYtMi4xMSA0LjcxLTQuNzEgNC43MXMtNC43MS0yLjExLTQuNzEtNC43MSAyLjExLTQuNzEgNC43MS00LjcxIDQuNzEgMi4xMSA0LjcxIDQuNzF6TTY0LjQgNjcuMzhjMCAzLjczLTMuMDIgNi43NS02Ljc1IDYuNzVzLTYuNzYtMy4wMi02Ljc2LTYuNzUgMy4wMy02Ljc2IDYuNzYtNi43NiA2Ljc1IDMuMDMgNi43NSA2Ljc2eiIgZmlsbD0iI0JBMDA0MCIgZmlsbC1vcGFjaXR5PSIuNSIvPjwvZz48L3N2Zz4=" class="empty-image" alt="暂无数据" />
+                <img src="../../../assets/images/no_data.png" class="empty-image" alt="暂无数据" />
                 <p class="empty-message">暂无文档结构内容，请点击"生成文档结构"按钮开始创作</p>
               </div>
             </div>
             
-            <div v-else-if="generatedStructure" class="article-result" :class="{'blur-content': isLoading}">
+            <div v-else-if="generatedStructure" class="article-result" :class="{'blur-content': isLoading, 'streaming': isStreaming}">
               <!-- 添加离线模式提示条 -->
               <div v-if="isOfflineGenerated" class="offline-mode-banner">
                 <i class="ri-information-line"></i>
                 <span>您当前正在使用离线模式，生成的是基础模板结构。要获得AI生成的更优质结构，请联系管理员启动后端服务。</span>
               </div>
               
-              <!-- 添加调试显示 -->
-              <div class="debug-content" style="margin-bottom: 20px; padding: 10px; border: 1px solid #f0f0f0; background-color: #f9f9f9;">
-                <h4 style="color: #666;">原始内容（调试模式）:</h4>
-                <pre style="white-space: pre-wrap; word-break: break-all;">{{ generatedStructure }}</pre>
+              <!-- 添加流式输出指示器 -->
+              <div v-if="isStreaming" class="streaming-indicator">
+                <i class="ri-loader-4-line spinning"></i>
+                <span>AI正在生成内容...</span>
               </div>
               
-              <div class="article-content" v-html="formattedContent"></div>
+              <!-- 注释：原始内容显示区域已被隐藏 -->
+              
+              <!-- 模拟Word文档界面 -->
+              <div class="word-document">
+                <div class="word-toolbar">
+                  <div class="toolbar-group">
+                    <button class="toolbar-btn" title="保存为PDF" @click="saveAsPdf">
+                      <i class="ri-file-pdf-line"></i>
+                    </button>
+                    <button class="toolbar-btn" title="打印文档" @click="printDocument">
+                      <i class="ri-printer-line"></i>
+                    </button>
+                  </div>
+                  <div class="toolbar-group">
+                    <button class="toolbar-btn" title="粗体" @click="applyFormat('bold')">
+                      <i class="ri-bold"></i>
+                    </button>
+                    <button class="toolbar-btn" title="斜体" @click="applyFormat('italic')">
+                      <i class="ri-italic"></i>
+                    </button>
+                    <button class="toolbar-btn" title="下划线" @click="applyFormat('underline')">
+                      <i class="ri-underline"></i>
+                    </button>
+                  </div>
+                  <div class="toolbar-group">
+                    <button class="toolbar-btn" title="左对齐" @click="applyAlign('left')">
+                      <i class="ri-align-left"></i>
+                    </button>
+                    <button class="toolbar-btn" title="居中对齐" @click="applyAlign('center')">
+                      <i class="ri-align-center"></i>
+                    </button>
+                    <button class="toolbar-btn" title="右对齐" @click="applyAlign('right')">
+                      <i class="ri-align-right"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="word-page">
+                  <!-- 修复v-html错误 -->
+                  <div class="word-content">
+                    <div v-html="wordFormattedContent"></div>
+                  </div>
+                  <!-- 添加页脚和页码 -->
+                  <div class="word-footer">
+                    <div class="word-page-number">第 1 页</div>
+                    <div class="word-document-title">{{ topic || '文档结构' }}</div>
+                  </div>
+                </div>
+                <!-- 添加状态栏 -->
+                <div class="word-statusbar">
+                  <div class="word-statusbar-item">100%</div>
+                  <div class="word-statusbar-item">编辑</div>
+                  <div class="word-statusbar-item">
+                    <i class="ri-check-line"></i> 已保存
+                  </div>
+                  <div class="word-statusbar-item">
+                    {{ new Date().toLocaleDateString('zh-CN') }}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
     
-    <!-- 创作小贴士模态窗口 -->
-    <div class="modal" v-if="showTipsModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3><i class="ri-lightbulb-line"></i> 创作小贴士</h3>
-          <button class="close-btn" @click="showTipsModal = false">
-            <i class="ri-close-line"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <ul class="tips-list">
-            <li>使用标题和小标题来组织文章结构，使内容层次分明</li>
-            <li>保持段落简短，每段聚焦一个主题或观点</li>
-            <li>使用列表和编号来展示步骤或关键点</li>
-            <li>适当使用粗体和斜体来强调重要内容</li>
-            <li>增加实例和数据来支持你的观点</li>
-          </ul>
+    <!-- 创作小贴士模态窗口 - 替换为el-drawer抽屉组件 -->
+    <el-drawer
+      v-model="showTipsModal"
+      title="文档结构创作指南"
+      direction="rtl"
+      size="30%"
+      :destroy-on-close="false"
+      class="knowledge-drawer"
+    >
+      <div class="knowledge-content">
+        <div v-for="(item, index) in documentStructureKnowledge" :key="index" class="knowledge-section">
+          <h3 class="knowledge-subtitle">
+            <i :class="item.icon" class="knowledge-icon"></i>
+            {{ item.subtitle }}
+          </h3>
+          <div class="knowledge-text" v-html="formatMarkdown(item.text)"></div>
         </div>
       </div>
-    </div>
+    </el-drawer>
     
     <!-- 提示词模态窗口 -->
     <div class="modal" v-if="showPromptModal">
@@ -330,19 +390,42 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
 import { ElMessage } from 'element-plus';
 // 导入简化版API测试函数
 import { testApiConnection } from '../../../utils/apiTest';
+// 导入文档结构知识数据
+import { documentStructureKnowledge } from '@/views/Knowledge_data.js';
 
 export default {
   name: 'DocumentStructure',
   setup() {
     const router = useRouter();
     const toast = useToast();
+    
+    // 添加Markdown格式化函数
+    const formatMarkdown = (text) => {
+      if (!text) return '';
+      
+      // 处理粗体 **text**
+      let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      
+      // 处理列表项 - item (改进列表项处理逻辑)
+      formatted = formatted.replace(/- (.*?)(?=\n|$)/g, '<li>$1</li>');
+      
+      // 将连续的列表项包装在ul标签中
+      const listPattern = /<li>.*?<\/li>(?:\s*<li>.*?<\/li>)*/gs;
+      formatted = formatted.replace(listPattern, '<ul>$&</ul>');
+      
+      // 处理换行符
+      formatted = formatted.replace(/\n\n/g, '<br><br>');
+      formatted = formatted.replace(/\n/g, '<br>');
+      
+      return formatted;
+    };
     
     // 模型列表
     const modelList = ref([]);
@@ -412,6 +495,7 @@ export default {
     const isGenerating = ref(false);
     const isLoading = ref(false);
     const isOfflineGenerated = ref(false);
+    const isStreaming = ref(false); // 添加流式输出状态标记
     const generatedStructure = ref('');  // 使用ref来定义初始值为空字符串
     const loadingText = ref('正在生成文档结构...');
     const lastUsedPrompt = ref('');
@@ -581,10 +665,26 @@ export default {
     
     const isLastPage = computed(() => {
       if (!exampleCarousel.value) return true;
-      const totalWidth = examples.value.length * 168; // 160px宽度 + 8px间距
-      const visibleWidth = exampleCarousel.value.offsetWidth;
-      const maxScroll = totalWidth - visibleWidth;
-      return currentExampleIndex.value * 168 >= maxScroll;
+      
+      try {
+        const totalWidth = examples.value.length * 168; // 160px宽度 + 8px间距
+        const visibleWidth = exampleCarousel.value.parentElement?.offsetWidth || 0;
+        const maxScroll = Math.max(0, totalWidth - visibleWidth);
+        const currentScroll = currentExampleIndex.value * 168;
+        
+        console.log('轮播状态:', {
+          totalWidth,
+          visibleWidth,
+          maxScroll,
+          currentScroll,
+          isLast: currentScroll >= maxScroll
+        });
+        
+        return currentScroll >= maxScroll;
+      } catch (error) {
+        console.error('计算isLastPage时出错:', error);
+        return true;
+      }
     });
     
     // 格式化结果
@@ -601,16 +701,114 @@ export default {
       return formatted;
     });
     
+    // Word风格的格式化内容
+    const wordFormattedContent = computed(() => {
+      if (!generatedStructure.value) return '';
+      
+      try {
+        // 提取文档标题（如果存在）
+        let documentTitle = topic.value || '文档结构';
+        let contentWithoutTitle = generatedStructure.value;
+        
+        // 检查第一行是否是一级标题
+        const titleMatch = generatedStructure.value.match(/^# (.+)$/m);
+        if (titleMatch) {
+          documentTitle = titleMatch[1];
+          // 移除第一个标题，稍后会在封面添加
+          contentWithoutTitle = generatedStructure.value.replace(/^# .+$/m, '');
+        }
+        
+        // 创建封面
+        let html = `
+          <div class="word-cover">
+            <div class="word-cover-title">${documentTitle}</div>
+            <div class="word-cover-subtitle">${getTypeName()} - ${getPurposeName()}</div>
+            <div class="word-cover-date">${new Date().toLocaleDateString('zh-CN')}</div>
+            <div class="word-cover-author">AI助手生成</div>
+          </div>
+          <div class="word-page-break"></div>
+        `;
+        
+        // 处理正文内容
+        html += contentWithoutTitle
+          // 处理一级标题
+          .replace(/^# (.*$)/gm, '<div class="word-heading word-heading-1">$1</div>')
+          // 处理二级标题
+          .replace(/^## (.*$)/gm, '<div class="word-heading word-heading-2">$1</div>')
+          // 处理三级标题
+          .replace(/^### (.*$)/gm, '<div class="word-heading word-heading-3">$1</div>')
+          // 处理四级标题
+          .replace(/^#### (.*$)/gm, '<div class="word-heading word-heading-4">$1</div>')
+          // 处理无序列表
+          .replace(/^[\*\-] (.*$)/gm, '<div class="word-list-item"><span class="word-bullet">•</span>$1</div>')
+          // 处理带编号的列表
+          .replace(/^(\d+)\. (.*$)/gm, '<div class="word-list-item"><span class="word-number">$1.</span>$2</div>')
+          // 处理粗体
+          .replace(/\*\*(.*?)\*\*/g, '<span class="word-bold">$1</span>')
+          // 处理斜体
+          .replace(/\*(.*?)\*/g, '<span class="word-italic">$1</span>')
+          // 处理代码块
+          .replace(/```([\s\S]*?)```/g, '<div class="word-code-block">$1</div>')
+          // 处理行内代码
+          .replace(/`(.*?)`/g, '<span class="word-inline-code">$1</span>')
+          // 处理分隔线
+          .replace(/^---$/gm, '<hr class="word-hr">')
+          // 处理引用块
+          .replace(/^> (.*$)/gm, '<div class="word-blockquote">$1</div>')
+          // 处理普通段落：找到不是标题和列表项的内容行
+          .replace(/^(?!#|[\*\-]|\d+\.|>)(.+)$/gm, '<div class="word-paragraph">$1</div>')
+          // 处理空行
+          .replace(/^\s*$/gm, '<div class="word-paragraph-spacing"></div>');
+
+        return html;
+      } catch (error) {
+        console.error('Word格式化错误:', error);
+        return '<div class="word-paragraph">格式化错误: ' + error.message + '</div>';
+      }
+    });
+    
+    // 辅助函数：根据选定的类型获取类型名称
+    const getTypeName = () => {
+      const typeMap = {
+        'report': '报告',
+        'presentation': '演示文稿',
+        'proposal': '提案',
+        'article': '文章',
+        'manual': '手册',
+        'whitepaper': '白皮书',
+        'marketing': '营销方案'
+      };
+      return typeMap[selectedType.value] || '报告';
+    };
+    
+    // 辅助函数：根据选定的目的获取目的名称
+    const getPurposeName = () => {
+      const purposeMap = {
+        'informative': '信息传递',
+        'persuasive': '说服/建议',
+        'instructional': '教学/指导',
+        'analysis': '分析/研究',
+        'marketing': '营销/推广'
+      };
+      return purposeMap[selectedPurpose.value] || '信息传递';
+    };
+    
     // 获取模型列表
     const fetchModels = async () => {
       try {
         console.log('正在获取可用模型列表...');
         // 使用完整URL
-        const response = await axios.get('http://localhost:9000/api/v1/llm/models', { timeout: 5000 });
+        const response = await axios.get(`${window.APP_CONFIG.API_BASE_URL}/api/v1/llm/models`, { timeout: 5000 });
         console.log('获取模型响应:', response);
         
         if (response.data && response.data.status === 'success') {
-          modelList.value = response.data.data || [];
+          // 过滤只保留火山引擎的R1和V3大模型以及豆包大模型
+          const allModels = response.data.data || [];
+          modelList.value = allModels.filter(model => 
+            model.id === 'deepseek-v3-vol' || 
+            model.id === 'deepseek-r1-vol' || 
+            model.id === 'doupo'
+          );
           
           console.log('可用模型:', modelList.value);
           
@@ -641,32 +839,52 @@ export default {
       modelList.value = [
         { id: 'deepseek-v3-vol', name: 'DeepSeek-V3（火山引擎）' },
         { id: 'deepseek-r1-vol', name: 'DeepSeek-R1（火山引擎）' },
-        { id: 'deepseek-r1-sf', name: 'DeepSeek-R1（硅基流动）' },
-        { id: 'deepseek-v3-sf', name: 'DeepSeek-V3（硅基流动）' },
-        { id: 'qwq-32b', name: '通义千问-32B（硅基流动）' }
+        { id: 'doupo', name: '豆包大模型' }
+        // 以下模型已被注释掉
+        // { id: 'deepseek-r1-sf', name: 'DeepSeek-R1（硅基流动）' },
+        // { id: 'deepseek-v3-sf', name: 'DeepSeek-V3（硅基流动）' },
+        // { id: 'qwq-32b', name: '通义千问-32B（硅基流动）' }
       ];
+      // 确保默认选择火山引擎的V3模型
       selectedModel.value = 'deepseek-v3-vol';
     };
     
     // 轮播控制函数
-    const prevExample = () => {
+    const prevExample = (event) => {
+      // 阻止事件冒泡
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      
       if (currentExampleIndex.value > 0) {
         currentExampleIndex.value--;
         scrollCarousel();
+        console.log('向前翻页:', currentExampleIndex.value);
       }
     };
     
-    const nextExample = () => {
+    const nextExample = (event) => {
+      // 阻止事件冒泡
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      
       if (!isLastPage.value) {
         currentExampleIndex.value++;
         scrollCarousel();
+        console.log('向后翻页:', currentExampleIndex.value);
       }
     };
     
     const scrollCarousel = () => {
       if (exampleCarousel.value) {
         const scrollAmount = currentExampleIndex.value * 168; // 160px宽度 + 8px间距
+        console.log('设置轮播滚动位置:', scrollAmount);
         exampleCarousel.value.style.transform = `translateX(-${scrollAmount}px)`;
+      } else {
+        console.error('轮播容器未找到');
       }
     };
     
@@ -766,7 +984,7 @@ export default {
         
         console.log('发送测试请求数据:', JSON.stringify(testData, null, 2));
         
-        const response = await axios.post('http://localhost:9000/api/v1/llm/chat', testData, {
+        const response = await axios.post(`${window.APP_CONFIG.API_BASE_URL}/api/v1/llm/chat`, testData, {
           timeout: 30000
         });
         
@@ -849,7 +1067,11 @@ export default {
         // 设置加载状态
         isLoading.value = true;
         isGenerating.value = true;
-        currentStep.value = 1;
+        
+        // 当不是流式输出时才更新步骤
+        if (!isStreaming.value) {
+          currentStep.value = 1;
+        }
         
         console.log('\n=== 准备API请求 ===');
         const prompt = buildPrompt();
@@ -857,131 +1079,145 @@ export default {
         
         console.log('生成的提示词:', prompt);
         
-        const requestData = {
+        // 创建API请求参数
+        const apiParams = {
           messages: [
             {
               role: 'user',
               content: prompt
             }
           ],
-          model: 'deepseek-v3-vol'
+          model: 'deepseek-v3', // 修改为deepseek-v3
+          stream: true,
+          temperature: 0.7,
+          max_tokens: 2000
         };
         
-        console.log('发送的请求数据:', JSON.stringify(requestData, null, 2));
+        console.log('发送的请求数据:', JSON.stringify(apiParams, null, 2));
         
-        // 更新步骤状态
-        currentStep.value = 2;
-        console.log('\n=== 发送API请求 ===');
-        const response = await axios.post('http://localhost:9000/api/v1/llm/chat', requestData, {
-          timeout: 60000 // 设置60秒超时
-        });
-        
-        console.log('\n=== 收到API响应 ===');
-        console.log('响应状态码:', response.status);
-        console.log('响应头:', response.headers);
-        console.log('完整响应数据:', JSON.stringify(response.data, null, 2));
-        
-        // 详细日志输出，记录每个层级的数据结构
-        console.log('\n=== 详细API响应结构分析 ===');
-        if (response.data) {
-          console.log('1. response.data存在，类型:', typeof response.data);
-          console.log('2. response.data包含的字段:', Object.keys(response.data));
+        try {
+          // 开始流式状态
+          isStreaming.value = true;
           
-          if (response.data.status) {
-            console.log('3. status字段值:', response.data.status);
+          // 发送API请求，使用fetch API来处理流式响应
+          console.log('开始发送流式请求到:', '/api/v1/v1/deepseek_volcano/chat');
+          const response = await fetch('/api/v1/v1/deepseek_volcano/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'text/event-stream'
+            },
+            body: JSON.stringify(apiParams)
+          });
+          
+          console.log('收到响应, 状态码:', response.status);
+          console.log('响应头:', {
+            'Content-Type': response.headers.get('Content-Type'),
+            'Transfer-Encoding': response.headers.get('Transfer-Encoding')
+          });
+          
+          if (!response.ok) {
+            throw new Error(`服务器返回错误: ${response.status}`);
           }
           
-          if (response.data.data) {
-            console.log('4. data嵌套字段存在，类型:', typeof response.data.data);
-            console.log('5. data嵌套字段包含:', Object.keys(response.data.data));
+          // 处理流式响应
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          
+          // 清空当前生成内容
+          generatedStructure.value = '';
+          
+          // 读取流数据
+          while (true) {
+            const { done, value } = await reader.read();
             
-            if (response.data.data.choices) {
-              console.log('6. choices数组长度:', response.data.data.choices.length);
-              console.log('7. 第一个choice内容:', JSON.stringify(response.data.data.choices[0], null, 2));
-              
-              if (response.data.data.choices[0].message) {
-                console.log('8. 消息内容:', response.data.data.choices[0].message.content);
+            if (done) {
+              console.log('流式响应完成');
+              break;
+            }
+            
+            // 解码二进制数据
+            const decoded = decoder.decode(value, { stream: true });
+            console.log('收到数据块:', decoded.length, '字节');
+            buffer += decoded;
+            
+            // 处理收到的数据
+            const lines = buffer.split('\n\n');
+            buffer = lines.pop() || '';
+            
+            for (const line of lines) {
+              if (line.trim() === '') continue;
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6);
+                if (data === '[DONE]') {
+                  console.log('收到结束标志');
+                  continue;
+                }
+                
+                try {
+                  console.log('解析数据:', data.substring(0, 100) + '...');
+                  const parsed = JSON.parse(data);
+                  console.log('解析后的数据格式:', Object.keys(parsed));
+                  
+                  // 处理错误消息
+                  if (parsed.error) {
+                    console.error("API错误:", parsed.error);
+                    throw new Error(parsed.error.message || '生成文档结构失败');
+                  }
+                  
+                  // 处理火山引擎返回的delta格式数据
+                  if (parsed.choices && parsed.choices.length > 0 && parsed.choices[0].delta) {
+                    const delta = parsed.choices[0].delta;
+                    
+                    // 处理内容增量
+                    if (delta.content) {
+                      console.log("收到内容增量:", delta.content);
+                      // 累加收到的内容
+                      generatedStructure.value += delta.content;
+                    }
+                  }
+                } catch (e) {
+                  console.error('解析流式数据失败:', e, data);
+                }
               }
             }
           }
-        }
-        
-        // 关键修改：处理backend返回的标准格式
-        if (response.data && response.data.status === 'success' && response.data.data) {
-          console.log('标准后端响应格式检测成功');
-          // 保存原始data对象的引用
-          const apiResponseData = response.data.data;
           
-          console.log('API响应data字段:', JSON.stringify(apiResponseData, null, 2));
+          // 处理完成，移除流式状态
+          isStreaming.value = false;
           
-          // 检查API响应中是否有choices
-          if (apiResponseData.choices && apiResponseData.choices.length > 0) {
-            const content = apiResponseData.choices[0].message.content;
-            console.log('\n=== 提取的内容(choices) ===');
-            console.log('原始内容:', content);
-            
-            generatedStructure.value = content;
-            console.log('已设置generatedStructure:', generatedStructure.value);
-            
-            // 更新步骤状态
-            currentStep.value = 6;
-            ElMessage.success('文档结构生成成功');
-            return; // 提前返回
+          ElMessage.success('文档结构生成成功');
+          isOfflineGenerated.value = false;
+          
+        } catch (error) {
+          console.error('API调用异常:', error);
+          
+          // 结束流式状态
+          isStreaming.value = false;
+          
+          // 判断是否是网络错误或服务器不可用
+          if (!error.response || error.message.includes('Network Error') || error.message.includes('Failed to fetch')) {
+            console.warn('后端服务不可用，切换到离线模式');
+            // 离线模式
+            generatedStructure.value = generateOfflineTemplate();
+            isOfflineGenerated.value = true;
+            ElMessage.warning('使用离线模式生成基础结构模板');
+          } else {
+            // 其他API错误
+            ElMessage.error(`生成失败：${error.message}`);
           }
         }
         
-        // 如果没有找到标准格式，继续尝试其他格式
-        if (response.data && response.data.choices && response.data.choices.length > 0) {
-          const content = response.data.choices[0].message.content;
-          console.log('\n=== 提取的内容 ===');
-          console.log('原始内容:', content);
-          
-          generatedStructure.value = content;
-          console.log('已设置generatedStructure:', generatedStructure.value);
-          
-          // 更新步骤状态
-          currentStep.value = 6;
-          ElMessage.success('文档结构生成成功');
-        } else if (response.data && response.data.content) {
-          // 处理直接返回content的情况
-          const content = response.data.content;
-          console.log('\n=== 提取的内容 ===');
-          console.log('原始内容:', content);
-          
-          generatedStructure.value = content;
-          console.log('已设置generatedStructure:', generatedStructure.value);
-          
-          // 更新步骤状态
-          currentStep.value = 6;
-          ElMessage.success('文档结构生成成功');
-        } else if (response.data && response.data.data && response.data.data.choices && response.data.data.choices.length > 0) {
-          // 处理火山引擎API的响应格式
-          const content = response.data.data.choices[0].message.content;
-          console.log('\n=== 提取的内容 ===');
-          console.log('原始内容:', content);
-          
-          generatedStructure.value = content;
-          console.log('已设置generatedStructure:', generatedStructure.value);
-          
-          // 更新步骤状态
-          currentStep.value = 6;
-          ElMessage.success('文档结构生成成功');
-        } else {
-          console.log('错误：响应数据格式不正确');
-          console.log('响应数据:', response.data);
-          ElMessage.error('生成失败：响应数据格式不正确');
-        }
       } catch (error) {
         console.error('\n=== 发生错误 ===');
         console.error('错误类型:', error.name);
         console.error('错误信息:', error.message);
-        if (error.response) {
-          console.error('错误响应状态码:', error.response.status);
-          console.error('错误响应数据:', error.response.data);
-        }
-        console.error('错误堆栈:', error.stack);
         
         ElMessage.error(`生成失败：${error.message}`);
+        
+        // 确保结束流式状态
+        isStreaming.value = false;
       } finally {
         // 重置加载状态
         isLoading.value = false;
@@ -1220,6 +1456,113 @@ export default {
     // 生命周期钩子
     onMounted(() => {
       fetchModels();
+      
+      // 从URL参数中获取并填充表单
+      const params = new URLSearchParams(window.location.search);
+      
+      // 记录接收到的所有参数到控制台
+      console.log('获取到URL参数:', Object.fromEntries(params.entries()));
+      
+      // 解析文档类型
+      if (params.has('documentType')) {
+        const docType = params.get('documentType');
+        console.log('解析文档类型:', docType);
+        // 查找匹配的文档类型选项
+        const foundType = documentTypes.value.find(type => type.name === docType);
+        if (foundType) {
+          console.log('找到匹配的文档类型:', foundType.id);
+          selectedType.value = foundType.id;
+        }
+      }
+      
+      // 解析文档用途
+      if (params.has('documentUsage')) {
+        const usage = params.get('documentUsage');
+        console.log('解析文档用途:', usage);
+        // 查找匹配的用途选项
+        const foundPurpose = documentPurposes.value.find(purpose => purpose.name === usage);
+        if (foundPurpose) {
+          console.log('找到匹配的文档用途:', foundPurpose.id);
+          selectedPurpose.value = foundPurpose.id;
+        }
+      }
+      
+      // 解析目标受众
+      if (params.has('targetAudience')) {
+        const audience = params.get('targetAudience');
+        console.log('解析目标受众:', audience);
+        // 查找匹配的受众选项
+        const foundAudience = audienceOptions.value.find(option => option.name === audience);
+        if (foundAudience) {
+          console.log('找到匹配的目标受众:', foundAudience.id);
+          selectedAudience.value = foundAudience.id;
+        }
+      }
+      
+      // 解析文档标题
+      if (params.has('documentTitle')) {
+        const title = params.get('documentTitle');
+        console.log('解析文档标题:', title);
+        topic.value = title;
+      }
+      
+      // 解析文档目的
+      if (params.has('documentPurpose')) {
+        const purpose = params.get('documentPurpose');
+        console.log('解析文档目的:', purpose);
+        keyPoints.value = purpose;
+      }
+      
+      // 解析文档包含元素
+      if (params.has('includeElements')) {
+        const elements = params.get('includeElements');
+        console.log('解析文档包含元素:', elements);
+        
+        // 如果是none，所有元素设为false
+        if (elements === 'none') {
+          includeSummary.value = false;
+          includeTableOfContents.value = false;
+          includeIntroduction.value = false;
+          includeMethods.value = false;
+          includeBackground.value = false;
+          includeCharts.value = false;
+          includeCaseStudies.value = false;
+          includeFindings.value = false;
+          includeImplementation.value = false;
+          includeResources.value = false;
+          includeConclusion.value = false;
+          includeReferences.value = false;
+          includeAppendix.value = false;
+          includeFuturePlans.value = false;
+        } else if (elements) {
+          // 如果是逗号分隔的元素列表，分别设置
+          const elementsList = elements.split(',');
+          includeSummary.value = elementsList.includes('summary');
+          includeTableOfContents.value = elementsList.includes('toc');
+          includeIntroduction.value = elementsList.includes('intro');
+          includeMethods.value = elementsList.includes('methods');
+          includeBackground.value = elementsList.includes('background');
+          includeCharts.value = elementsList.includes('charts');
+          includeCaseStudies.value = elementsList.includes('cases');
+          includeFindings.value = elementsList.includes('findings');
+          includeImplementation.value = elementsList.includes('implementation');
+          includeResources.value = elementsList.includes('resources');
+          includeConclusion.value = elementsList.includes('conclusion');
+          includeReferences.value = elementsList.includes('references');
+          includeAppendix.value = elementsList.includes('appendix');
+          includeFuturePlans.value = elementsList.includes('futurePlans');
+        }
+      }
+      
+      // 确保轮播引用已初始化
+      nextTick(() => {
+        if (exampleCarousel.value) {
+          console.log('轮播容器已初始化:', exampleCarousel.value);
+          // 重置轮播位置
+          currentExampleIndex.value = 0;
+          scrollCarousel();
+        }
+      });
     });
     
     // 计算属性
@@ -1264,6 +1607,110 @@ export default {
       }
     });
     
+    // 打印文档
+    const printDocument = () => {
+      // 创建一个新的打印窗口，只包含文档内容
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        toast.error('无法打开打印窗口，请检查浏览器的弹窗设置');
+        return;
+      }
+
+      // 添加样式和内容
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>${topic.value || '文档结构'}</title>
+            <style>
+              @media print {
+                body {
+                  font-family: 'Calibri', 'Microsoft YaHei', sans-serif;
+                  margin: 0;
+                  padding: 20mm;
+                }
+                
+                /* 复制所有word-相关的样式... */
+                .word-heading-1 {
+                  font-size: 24px;
+                  font-weight: bold;
+                  margin-top: 24px;
+                  color: #2b579a;
+                  border-bottom: 1px solid #e0e0e0;
+                  padding-bottom: 8px;
+                }
+                
+                .word-heading-2 {
+                  font-size: 20px;
+                  font-weight: bold;
+                  margin-top: 20px;
+                  color: #2b579a;
+                }
+                
+                .word-heading-3 {
+                  font-size: 16px;
+                  font-weight: bold;
+                  margin-top: 16px;
+                }
+                
+                .word-paragraph {
+                  font-size: 14px;
+                  line-height: 1.5;
+                  margin-bottom: 8px;
+                  text-align: justify;
+                }
+                
+                .word-list-item {
+                  font-size: 14px;
+                  line-height: 1.5;
+                  margin-bottom: 6px;
+                  padding-left: 24px;
+                  position: relative;
+                }
+                
+                /* 其他样式... */
+              }
+            </style>
+          </head>
+          <body>
+            ${wordFormattedContent.value}
+          </body>
+        </html>
+      `);
+      
+      printWindow.document.close();
+      
+      // 等待样式加载完成后打印
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
+    };
+
+    // 保存为PDF
+    const saveAsPdf = () => {
+      toast.info('准备将文档保存为PDF...');
+      
+      // 实际产品中，可以使用html2pdf.js或jspdf等库进行PDF转换
+      // 这里简化为使用打印功能的"另存为PDF"选项
+      printDocument();
+      
+      toast.success('请通过浏览器的打印功能选择"另存为PDF"选项');
+    };
+
+    // 格式应用函数（实际环境中这些按钮只是样式展示，并不会有实际功能）
+    const applyFormat = (format) => {
+      // 在实际的Word中，这些按钮会修改选中的文本样式
+      // 这里只是模拟界面，不需要实际功能
+      console.log(`应用${format}格式`);
+    };
+
+    // 对齐应用函数
+    const applyAlign = (align) => {
+      // 在实际的Word中，这些按钮会修改段落对齐方式
+      // 这里只是模拟界面，不需要实际功能
+      console.log(`应用${align}对齐`);
+    };
+    
     return {
       // 状态和数据
       modelList,
@@ -1301,6 +1748,7 @@ export default {
       isGenerating,
       isLoading,
       isOfflineGenerated,
+      isStreaming,
       generatedStructure,
       loadingText,
       lastUsedPrompt,
@@ -1311,6 +1759,7 @@ export default {
       exampleCarousel,
       isLastPage,
       formattedContent,
+      wordFormattedContent,
       
       // 步骤状态
       steps,
@@ -1332,593 +1781,119 @@ export default {
       documentTypes,
       documentPurposes,
       audienceOptions,
+      
+      // 打印和保存功能
+      printDocument,
+      saveAsPdf,
+      applyFormat,
+      applyAlign,
+      
+      // 添加文档结构知识内容
+      documentStructureKnowledge,
+      formatMarkdown,
     };
   }
 };
 </script>
 
-<style scoped>
-/* 全局样式 */
+<style>
+/* 导入通用样式 */
+@import '../../../assets/css/text-creation-common.css';
+
+/* 特定于文档结构的样式 */
 .document-structure-page {
-  padding: 0 20px 15px 20px; /* 将顶部内边距设为0 */
-  margin-top: -30px; /* 增加负上边距到-30px */
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px; /* 进一步减少底部边距 */
-  margin-top: 0; /* 确保顶部没有边距 */
-}
-
-.page-nav h2 {
-  font-size: 1.3rem; /* 略微减小标题 */
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-}
-
-.page-actions {
-  display: flex;
-  gap: 15px;
-}
-
-.action-btn {
-  background: none;
-  border: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f5f5f5;
-  color: #555;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.action-btn:hover {
-  background-color: #eaeaea;
-  color: #BA003F;
-}
-
-.main-container {
-  display: flex;
-  gap: 15px;
-  margin-top: -8px; /* 增加负边距 */
-}
-
-.input-section {
-  width: 45%;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   padding: 20px;
 }
 
-.right-column {
-  width: 55%;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.section-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #444;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-}
-
-.section-title i {
-  color: #BA003F;
-  font-size: 1.1rem;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
+/* 文档包含元素 */
+.document-elements {
   margin-bottom: 15px;
 }
 
-.form-row .form-group {
+.document-elements h3 {
+  font-size: 16px;
+  color: #444;
+  margin-bottom: 10px;
+}
+
+.elements-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.element-checkbox {
   display: flex;
   align-items: center;
   background-color: #f9f9f9;
   padding: 8px 12px;
   border-radius: 4px;
-  gap: 8px;
-  min-width: 140px;
-}
-
-.form-row .form-group label {
-  margin-bottom: 0;
-  font-size: 13px;
-  white-space: nowrap;
-}
-
-.form-row .form-group input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-}
-
-.form-group label {
-  display: block;
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin-bottom: 6px;
-  color: #555;
-}
-
-.form-group label.required::after {
-  content: '*';
-  color: #BA003F;
-  margin-left: 4px;
-}
-
-.form-control {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: border-color 0.3s;
-}
-
-.form-control:focus {
-  border-color: #BA003F;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-textarea.form-control {
-  min-height: 100px;
-  resize: vertical;
-}
-
-select.form-control {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 16px;
-}
-
-.form-note {
-  font-size: 12px;
-  color: #777;
-  margin-top: 4px;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 12px;
-  margin-top: 20px;
-}
-
-.btn {
-  border: none;
-  border-radius: 6px;
-  padding: 10px 15px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 44px;
-}
-
-.btn i {
-  font-size: 16px;
-}
-
-.btn-primary {
-  background-color: #BA003F;
-  color: white;
-  flex: 2;
-}
-
-.btn-primary:hover {
-  background-color: #9D0036;
-}
-
-.btn-secondary {
-  background-color: #f5f5f5;
-  color: #444;
-}
-
-.btn-secondary:hover {
-  background-color: #e5e5e5;
-}
-
-.model-loading {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: #666;
-  margin-top: 4px;
-}
-
-.spinning {
-  animation: spin 1.5s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* 参考案例部分 */
-.examples-section {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  padding: 15px;
-}
-
-.examples-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.carousel-controls {
-  display: flex;
-  gap: 8px;
-}
-
-.carousel-control {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: #f5f5f5;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-}
-
-.carousel-control:hover {
-  background-color: #eaeaea;
-}
-
-.carousel-control.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.example-carousel {
-  overflow: hidden;
-}
-
-.example-cards {
-  display: flex;
-  gap: 8px; /* 减少间距 */
-  transition: transform 0.3s ease;
-}
-
-.example-card {
-  min-width: 160px; /* 进一步减小宽度 */
-  flex: 0 0 auto;
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 10px; /* 减少内边距 */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  transition: all 0.3s ease;
   border: 1px solid #eee;
 }
 
-.example-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
-  border-color: #BA003F;
+.element-checkbox:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.example-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: rgba(186, 0, 63, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 8px;
+.element-checkbox input[type="checkbox"] {
+  margin-right: 8px;
 }
 
-.example-icon i {
-  font-size: 20px;
-  color: #BA003F;
-}
-
-.example-info {
-  display: flex;
-  flex-direction: column;
-  text-align: center;
-}
-
-.example-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 4px;
-  color: #333;
-}
-
-.example-desc {
-  font-size: 12px;
-  color: #666;
-}
-
-/* 结果部分 */
-.result-section {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  padding: 15px;
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.result-content-wrapper {
-  position: relative;
-  flex-grow: 1;
-  overflow: hidden;
-  margin-top: -5px;
-}
-
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(255, 255, 255, 0.95);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  padding: 20px;
-}
-
-.loading-steps {
-  display: flex;
-  flex-direction: column;
-  width: 80%;
-  max-width: 450px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.step-item {
-  display: flex;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
-  opacity: 0.6;
-  transition: all 0.3s ease;
-}
-
-.step-item:last-child {
-  border-bottom: none;
-}
-
-.step-item.active {
-  opacity: 1;
-}
-
-.step-item.current {
-  background-color: rgba(186, 0, 63, 0.05);
-  border-radius: 8px;
-  padding: 12px 8px;
-}
-
-.step-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: #f5f5f5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 15px;
-  transition: all 0.3s ease;
-}
-
-.step-item.active .step-icon {
-  background-color: rgba(186, 0, 63, 0.1);
-  color: #BA003F;
-}
-
-.step-item.completed .step-icon {
-  background-color: #BA003F;
-  color: white;
-}
-
-.step-info {
-  flex: 1;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.step-name {
+.element-checkbox span {
   font-size: 14px;
-  font-weight: 500;
-  color: #333;
-}
-
-.step-status {
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-}
-
-.step-item.completed .step-status {
-  color: #52c41a;
-}
-
-.loading-dots {
-  display: flex;
-  align-items: center;
-}
-
-.loading-dots span {
-  width: 6px;
-  height: 6px;
-  margin: 0 2px;
-  background-color: #BA003F;
-  border-radius: 50%;
-  display: inline-block;
-  animation: dot-flashing 1s infinite linear alternate;
-}
-
-.loading-dots span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.loading-dots span:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-@keyframes dot-flashing {
-  0% { opacity: 0.2; }
-  100% { opacity: 1; }
-}
-
-.loading-text {
-  font-size: 15px;
-  color: #555;
-  font-weight: 500;
-  text-align: center;
-}
-
-.empty-result {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  min-height: 250px;
-}
-
-.empty-content {
-  text-align: center;
-  padding: 20px;
-}
-
-.empty-image {
-  width: 70px;
-  height: 70px;
-  margin-bottom: 12px;
-}
-
-.empty-message {
-  font-size: 14px;
-  color: #666;
-  max-width: 300px;
-  margin: 0 auto;
-}
-
-.article-result {
-  padding: 8px;
-  overflow-y: auto;
-  max-height: 600px;
-}
-
-.blur-content {
-  filter: blur(2px);
-}
-
-.article-content {
-  font-size: 14px;
-  line-height: 1.6;
-  color: #333;
-}
-
-.article-content h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #BA003F;
-  margin: 16px 0 8px 0;
-}
-
-.offline-mode-banner {
-  background-color: #FFF8E1;
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 15px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  color: #856404;
-}
-
-.primary-button, .secondary-button, .prompt-button {
-  border: none;
-  border-radius: 4px;
-  padding: 8px 12px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: background-color 0.2s;
-}
-
-.primary-button {
-  background-color: #BA003F;
-  color: white;
-}
-
-.primary-button:hover {
-  background-color: #9D0036;
-}
-
-.secondary-button {
-  background-color: #f5f5f5;
   color: #444;
 }
 
-.secondary-button:hover {
-  background-color: #e5e5e5;
+.element-checkbox input[type="checkbox"]:checked + span {
+  color: var(--primary-color, #ba003f);
+  font-weight: 500;
+}
+
+/* 面板样式 */
+.panel-section {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  border: 1px solid #f0f0f0;
+}
+
+.panel-section h3 {
+  font-size: 16px;
+  color: #444;
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+/* 离线模式提示条 */
+.offline-mode-banner {
+  background-color: #fff8e1;
+  color: #856404;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.offline-mode-banner i {
+  font-size: 18px;
+}
+
+.article-result {
+  padding: 15px;
+  transition: all 0.3s ease;
 }
 
 .prompt-button {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  border: none;
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #eee;
   padding: 6px 14px;
   border-radius: 4px;
   cursor: pointer;
@@ -1929,316 +1904,12 @@ select.form-control {
 }
 
 .prompt-button:hover {
-  background-color: #980034;
+  background-color: #e5e5e5;
 }
 
 .prompt-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background-color: #ccc;
-  color: #666;
-}
-
-/* 模态窗口样式 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: #fff;
-  border-radius: 8px;
-  width: 80%;
-  max-width: 800px;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
-  animation: modal-pop 0.3s ease-out;
-}
-
-@keyframes modal-pop {
-  0% { transform: scale(0.9); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.modal-header h3 i {
-  color: var(--primary-color, #ba003f);
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: #666;
-  font-size: 20px;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.modal-body {
-  padding: 20px;
-  overflow-y: auto;
-}
-
-.prompt-content {
-  background-color: #f5f5f5;
-  padding: 15px;
-  border-radius: 4px;
-  font-family: monospace;
-  white-space: pre-wrap;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #333;
-  border-left: 3px solid #BA003F;
-  margin: 0;
-}
-
-.tips-list {
-  padding-left: 20px;
-  margin: 10px 0;
-}
-
-.tips-list li {
-  margin-bottom: 10px;
-  color: #555;
-  line-height: 1.5;
-}
-
-.prompt-actions {
-  display: flex;
-  justify-content: flex-end;
-  padding: 15px 0 0;
-}
-
-.prompt-modal {
-  max-width: 700px;
-}
-
-/* 响应式设计 */
-@media (max-width: 992px) {
-  .main-container {
-    flex-direction: column;
-  }
-  
-  .input-section, .right-column {
-    flex: none;
-    width: 100%;
-  }
-}
-
-/* AI模型选择下拉框样式 */
-.model-select-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.model-select {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 12px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  cursor: pointer;
-  background-color: #fff;
-  transition: all 0.3s;
-  color: #333;
-  font-size: 14px;
-}
-
-.model-select:hover {
-  border-color: #c0c4cc;
-}
-
-.model-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  max-width: 450px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  z-index: 10;
-  margin-top: 8px;
-  overflow: hidden;
-  animation: dropdown-fade 0.2s ease;
-}
-
-@keyframes dropdown-fade {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.model-dropdown-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 15px;
-  background-color: #f5f7fa;
-  border-bottom: 1px solid #ebeef5;
-  font-weight: 500;
-  color: #333;
-}
-
-.close-dropdown {
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  color: #909399;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-}
-
-.close-dropdown:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.model-list {
-  max-height: 350px;
-  overflow-y: auto;
-  padding: 5px 0;
-}
-
-.model-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 15px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.model-item:hover {
-  background-color: #f5f7fa;
-}
-
-.model-item.active {
-  background-color: #ecf5ff;
-}
-
-.model-info {
-  flex: 1;
-  padding-right: 10px;
-}
-
-.model-name {
-  font-weight: 500;
-  color: #303133;
-  margin-bottom: 4px;
-  font-size: 14px;
-}
-
-.model-desc {
-  font-size: 12px;
-  color: #909399;
-  white-space: normal;
-  line-height: 1.4;
-}
-
-.model-check {
-  color: #409EFF;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.model-loading {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  color: #909399;
-  font-size: 13px;
-}
-
-.model-loading i {
-  margin-right: 6px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* 文档目的输入框样式 */
-textarea#document-purpose {
-  min-height: 120px;
-  padding: 12px;
-  font-size: 14px;
-  line-height: 1.5;
-  resize: vertical;
-}
-
-/* 添加紧凑布局的样式 */
-.form-row {
-  margin-bottom: 5px;
-}
-.form-group label {
-  font-size: 0.9em;
-  margin-left: 2px;
-}
-
-/* 文档包含元素的新样式 */
-.document-elements {
-  margin-bottom: 15px;
-}
-.elements-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
-}
-.element-checkbox {
-  display: flex;
-  align-items: center;
-  width: calc(25% - 8px);
-  font-size: 0.9em;
-  background-color: #f5f7fa;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-.element-checkbox:hover {
-  background-color: #e9ecef;
-}
-.element-checkbox input {
-  margin-right: 4px;
 }
 
 .prompt-content {
@@ -2265,5 +1936,364 @@ textarea#document-purpose {
   display: flex;
   justify-content: flex-end;
   margin-top: 15px;
+}
+
+/* Word模拟样式 */
+.word-document {
+  background: #f5f5f5;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  margin: 20px 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-width: 800px; /* 控制最大宽度 */
+  margin: 0 auto; /* 居中显示 */
+}
+
+.word-toolbar {
+  background-color: #2b579a; /* 恢复Word顶部的蓝色区域 */
+  border-bottom: 1px solid #1e3f73;
+  display: flex;
+  padding: 8px;
+  gap: 10px;
+}
+
+.toolbar-group {
+  display: flex;
+  gap: 4px;
+  border-right: 1px solid rgba(255, 255, 255, 0.2); /* 调整分割线颜色 */
+  padding-right: 10px;
+  margin-right: 10px;
+}
+
+.toolbar-group:last-child {
+  border-right: none;
+}
+
+.toolbar-btn {
+  background: none;
+  border: none;
+  border-radius: 3px;
+  color: white; /* 恢复白色按钮 */
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 6px;
+}
+
+.toolbar-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2); /* 恢复悬停效果 */
+}
+
+.word-page {
+  background-color: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin: 15px;
+  min-height: auto; /* 由固定高度改为auto，适应内容高度 */
+  padding: 40px 40px 60px; /* 修改下内边距为60px，为页脚留出空间 */
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: calc(100% - 30px); /* 考虑margin */
+}
+
+.word-content {
+  overflow-y: auto; /* 保留垂直滚动 */
+  flex: 1;
+  margin-bottom: 30px; /* 为页脚预留空间，减少冗余高度 */
+}
+
+.word-footer {
+  border-top: 1px solid #eee;
+  color: #777;
+  display: flex;
+  font-size: 11px;
+  justify-content: space-between;
+  padding-top: 10px;
+  position: relative; /* 改为相对定位，更好地跟随内容 */
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%; /* 确保宽度占满 */
+}
+
+.word-statusbar {
+  background-color: #f0f0f0;
+  border-top: 1px solid #ddd;
+  color: #666;
+  display: flex;
+  font-size: 12px;
+  padding: 4px 15px;
+}
+
+.word-statusbar-item {
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.word-statusbar-item i {
+  margin-right: 4px;
+}
+
+/* 修改流式输出样式 */
+.streaming .streaming-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(186, 0, 63, 1); /* 移除透明度，使其完全不透明 */
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 12px 24px;
+  z-index: 100;
+}
+
+.streaming .streaming-indicator i {
+  margin-right: 10px;
+  font-size: 20px;
+}
+
+/* 增强旋转动画效果 */
+.spinning {
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 添加页脚和页码样式 */
+.word-footer {
+  position: absolute;
+  bottom: 10px;
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 60px;
+  color: #777;
+  font-size: 12px;
+  font-family: 'Calibri', 'Microsoft YaHei', sans-serif;
+}
+
+.word-page-number {
+  text-align: left;
+}
+
+.word-document-title {
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+
+/* 添加Word状态栏样式 */
+.word-statusbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  background-color: #f3f3f3;
+  border-top: 1px solid #e0e0e0;
+  padding: 4px 16px;
+  gap: 24px;
+  font-size: 12px;
+  color: #666;
+  height: 24px;
+}
+
+.word-statusbar-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.word-statusbar-item i {
+  font-size: 14px;
+  color: #2b579a;
+}
+
+/* 加载中的点动画 */
+.loading-dots span {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background-color: #666;
+  border-radius: 50%;
+  margin: 0 2px;
+  animation: dotPulse 1.4s infinite ease-in-out;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dotPulse {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.model-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.spinning {
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 创作小贴士模态窗口 - 替换为el-drawer抽屉组件 */
+.knowledge-drawer {
+  width: 30%;
+}
+
+.knowledge-content {
+  padding: 20px;
+}
+
+.knowledge-section {
+  margin-bottom: 20px;
+}
+
+.knowledge-subtitle {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.knowledge-icon {
+  margin-right: 10px;
+}
+
+.knowledge-text {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* 流式输出样式 */
+.streaming .streaming-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(186, 0, 63, 1); /* 移除透明度，使其完全不透明 */
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 12px 24px;
+  z-index: 100;
+}
+
+.streaming .streaming-indicator i {
+  margin-right: 10px;
+  font-size: 20px;
+}
+
+/* 增强旋转动画效果 */
+.spinning {
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.streaming .word-content {
+  position: relative;
+}
+
+.streaming .word-content::after {
+  content: '|';
+  display: inline-block;
+  animation: blink 1s step-end infinite;
+  color: var(--primary-color, #ba003f);
+  font-weight: bold;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* 确保轮播控制按钮可点击 */
+.carousel-controls {
+  display: flex;
+  gap: 8px;
+  position: relative;
+  z-index: 10; /* 提高z-index确保控件在最上层 */
+}
+
+.carousel-control {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: white;
+  border: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+  z-index: 15; /* 确保按钮在最上层 */
+  pointer-events: auto !important; /* 强制启用点击事件 */
+}
+
+.carousel-control i {
+  font-size: 20px;
+  color: #666;
+  display: inline-block; /* 确保图标可见 */
+  line-height: 1; /* 修正行高 */
+  pointer-events: none; /* 防止图标干扰点击 */
+}
+
+.carousel-control:hover {
+  background-color: rgba(186, 0, 63, 0.05);
+  border-color: var(--primary-color, #ba003f);
+}
+
+.carousel-control:hover i {
+  color: var(--primary-color, #ba003f);
+}
+
+.carousel-control.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none; /* 禁用点击 */
 }
 </style> 

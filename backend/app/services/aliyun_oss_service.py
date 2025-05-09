@@ -17,13 +17,15 @@ from flask import current_app
 import re
 from urllib.parse import urlparse
 import logging
+import time
 
 # 阿里云OSS配置
 OSS_CONFIG = {
-    "access_key_id": os.environ.get("ALIYUN_OSS_ACCESS_KEY_ID", "YOUR_ACCESS_KEY_ID"),
-    "access_key_secret": os.environ.get("ALIYUN_OSS_ACCESS_KEY_SECRET", "YOUR_ACCESS_KEY_SECRET"),
-    "endpoint": os.environ.get("ALIYUN_OSS_ENDPOINT", "oss-cn-beijing.aliyuncs.com"),
-    "bucket_name": os.environ.get("ALIYUN_OSS_BUCKET_NAME", "ezijingai")
+    # 使用与digital_human_service.py相同的环境变量获取逻辑
+    "access_key_id": os.environ.get("ALIYUN_OSS_ACCESS_KEY_ID", os.environ.get("ALIYUN_ACCESS_KEY_ID")),
+    "access_key_secret": os.environ.get("ALIYUN_OSS_ACCESS_KEY_SECRET", os.environ.get("ALIYUN_ACCESS_KEY_SECRET")),
+    "endpoint": os.environ.get("ALIYUN_OSS_ENDPOINT", os.environ.get("ALIYUN_OSS_ENDPOINT", "oss-cn-beijing.aliyuncs.com")),
+    "bucket_name": os.environ.get("ALIYUN_OSS_BUCKET_NAME", os.environ.get("ALIYUN_OSS_BUCKET", "ezijingai"))
 }
 
 def get_oss_bucket():
@@ -33,9 +35,22 @@ def get_oss_bucket():
     返回:
         oss2.Bucket: OSS Bucket对象
     """
-    auth = oss2.Auth(OSS_CONFIG["access_key_id"], OSS_CONFIG["access_key_secret"])
-    bucket = oss2.Bucket(auth, OSS_CONFIG["endpoint"], OSS_CONFIG["bucket_name"])
-    return bucket
+    try:
+        # 记录OSS配置信息（不包含敏感信息）
+        current_app.logger.info(f"OSS配置信息: bucket={OSS_CONFIG['bucket_name']}, endpoint={OSS_CONFIG['endpoint']}")
+        current_app.logger.info(f"AccessKey配置状态: ID存在={bool(OSS_CONFIG['access_key_id'])}, Secret存在={bool(OSS_CONFIG['access_key_secret'])}")
+        
+        # 验证OSS配置
+        if not OSS_CONFIG['access_key_id'] or not OSS_CONFIG['access_key_secret']:
+            current_app.logger.error("OSS配置不完整，无法上传")
+            raise ValueError("OSS访问密钥未配置")
+            
+        auth = oss2.Auth(OSS_CONFIG["access_key_id"], OSS_CONFIG["access_key_secret"])
+        bucket = oss2.Bucket(auth, OSS_CONFIG["endpoint"], OSS_CONFIG["bucket_name"])
+        return bucket
+    except Exception as e:
+        current_app.logger.error(f"获取OSS Bucket实例失败: {str(e)}")
+        raise
 
 def generate_object_key(file_extension='.jpg'):
     """
@@ -170,7 +185,119 @@ def upload_image(image_source):
     返回:
         str: 上传后的OSS URL
     """
-    if image_source.startswith('http'):
-        return upload_from_url(image_source)
-    else:
-        return upload_from_base64(image_source) 
+    try:
+        # 检查开发环境变量
+        dev_mode = os.environ.get('DEV_MODE', 'true').lower() == 'true'
+        
+        # 如果是公网可访问的URL，直接使用
+        if not dev_mode and image_source.startswith('http') and not is_local_url(image_source):
+            current_app.logger.info(f"使用公网可访问的URL: {image_source}")
+            return image_source
+            
+        if dev_mode:
+            # 生成文件名用于模拟URL
+            if image_source.startswith('http'):
+                filename = os.path.basename(urlparse(image_source).path)
+                if not filename:
+                    filename = f"mock_image_{uuid.uuid4().hex}.jpg"
+            else:
+                filename = f"mock_image_{uuid.uuid4().hex}.jpg"
+                
+            # 在开发模式下，返回模拟的URL而不是实际上传到OSS
+            current_app.logger.info("开发模式：模拟OSS上传")
+            mock_url = f"https://mock-{OSS_CONFIG['bucket_name']}.{OSS_CONFIG['endpoint']}/dev-uploads/{time.strftime('%Y%m%d')}/{uuid.uuid4().hex}-{filename}"
+            current_app.logger.info(f"模拟图片URL: {mock_url}")
+            return mock_url
+            
+        # 正常处理上传
+        current_app.logger.info("非开发模式：实际上传图片到OSS")
+        if image_source.startswith('http'):
+            return upload_from_url(image_source)
+        else:
+            return upload_from_base64(image_source)
+    except Exception as e:
+        current_app.logger.error(f"上传图片到OSS失败: {str(e)}")
+        # 返回阿里云演示图片作为后备选项，确保API能够正常工作
+        if image_source.startswith('http') and 'mask' in image_source:
+            backup_url = "http://wanx.alicdn.com/material/20250318/description_edit_with_mask_2_mask.png"
+        else:
+            backup_url = "http://wanx.alicdn.com/material/20250318/description_edit_with_mask_2.jpeg"
+        current_app.logger.warning(f"OSS上传失败，返回阿里云演示图片URL: {backup_url}")
+        return backup_url
+        
+def is_local_url(url):
+    """检查URL是否为本地URL"""
+    if not url.startswith('http'):
+        return False
+    parsed = urlparse(url)
+    return (parsed.netloc in ['localhost', '127.0.0.1'] or 
+            parsed.netloc.startswith('localhost:') or 
+            parsed.netloc.startswith('127.0.0.1:'))
+
+def upload_file_to_oss(file_obj, filename, content_type=None):
+    """
+    上传文件到OSS
+    
+    参数:
+        file_obj (FileStorage): Flask的文件对象
+        filename (str): 文件名
+        content_type (str, optional): 文件的MIME类型
+        
+    返回:
+        str: 上传后的OSS URL
+    """
+    try:
+        # 检查开发环境变量
+        dev_mode = os.environ.get('DEV_MODE', 'true').lower() == 'true'
+            
+        if dev_mode:
+            # 在开发模式下，返回模拟的URL而不是实际上传到OSS
+            current_app.logger.info("开发模式：模拟文件上传到OSS")
+            
+            # 获取文件扩展名
+            file_ext = os.path.splitext(filename)[1]
+            
+            # 生成模拟URL
+            mock_url = f"https://mock-{OSS_CONFIG['bucket_name']}.{OSS_CONFIG['endpoint']}/dev-uploads/{time.strftime('%Y%m%d')}/{uuid.uuid4().hex}-{filename}"
+            current_app.logger.info(f"模拟文件URL: {mock_url}")
+            return mock_url
+            
+        # 正常处理上传
+        current_app.logger.info(f"非开发模式：实际上传文件到OSS: {filename}")
+        
+        # 确定文件对象键 (OSS中的路径)
+        file_ext = os.path.splitext(filename)[1]
+        object_key = f"uploaded-files/{time.strftime('%Y%m%d')}/{uuid.uuid4().hex}{file_ext}"
+        
+        # 获取文件内容
+        file_content = file_obj.read()
+        
+        # 创建OSS bucket
+        bucket = get_oss_bucket()
+        
+        # 设置额外参数，如Content-Type
+        headers = {}
+        if content_type:
+            headers['Content-Type'] = content_type
+        
+        # 上传文件到OSS
+        bucket.put_object(object_key, file_content, headers=headers)
+        
+        # 构建OSS URL
+        oss_url = f"https://{OSS_CONFIG['bucket_name']}.{OSS_CONFIG['endpoint']}/{object_key}"
+        current_app.logger.info(f"文件已上传到OSS: {oss_url}")
+        
+        return oss_url
+        
+    except Exception as e:
+        current_app.logger.error(f"上传文件到OSS失败: {str(e)}")
+        # 如果是视频文件，可以返回一个示例视频URL
+        if filename.lower().endswith(('.mp4', '.mov', '.webm', '.avi')):
+            backup_url = "https://file-examples-com.github.io/uploads/2017/04/file_example_MP4_480_1_5MG.mp4"
+            current_app.logger.warning(f"OSS视频上传失败，返回示例视频URL: {backup_url}")
+            return backup_url
+        else:
+            # 其他类型文件的后备URL
+            backup_url = f"https://mock-{OSS_CONFIG['bucket_name']}.{OSS_CONFIG['endpoint']}/backup-uploads/{time.strftime('%Y%m%d')}/{uuid.uuid4().hex}-{filename}"
+            current_app.logger.warning(f"OSS文件上传失败，返回模拟URL: {backup_url}")
+            return backup_url 

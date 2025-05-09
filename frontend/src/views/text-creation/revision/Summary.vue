@@ -1,12 +1,13 @@
 <template>
-  <div class="longform-article-page">
+  <div class="longform-article-page text-creation-page">
     <div class="page-header">
       <div class="page-nav">
         <h2>文章总结</h2>
       </div>
       <div class="page-actions">
-        <button class="action-btn" title="创作小贴士" @click="showTips">
-          <i class="ri-lightbulb-line"></i>
+        <button class="learn-button" title="知识学习" @click="showTips">
+          <i class="ri-book-open-line"></i>
+          知识学习
         </button>
       </div>
     </div>
@@ -18,120 +19,123 @@
         <div class="section-header">
           <h3 class="section-title">
             <i class="ri-file-text-line"></i>
-            文本输入
+            输入参数
           </h3>
         </div>
         
-        <!-- 移除诗歌类型、主题、风格倾向、背景情景和关键词部分 -->
-        
-        <!-- 文本输入支持直接输入和上传文件两种形式 -->
-        <div class="form-group">
-          <label for="text-input" class="required">直接文本输入</label>
-          <textarea 
-            id="text-input" 
-            v-model="textInput" 
-            placeholder="请输入需要总结的文本内容（最多1000个汉字）..."
-            class="form-control"
-            rows="10"
-            maxlength="1000"
-          ></textarea>
-          <div class="text-counter">{{textInput.length}}/1000</div>
-        </div>
-        
-        <div class="form-group">
-          <label for="file-upload">上传文件</label>
-          <div class="file-upload-container">
-            <button class="file-upload-btn" disabled>
-              <i class="ri-upload-2-line"></i>
-              选择文件
+        <div class="input-section-content">
+          <!-- 文本输入支持直接输入和上传文件两种形式 -->
+          <div class="form-group">
+            <label for="text-input" class="form-control-label required">直接文本输入</label>
+            <textarea 
+              id="text-input" 
+              v-model="textInput" 
+              placeholder="请输入需要总结的文本内容（最多1000个汉字）..."
+              class="form-control"
+              rows="10"
+              maxlength="1000"
+            ></textarea>
+            <div class="text-counter">{{textInput.length}}/1000</div>
+          </div>
+          
+          <!-- 注释掉文件上传区域 -->
+          <!--
+          <div class="form-group">
+            <label for="file-upload" class="form-control-label">上传文件</label>
+            <div class="file-upload-container">
+              <button class="file-upload-btn" disabled>
+                <i class="ri-upload-2-line"></i>
+                选择文件
+              </button>
+              <span class="file-upload-hint">文件上传功能暂不可用</span>
+            </div>
+          </div>
+          -->
+          
+          <!-- 总结长度 -->
+          <div class="form-group">
+            <label class="form-control-label">总结长度</label>
+            <div class="radio-group">
+              <div class="radio-item" :class="{'radio-active': summaryLength === 'short'}">
+                <input type="radio" v-model="summaryLength" value="short" name="summaryLength" id="length-short">
+                <label class="radio-label" for="length-short">简短</label>
+              </div>
+              <div class="radio-item" :class="{'radio-active': summaryLength === 'medium'}">
+                <input type="radio" v-model="summaryLength" value="medium" name="summaryLength" id="length-medium">
+                <label class="radio-label" for="length-medium">中等</label>
+              </div>
+              <div class="radio-item" :class="{'radio-active': summaryLength === 'detailed'}">
+                <input type="radio" v-model="summaryLength" value="detailed" name="summaryLength" id="length-detailed">
+                <label class="radio-label" for="length-detailed">详细</label>
+              </div>
+              <div class="radio-item" :class="{'radio-active': summaryLength === 'comprehensive'}">
+                <input type="radio" v-model="summaryLength" value="comprehensive" name="summaryLength" id="length-comprehensive">
+                <label class="radio-label" for="length-comprehensive">全面</label>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 总结选项 -->
+          <div class="form-group">
+            <label class="form-control-label">总结选项</label>
+            <div class="checkbox-group">
+              <div class="checkbox-item" :class="{'checkbox-active': summaryOptions.keyPoints}">
+                <input type="checkbox" v-model="summaryOptions.keyPoints" id="keyPoints">
+                <label class="checkbox-label" for="keyPoints">提取关键观点</label>
+              </div>
+              <div class="checkbox-item" :class="{'checkbox-active': summaryOptions.keywords}">
+                <input type="checkbox" v-model="summaryOptions.keywords" id="keywords">
+                <label class="checkbox-label" for="keywords">包含关键词</label>
+              </div>
+              <div class="checkbox-item" :class="{'checkbox-active': summaryOptions.outline}">
+                <input type="checkbox" v-model="summaryOptions.outline" id="outline">
+                <label class="checkbox-label" for="outline">生成文档大纲</label>
+              </div>
+              <div class="checkbox-item" :class="{'checkbox-active': summaryOptions.takeaways}">
+                <input type="checkbox" v-model="summaryOptions.takeaways" id="takeaways">
+                <label class="checkbox-label" for="takeaways">包含核心要点</label>
+              </div>
+              <div class="checkbox-item" :class="{'checkbox-active': summaryOptions.simpleLang}">
+                <input type="checkbox" v-model="summaryOptions.simpleLang" id="simpleLang">
+                <label class="checkbox-label" for="simpleLang">使用简明语言</label>
+              </div>
+              <div class="checkbox-item" :class="{'checkbox-active': summaryOptions.stats}">
+                <input type="checkbox" v-model="summaryOptions.stats" id="stats">
+                <label class="checkbox-label" for="stats">包含文档统计</label>
+              </div>
+              <div class="checkbox-item" :class="{'checkbox-active': summaryOptions.quotes}">
+                <input type="checkbox" v-model="summaryOptions.quotes" id="quotes">
+                <label class="checkbox-label" for="quotes">包含关键引述</label>
+              </div>
+              <div class="checkbox-item" :class="{'checkbox-active': summaryOptions.academic}">
+                <input type="checkbox" v-model="summaryOptions.academic" id="academic">
+                <label class="checkbox-label" for="academic">学术风格</label>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 模型选择 -->
+          <div class="form-group">
+            <label for="model" class="form-control-label">AI模型</label>
+            <select id="model" v-model="selectedModel" class="form-control">
+              <option v-for="model in modelList" :key="model.id" :value="model.id">
+                {{ model.name }}
+              </option>
+            </select>
+          </div>
+          
+          <!-- 生成按钮 -->
+          <div class="action-buttons">
+            <button @click="generateLongform" class="btn btn-primary" :disabled="isGenerating">
+              <i class="ri-magic-line" v-if="!isGenerating"></i>
+              <i class="ri-loader-4-line spinning" v-else></i>
+              {{ isGenerating ? '总结中...' : '开始总结' }}
             </button>
-            <span class="file-upload-hint">文件上传功能暂不可用</span>
+            <button @click="resetForm" class="btn btn-secondary">
+              <i class="ri-refresh-line"></i>
+              重置
+            </button>
           </div>
-        </div>
-        
-        <!-- 总结长度 -->
-        <div class="form-group">
-          <label>总结长度</label>
-          <div class="checkbox-group">
-            <label class="checkbox-container">
-              <input type="radio" v-model="summaryLength" value="short" name="summaryLength">
-              <span>简短</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="radio" v-model="summaryLength" value="medium" name="summaryLength">
-              <span>中等</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="radio" v-model="summaryLength" value="detailed" name="summaryLength">
-              <span>详细</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="radio" v-model="summaryLength" value="comprehensive" name="summaryLength">
-              <span>全面</span>
-            </label>
-          </div>
-        </div>
-        
-        <!-- 总结选项 -->
-        <div class="form-group">
-          <label>总结选项</label>
-          <div class="checkbox-group">
-            <label class="checkbox-container">
-              <input type="checkbox" v-model="summaryOptions.keyPoints">
-              <span>提取关键观点</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" v-model="summaryOptions.keywords">
-              <span>包含关键词</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" v-model="summaryOptions.outline">
-              <span>生成文档大纲</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" v-model="summaryOptions.takeaways">
-              <span>包含核心要点</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" v-model="summaryOptions.simpleLang">
-              <span>使用简明语言</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" v-model="summaryOptions.stats">
-              <span>包含文档统计</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" v-model="summaryOptions.quotes">
-              <span>包含关键引述</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" v-model="summaryOptions.academic">
-              <span>学术风格</span>
-            </label>
-          </div>
-        </div>
-        
-        <!-- 模型选择 -->
-        <div class="form-group">
-          <label for="model">AI模型</label>
-          <select id="model" v-model="selectedModel" class="form-control">
-            <option v-for="model in modelList" :key="model.id" :value="model.id">
-              {{ model.name }}
-            </option>
-          </select>
-        </div>
-        
-        <!-- 生成按钮 -->
-        <div class="action-buttons">
-          <button @click="generateLongform" class="btn btn-primary" :disabled="isGenerating">
-            <i class="ri-magic-line" v-if="!isGenerating"></i>
-            <i class="ri-loader-4-line spinning" v-else></i>
-            {{ isGenerating ? '总结中...' : '开始总结' }}
-          </button>
-          <button @click="resetForm" class="btn btn-secondary">
-            <i class="ri-refresh-line"></i>
-            重置
-          </button>
         </div>
       </div>
       
@@ -142,7 +146,7 @@
           <div class="section-header">
             <h3 class="section-title">
               <i class="ri-article-line"></i>
-              总结结果
+              AI生成内容
             </h3>
             <div class="action-buttons">
               <button @click="generateLongform" class="primary-button" :disabled="isGenerating">
@@ -154,7 +158,7 @@
                 <i class="ri-file-copy-line"></i>
                 复制文本
               </button>
-              <button @click="showPrompt" class="prompt-button" :disabled="!lastUsedPrompt">
+              <button @click="showPrompt" class="secondary-button" :disabled="!lastUsedPrompt">
                 <i class="ri-code-line"></i>
                 查看提示词
               </button>
@@ -170,7 +174,7 @@
             
             <div v-if="!generatedNote && !isGenerating" class="empty-result">
               <div class="empty-content">
-                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgZmlsbC1vcGFjaXR5PSIuMDgiIGZpbGw9IiNEOEQ4RDgiIGN4PSI2NCIgY3k9IjY0IiByPSI2NCIvPjxwYXRoIGQ9Ik00MS41OTkgNDkuODhjMS4xIDAgMiAuOSAyIDJ2MzIuMjRjMCAxLjEtLjkgMi0yIDJoLTguOTdhLjk3Ljk3IDAgMDEtLjk1LS45NSAwIDAgMCAwLS4wNCAwIDAgMCAwLS4wM3YtMjkuNTFjMC0xLjk5IDEuNjItMy42MiAzLjYyLTMuNjJsMCAwUTQxLjU5OCA0OS44OTggNDEuNTk5IDQ5Ljg4ek04Ni4wNyA0OS44OGMxLjEgMCAyIC45IDIgMnYzMi4yNGMwIDEuMS0uOSAyLTIgMmgtOC45N3MtLjk2LS43OS0uOTYtLjk2VjUyLjgyYzAtMS42MiAxLjMyLTIuOTUgMi45NS0yLjk1bDAgMGg2Ljk4ek02NC4wNyA0Ni44M2MxLjMxIDAgMi4zNyAxLjA2IDIuMzcgMi4zN3YzNC44OGMwIDEuMzEtMS4wNiAyLjM3LTIuMzcgMi4zN2gtOS43YTIuMzcgMi4zNyAwIDAxLTIuMzctMi4zN1Y0OS4yYzAtMS4zMSAxLjA2LTIuMzcgMi4zNy0yLjM3bDAgMGg5LjciIGZpbGw9IiNFMUUxRTEiLz48cGF0aCBkPSJNMzIuNjMgNjkuNzVjMCAyLjYgMi4xMSA0LjcxIDQuNzEgNC43MXMyLjYtMi4xMSA0LjctNC43MS0yLjExLTQuNzEtNC43LTQuNzEtNC43MSAyLjExLTQuNzEgNC43MXpNODcuMDMgNjkuNzVjMCAyLjYtMi4xMSA0LjcxLTQuNzEgNC43MXMtNC43MS0yLjExLTQuNzEtNC43MSAyLjExLTQuNzEgNC43MS00LjcxIDQuNzEgMi4xMSA0LjcxIDQuNzF6TTY0LjQgNjcuMzhjMCAzLjczLTMuMDIgNi43NS02Ljc1IDYuNzVzLTYuNzYtMy4wMi02Ljc2LTYuNzUgMy4wMy02Ljc2IDYuNzYtNi43NiA2Ljc1IDMuMDMgNi43NSA2Ljc2eiIgZmlsbD0iI0JBMDA0MCIgZmlsbC1vcGFjaXR5PSIuNSIvPjwvZz48L3N2Zz4=" class="empty-image" alt="暂无数据" />
+                <img src="@/assets/images/no_data.png" class="empty-image" alt="暂无数据" />
                 <p class="empty-message">暂无总结内容，请点击"开始总结"按钮开始总结</p>
               </div>
             </div>
@@ -183,29 +187,25 @@
       </div>
     </div>
     
-    <!-- 创作小贴士模态框 -->
-    <div class="modal" v-if="showTipsModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3><i class="ri-lightbulb-line"></i> 总结小贴士</h3>
-          <button class="close-btn" @click="showTipsModal = false">
-            <i class="ri-close-line"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <ul class="tips-list">
-            <li>📝 提取要点 - 阅读全文，识别并提取核心观点和关键信息</li>
-            <li>🔍 内容浓缩 - 用简洁语言概括原文内容，保留关键信息</li>
-            <li>🚫 避免细节 - 总结应聚焦于主要观点，省略不必要的细节</li>
-            <li>❗ 保持客观 - 避免添加个人解释或评价，忠实原文观点</li>
-            <li>🔄 结构清晰 - 使用有条理的结构呈现总结内容</li>
-            <li>📊 按比例总结 - 文章各部分总结长度应与原文比例相符</li>
-            <li>🌈 保持连贯 - 确保总结内容连贯流畅，逻辑清晰</li>
-            <li>📖 检查准确性 - 确保总结内容与原文一致，无错误理解</li>
-          </ul>
+    <!-- 知识学习侧边抽屉 -->
+    <el-drawer
+      v-model="showTipsModal"
+      title="文章总结创作指南"
+      direction="rtl"
+      size="30%"
+      :destroy-on-close="false"
+      class="knowledge-drawer"
+    >
+      <div class="knowledge-content">
+        <div v-for="(item, index) in summaryKnowledge" :key="index" class="knowledge-section">
+          <h3 class="knowledge-subtitle">
+            <i :class="item.icon" class="knowledge-icon"></i>
+            {{ item.subtitle }}
+          </h3>
+          <div class="knowledge-text" v-html="formatMarkdown(item.text)"></div>
         </div>
       </div>
-    </div>
+    </el-drawer>
 
     <!-- 提示词模态框 -->
     <div class="modal" v-if="showPromptModal">
@@ -239,6 +239,8 @@
 
 <script>
 import axios from 'axios';
+import { summaryKnowledge } from '@/views/Knowledge_data.js';
+import '@/assets/css/text-creation-common.css'; // 引入统一CSS样式文件
 
 export default {
   name: 'Summary',
@@ -273,8 +275,14 @@ export default {
       showPromptModal: false,
       
       // 模型选择 - 默认使用火山引擎V3
-      selectedModel: 'deepseek-v3-vol',
+      selectedModel: 'deepseek-v3',
       modelList: [],
+      
+      // 添加知识库内容
+      summaryKnowledge: summaryKnowledge,
+      
+      // 添加流式输出状态标记
+      isStreaming: false,
     };
   },
   mounted() {
@@ -290,22 +298,29 @@ export default {
         console.log('获取模型列表响应:', response.data);
         
         if (response.data && response.data.status === 'success') {
-          // 不做过滤，获取所有可用模型
-          this.modelList = response.data.data || [];
-          console.log('可用模型列表:', this.modelList);
+          // 获取API返回的所有模型
+          const allModels = response.data.data || [];
+          console.log('API返回的模型列表:', allModels);
+          
+          // 只保留火山引擎的R1、V3和豆包大模型
+          this.modelList = allModels.filter(model => 
+            model.id === 'deepseek-v3' || 
+            model.id === 'deepseek-r1' || 
+            model.id === 'doubi-doupo'
+          );
+          
+          console.log('过滤后的可用模型列表:', this.modelList);
           
           // 如果没有模型，添加默认模型
           if (this.modelList.length === 0) {
             console.log('未找到可用模型，使用默认模型');
-            this.modelList.push({ id: 'deepseek-v3-vol', name: '火山引擎 DeepSeek V3' });
+            this.modelList.push({ id: 'deepseek-v3', name: '火山引擎 DeepSeek V3' });
           }
           
-          // 默认选择火山引擎V3或第一个可用模型
-          if (!this.selectedModel) {
-            const volcanoModel = this.modelList.find(model => model.id === 'deepseek-v3-vol');
-            this.selectedModel = volcanoModel ? volcanoModel.id : (this.modelList[0] ? this.modelList[0].id : 'deepseek-v3-vol');
-            console.log('已选择模型:', this.selectedModel);
-          }
+          // 默认选择火山引擎V3
+          const volcanoModel = this.modelList.find(model => model.id === 'deepseek-v3');
+          this.selectedModel = volcanoModel ? volcanoModel.id : (this.modelList[0] ? this.modelList[0].id : 'deepseek-v3');
+          console.log('已选择模型:', this.selectedModel);
         } else {
           console.error('获取模型列表失败:', response.data?.message);
           this.setupDefaultModels();
@@ -324,13 +339,15 @@ export default {
     setupDefaultModels() {
       console.log('使用默认模型列表');
       this.modelList = [
-        { id: 'deepseek-v3-vol', name: '火山引擎 DeepSeek V3' },
-        { id: 'deepseek-r1-vol', name: 'DeepSeek-R1（火山引擎）' },
-        { id: 'deepseek-r1-sf', name: 'DeepSeek-R1（硅基流动）' },
-        { id: 'deepseek-v3-sf', name: 'DeepSeek-V3（硅基流动）' },
-        { id: 'qwq-32b', name: '通义千问-32B（硅基流动）' }
+        { id: 'deepseek-v3', name: '火山引擎 DeepSeek V3' },
+        { id: 'deepseek-r1', name: 'DeepSeek-R1（火山引擎）' },
+        { id: 'doubi-doupo', name: '豆包大模型' }
+        // 以下模型已注释掉
+        // { id: 'deepseek-r1-sf', name: 'DeepSeek-R1（硅基流动）' },
+        // { id: 'deepseek-v3-sf', name: 'DeepSeek-V3（硅基流动）' },
+        // { id: 'qwq-32b', name: '通义千问-32B（硅基流动）' }
       ];
-      this.selectedModel = 'deepseek-v3-vol';
+      this.selectedModel = 'deepseek-v3';
     },
     
     // 生成总结结果的方法
@@ -347,172 +364,129 @@ export default {
         // 构建提示词
         const prompt = this.generatePrompt();
         
-        // 构建API请求
-        const systemMessage = "你是一位专业的文章总结专家，能够提供准确、精炼的文章摘要和关键内容提炼。";
-        const userMessage = prompt;
-        
-        const apiMessages = [
-          { role: "system", content: systemMessage },
-          { role: "user", content: userMessage }
+        // 保存提示词供后续显示
+        this.lastUsedPrompt = [
+          { role: "system", content: "你是一位专业的文章总结专家，能够提供准确、精炼的文章摘要和关键内容提炼。" },
+          { role: "user", content: prompt }
         ];
-        
-        // 保存apiMessages供后续显示
-        this.lastUsedPrompt = apiMessages;
         
         this.loadingText = '正在总结文章，请耐心等待...';
         
         // 确保选择了模型
         if (!this.selectedModel) {
-          this.selectedModel = 'deepseek-v3-vol';
+          this.selectedModel = 'deepseek-v3';
           console.log('未选择模型，已自动选择默认模型');
         }
         
-        // 调用API (增加timeout和重试逻辑)
-        console.log('开始调用API，模型:', this.selectedModel);
+        // 准备API请求参数
+        const apiParams = {
+          model: this.selectedModel,
+          messages: [{ role: 'user', content: prompt }],
+          stream: true,
+          temperature: 0.7,
+          max_tokens: 2000
+        };
         
-        let maxRetries = 2;
-        let retryCount = 0;
-        let response;
+        console.log('API请求参数:', JSON.stringify(apiParams));
         
-        while (retryCount <= maxRetries) {
-          try {
-            if (retryCount > 0) {
-              this.loadingText = `正在重试总结 (${retryCount}/${maxRetries})...`;
-              console.log(`尝试第${retryCount}次重试...`);
+        try {
+          // 开始流式状态
+          this.isStreaming = true;
+          
+          // 发送API请求，使用fetch API来处理流式响应
+          console.log('开始发送流式请求到:', '/api/v1/v1/deepseek_volcano/chat');
+          const response = await fetch('/api/v1/v1/deepseek_volcano/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'text/event-stream'
+            },
+            body: JSON.stringify(apiParams)
+          });
+          
+          console.log('收到响应, 状态码:', response.status);
+          console.log('响应头:', {
+            'Content-Type': response.headers.get('Content-Type'),
+            'Transfer-Encoding': response.headers.get('Transfer-Encoding')
+          });
+          
+          if (!response.ok) {
+            throw new Error(`服务器返回错误: ${response.status}`);
+          }
+          
+          // 处理流式响应
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          
+          // 读取流数据
+          while (true) {
+            const { done, value } = await reader.read();
+            
+            if (done) {
+              console.log('流式响应完成');
+              break;
             }
             
-            response = await axios.post('/api/v1/llm/chat', {
-              model: this.selectedModel,
-              messages: apiMessages,
-              temperature: 0.7,
-              top_p: 0.95,
-              max_tokens: 2000
-            }, { 
-              timeout: 60000 // 设置60秒超时
-            });
+            // 解码二进制数据
+            const decoded = decoder.decode(value, { stream: true });
+            console.log('收到数据块:', decoded.length, '字节');
+            buffer += decoded;
             
-            // 如果成功获取响应，跳出重试循环
-            console.log('API调用成功，响应状态:', response.status);
-            console.log('API调用成功，返回数据类型:', typeof response.data);
+            // 处理收到的数据
+            const lines = buffer.split('\n\n');
+            buffer = lines.pop() || '';
             
-            // 检查响应是否包含预期的字段
-            if (response.data) {
-              const hasStatus = 'status' in response.data;
-              const hasData = 'data' in response.data;
-              const hasContent = 'content' in response.data;
-              console.log(`响应字段检查: status=${hasStatus}, data=${hasData}, content=${hasContent}`);
-              
-              if (hasData && response.data.data) {
-                const dataType = typeof response.data.data;
-                console.log(`data字段类型: ${dataType}`);
+            for (const line of lines) {
+              if (line.trim() === '') continue;
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6);
+                if (data === '[DONE]') {
+                  console.log('收到结束标志');
+                  continue;
+                }
                 
-                if (dataType === 'object') {
-                  console.log('data对象字段:', Object.keys(response.data.data).join(', '));
+                try {
+                  console.log('解析数据:', data.substring(0, 100) + '...');
+                  const parsed = JSON.parse(data);
+                  console.log('解析后的数据格式:', Object.keys(parsed));
                   
-                  // 检查choices字段
-                  if (response.data.data.choices) {
-                    console.log('choices数量:', response.data.data.choices.length);
-                    if (response.data.data.choices.length > 0) {
-                      const choice = response.data.data.choices[0];
-                      console.log('第一个choice字段:', Object.keys(choice).join(', '));
-                      if (choice.message) {
-                        console.log('消息角色:', choice.message.role);
-                        console.log('消息内容 (前200字符):', choice.message.content.substring(0, 200));
-                      }
+                  // 处理错误消息
+                  if (parsed.error) {
+                    console.error("API错误:", parsed.error);
+                    throw new Error(parsed.error.message || '生成总结失败');
+                  }
+                  
+                  // 处理火山引擎返回的delta格式数据
+                  if (parsed.choices && parsed.choices.length > 0 && parsed.choices[0].delta) {
+                    const delta = parsed.choices[0].delta;
+                    
+                    // 处理内容增量
+                    if (delta.content) {
+                      console.log("收到内容增量:", delta.content);
+                      // 累加收到的内容
+                      this.generatedNote += delta.content;
                     }
                   }
+                } catch (e) {
+                  console.error('解析流式数据失败:', e, data);
                 }
               }
             }
-            
-            break;
-          } catch (error) {
-            console.error(`API调用失败 (尝试 ${retryCount+1}/${maxRetries+1}):`, error.message);
-            
-            if (retryCount === maxRetries) {
-              // 所有重试都失败了，抛出最后一个错误
-              throw error;
-            }
-            
-            // 增加重试次数并继续
-            retryCount++;
-            // 等待一段时间再重试 (1秒)
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-        }
-        
-        // 日志记录API响应状态
-        console.log('API响应状态:', response.status);
-        console.log('API响应数据:', response.data);
-        
-        if (response.data && response.data.status === 'success') {
-          // 从响应中提取生成的内容
-          let content = '';
-          
-          if (response.data.data && response.data.data.choices && response.data.data.choices.length > 0) {
-            // 火山引擎格式
-            const message = response.data.data.choices[0].message;
-            content = message.content || '';
-            console.log('使用火山引擎响应格式，内容长度:', content.length);
-          } else if (response.data.data && response.data.data.response) {
-            // 硅基流动格式
-            content = response.data.data.response || '';
-            console.log('使用硅基流动响应格式，内容长度:', content.length);
-          } else if (response.data.data && typeof response.data.data === 'string') {
-            // 直接返回字符串
-            content = response.data.data;
-            console.log('使用字符串响应格式，内容长度:', content.length);
-          } else if (response.data.content) {
-            // 直接包含在内容字段
-            content = response.data.content;
-            console.log('使用content字段响应格式，内容长度:', content.length);
-          } else if (response.data.data) {
-            // 尝试直接获取data对象
-            const dataObj = response.data.data;
-            if (typeof dataObj === 'object' && dataObj.message && dataObj.message.content) {
-              content = dataObj.message.content;
-              console.log('从data.message.content获取内容，长度:', content.length);
-            } else if (typeof dataObj === 'object' && dataObj.content) {
-              content = dataObj.content;
-              console.log('从data.content获取内容，长度:', content.length);
-            } else {
-              // 尝试将整个data对象转换为字符串
-              content = JSON.stringify(dataObj);
-              console.log('将整个data对象转换为字符串，长度:', content.length);
-            }
           }
           
-          // 添加调试日志
-          console.log('API响应数据结构:', JSON.stringify(response.data, null, 2));
+          // 处理完成，移除流式状态
+          this.isStreaming = false;
+          console.log('流式响应处理完成，生成的内容长度:', this.generatedNote.length);
           
-          if (content) {
-            this.generatedNote = content;
-            console.log('成功获取总结结果');
-            // 添加成功提示
-            this.$message ? this.$message.success('文章总结完成！') : alert('文章总结完成！');
-          } else {
-            console.error('API返回成功，但无法提取内容:', response.data);
-            // 尝试备用方法提取内容
-            try {
-              const rawData = JSON.stringify(response.data);
-              if (rawData.includes('"content":')) {
-                const contentMatch = rawData.match(/"content":"(.*?)"/);
-                if (contentMatch && contentMatch[1]) {
-                  this.generatedNote = contentMatch[1].replace(/\\n/g, '\n');
-                  console.log('使用备用方法提取内容成功');
-                  this.$message ? this.$message.success('文章总结完成！') : alert('文章总结完成！');
-                  return;
-                }
-              }
-            } catch (e) {
-              console.error('备用提取方法失败:', e);
-            }
-            throw new Error('无法从API响应中提取内容');
-          }
-        } else {
-          // 处理API响应不成功的情况
-          console.error('API返回不成功状态:', response.data);
-          throw new Error(response.data?.message || '服务器返回错误');
+          // 成功提示
+          this.$message ? this.$message.success('文章总结完成！') : alert('文章总结完成！');
+          
+        } catch (error) {
+          // 结束流式状态
+          this.isStreaming = false;
+          console.error('API调用异常:', error);
+          throw error;
         }
       } catch (error) {
         console.error('生成总结结果出错，详细错误:', error);
@@ -644,11 +618,6 @@ export default {
       this.generatedNote = '';
     },
     
-    // 显示创作小贴士
-    showTips() {
-      this.showTipsModal = true;
-    },
-    
     // 复制生成的文本
     copyText() {
       if (!this.generatedNote) return;
@@ -703,900 +672,134 @@ export default {
       document.body.appendChild(element);
       element.click();
       document.body.removeChild(element);
+    },
+    
+    // 显示创作小贴士
+    showTips() {
+      this.showTipsModal = true;
+    },
+    
+    // 格式化Markdown文本的方法
+    formatMarkdown(text) {
+      if (!text) return '';
+      
+      // 处理加粗文本
+      text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      
+      // 处理列表项
+      text = text.replace(/\n\n/g, '<br><br>');
+      
+      return text;
     }
   }
 };
 </script>
 
 <style scoped>
-.longform-article-page {
-  padding: 0;
-  margin-top: -40px;
-}
+/* 导入通用样式 */
+@import '~@/assets/css/text-creation-common.css';
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding: 0;
-}
-
-.page-nav h2 {
-  font-size: 24px;
-  color: #333;
-  margin: 0;
-}
-
-.page-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.action-btn {
-  background: none;
-  border: none;
-  color: #666;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s;
-}
-
-.action-btn:hover {
-  background-color: #f5f5f5;
-  color: var(--primary-color, #ba003f);
-  transform: scale(1.1);
-  box-shadow: 0 2px 6px rgba(186, 0, 63, 0.2);
-}
-
-/* 主要内容区域 - 使用两列布局 */
-.main-container {
-  display: flex;
-  gap: 20px;
-  min-height: calc(100vh - 120px);
-}
-
-/* 左侧：输入参数 */
+/* 优化左侧输入区域 */
 .input-section {
   width: 45%;
   background-color: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  padding: 15px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
 }
 
-.section-header {
+.input-section-content {
+  padding: 16px;
+  flex-grow: 1;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.section-title {
-  font-size: 18px;
-  color: #333;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.section-title i {
-  color: var(--primary-color, #ba003f);
-}
-
-.form-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
+  flex-direction: column;
 }
 
 .form-group {
-  flex: 1;
-  margin-bottom: 16px;
-  position: relative;
-  transition: all 0.3s ease;
+  margin-bottom: 18px;
 }
 
-.form-group:hover label {
-  color: var(--primary-color, #ba003f);
-}
-
-/* 标签动画效果 */
-.form-group label {
-  transition: color 0.3s ease;
+.form-control-label {
+  margin-bottom: 10px;
+  font-size: 15px;
   font-weight: 500;
-  display: block;
-  margin-bottom: 6px;
 }
 
-/* 焦点状态下整个表单组的效果 */
-.form-group:focus-within {
-  transform: translateY(-2px);
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #444;
-  font-size: 14px;
-}
-
-.required:after {
-  content: " *";
-  color: var(--primary-color, #ba003f);
-}
-
-.form-control {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.form-control:focus {
-  border-color: var(--primary-color, #ba003f);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-/* 下拉菜单的自定义样式 */
-select.form-control {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
-  background-repeat: no-repeat;
-  background-position: calc(100% - 12px) center;
-  background-size: 12px;
-  padding-right: 32px;
-  cursor: pointer;
-  transition: all 0.3s;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-select.form-control:hover {
-  border-color: #bbb;
-  background-color: #f9f9f9;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-}
-
-select.form-control:focus {
-  border-color: var(--primary-color, #ba003f);
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23ba003f' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
-}
-
-/* 优化下拉选项样式 */
-select.form-control option {
-  padding: 10px;
-  font-size: 14px;
-}
-
-/* 禁用状态样式 */
-select.form-control:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #f5f5f5;
-}
-
-/* 文本区域样式优化 */
 textarea.form-control {
-  min-height: 100px;
-  line-height: 1.5;
-  resize: vertical;
+  padding: 12px;
+  font-size: 15px;
+  line-height: 1.6;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
   background-color: #fafafa;
-  transition: all 0.3s ease;
+  min-height: 180px;
+  transition: all 0.3s;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 textarea.form-control:focus {
-  background-color: #fff;
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-/* 复选框样式 */
-.checkbox-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 5px;
-}
-
-.checkbox-container {
-  display: flex;
-  align-items: center;
-  background-color: #fcf2f5;
-  padding: 8px 14px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid #f9e0e7;
-  position: relative;
-}
-
-.checkbox-container:hover {
-  background-color: #f9e0e7;
-  transform: translateY(-2px);
-  box-shadow: 0 3px 6px rgba(186, 0, 63, 0.1);
-}
-
-.checkbox-container input {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-  height: 0;
-  width: 0;
-}
-
-.checkbox-container span {
-  padding-left: 24px;
-  position: relative;
-  font-weight: 500;
-  color: #555;
-}
-
-.checkbox-container span:before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  border: 1px solid #e6aebe;
-  background-color: #fff;
-  transition: all 0.2s ease;
-}
-
-.checkbox-container input:checked + span:before {
-  background-color: var(--primary-color, #ba003f);
   border-color: var(--primary-color, #ba003f);
-}
-
-.checkbox-container input:checked + span:after {
-  content: '';
-  position: absolute;
-  left: 6px;
-  top: 50%;
-  width: 6px;
-  height: 10px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: translateY(-75%) rotate(45deg);
-}
-
-.checkbox-container input:focus + span:before {
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-.checkbox-container:active {
-  transform: scale(0.98);
-}
-
-/* 操作按钮 */
-.action-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 15px;
+  background-color: #fff;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05), 0 0 0 3px rgba(186, 0, 63, 0.1);
 }
 
 .btn {
+  padding: 10px 18px;
+  font-size: 15px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  height: 44px;
-  padding: 0 16px;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 6px;
+  gap: 8px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   border: none;
-}
-
-.btn:active {
-  transform: scale(0.96);
+  font-weight: 500;
 }
 
 .btn i {
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .btn-primary {
   background-color: var(--primary-color, #ba003f);
   color: white;
-  flex: 1;
+  box-shadow: 0 2px 5px rgba(186, 0, 63, 0.2);
 }
 
 .btn-primary:hover {
-  background-color: #d4004c;
-  box-shadow: 0 4px 12px rgba(186, 0, 63, 0.3);
+  background-color: #cf0046;
   transform: translateY(-2px);
-}
-
-.btn-primary:disabled {
-  background-color: #e0e0e0;
-  color: #999;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+  box-shadow: 0 4px 8px rgba(186, 0, 63, 0.3);
 }
 
 .btn-secondary {
   background-color: #f5f5f5;
-  color: #666;
+  color: #555;
+  border: 1px solid #e0e0e0;
 }
 
 .btn-secondary:hover {
-  background-color: #eaeaea;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: #e8e8e8;
+  color: #333;
   transform: translateY(-2px);
-}
-
-/* 右侧：输出内容 */
-.right-column {
-  width: 55%;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* 示例区域 */
-.examples-section {
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 12px 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  margin-bottom: 0;
-  transition: all 0.3s;
-}
-
-.examples-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.carousel-controls {
-  display: flex;
-  gap: 10px;
-}
-
-.carousel-control {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid #ddd;
-  background-color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: #666;
-}
-
-.carousel-control:hover:not(.disabled):not(:disabled) {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  border-color: var(--primary-color, #ba003f);
-  transform: scale(1.05);
-}
-
-.carousel-control.disabled,
-.carousel-control:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.carousel-control i {
-  font-size: 18px;
-}
-
-.example-carousel {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  padding-bottom: 5px;
-}
-
-.example-cards {
-  display: flex;
-  transition: transform 0.3s ease;
-  padding: 8px 0;
-  gap: 0;
-}
-
-.example-card {
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 12px;
-  margin-right: 15px;
-  width: 200px;
-  min-width: 200px;
-  max-width: 200px;
-  height: 150px;
-  min-height: 150px;
-  max-height: 150px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.3s;
-  background-color: #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  overflow: hidden;
-  box-sizing: border-box;
-}
-
-.example-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(186, 0, 63, 0.15);
-  border-color: var(--primary-color, #ba003f);
-}
-
-.example-icon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background-color: rgba(186, 0, 63, 0.1);
-  margin-bottom: 12px;
-}
-
-.example-icon svg {
-  width: 32px;
-  height: 32px;
-  color: #BA003F;
-}
-
-.example-info {
-  display: flex;
-  flex-direction: column;
-  text-align: center;
-  overflow: hidden;
-  width: 100%;
-}
-
-.example-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 5px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.example-desc {
-  font-size: 12px;
-  color: #888;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-/* 结果区域 */
-.result-section {
-  flex: 1;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 15px;
-  border-bottom: 1px solid #eee;
-  background-color: #fff;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.section-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-}
-
-.section-title {
-  display: flex;
-  align-items: center;
-  color: #333;
-  font-size: 16px;
-  margin: 0;
-  font-weight: 600;
-}
-
-.section-title i {
-  margin-right: 8px;
-  font-size: 20px;
-  color: var(--primary-color, #ba003f);
-}
-
-.result-content-wrapper {
-  position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 300px;
-}
-
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.9);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-}
-
-.loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 3px solid rgba(186, 0, 63, 0.1);
-  border-radius: 50%;
-  border-top-color: var(--primary-color, #ba003f);
-  animation: spin 1s linear infinite;
-  margin-bottom: 15px;
-}
-
-.loading-text {
-  font-size: 14px;
-  color: #666;
-}
-
-.empty-result {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-  text-align: center;
-}
-
-.empty-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.empty-image {
-  width: 120px;
-  height: 120px;
-  margin-bottom: 20px;
-}
-
-.empty-message {
-  margin: 0 0 20px;
-  font-size: 16px;
-  color: #666;
-}
-
-.note-result {
-  flex: 1;
-  padding: 15px;
-  overflow: hidden;
-  display: flex;
-  height: 100%;
-}
-
-.result-textarea {
-  width: 100%;
-  height: 100%;
-  min-height: 350px;
-  padding: 20px;
-  border: 1px solid #eee;
-  border-radius: 6px;
-  font-size: 15px;
-  line-height: 1.6;
-  color: #333;
-  resize: none;
-  background-color: #f9f9f9;
-  outline: none;
-  overflow-y: auto;
-  transition: border-color 0.3s;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-  white-space: pre-wrap;
-  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-}
-
-.result-textarea:focus {
-  border-color: var(--primary-color, #ba003f);
-}
-
-.blur-content {
-  filter: blur(1px);
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* 模态框 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
-  border-radius: 10px;
-  max-width: 600px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: #666;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.tips-list {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
-.tips-list li {
-  margin-bottom: 12px;
-  padding-left: 20px;
-  position: relative;
-  line-height: 1.5;
-}
-
-.tips-list li:before {
-  content: "•";
-  position: absolute;
-  left: 0;
-  color: var(--primary-color, #ba003f);
-  font-weight: bold;
-}
-
-/* 响应式调整 */
-@media (max-width: 1200px) {
-  .main-container {
-    flex-direction: column;
-  }
-  
-  .input-section, .right-column {
-    width: 100%;
-  }
-}
-
-/* 新增公众号风格按钮样式 */
-.primary-button {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  border: none;
-  padding: 0 16px;
-  height: 36px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: all 0.2s ease;
-}
-
-.primary-button:hover {
-  background-color: #d4004c;
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(186, 0, 63, 0.2);
-}
-
-.primary-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #ccc;
-  color: #666;
-  transform: none;
-  box-shadow: none;
-}
-
-.secondary-button {
-  background-color: #f5f5f5;
-  color: #666;
-  border: 1px solid #e0e0e0;
-  padding: 0 16px;
-  height: 36px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: all 0.2s ease;
-}
-
-.secondary-button:hover {
-  background-color: #eaeaea;
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-}
-
-.secondary-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #f5f5f5;
-  color: #aaa;
-  transform: none;
-  box-shadow: none;
-}
-
-.prompt-button {
-  background-color: white;
-  color: var(--primary-color, #ba003f);
-  border: 1px solid var(--primary-color, #ba003f);
-  padding: 0 16px;
-  height: 36px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: all 0.2s ease;
-}
-
-.prompt-button:hover {
-  background-color: rgba(186, 0, 63, 0.05);
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(186, 0, 63, 0.1);
-}
-
-.prompt-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  color: #aaa;
-  border-color: #e0e0e0;
-  transform: none;
-  box-shadow: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .action-buttons {
   display: flex;
-  gap: 8px;
-  margin-top: 0;
+  gap: 10px;
+  margin-top: 10px;
 }
 
-/* 提示词模态框样式 */
-.prompt-modal {
-  width: 90%;
-  max-width: 900px;
-}
-
-.prompt-content {
-  background-color: #f9f9f9;
-  border-radius: 6px;
-  padding: 20px;
-  overflow-x: auto;
-  font-size: 15px;
-  line-height: 1.6;
-  color: #333;
-  white-space: normal;
-  max-height: 60vh;
-  overflow-y: auto;
-}
-
-.prompt-message {
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #eee;
-}
-
-.prompt-message:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
-}
-
-.prompt-role {
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: var(--primary-color, #ba003f);
-  font-size: 16px;
-}
-
-.prompt-text {
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.prompt-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 15px;
-}
-
+/* 仅保留与通用CSS不重复的特殊样式 */
 /* 文本计数器 */
 .text-counter {
   text-align: right;
   font-size: 12px;
   color: #999;
-  margin-top: 4px;
+  margin-top: 5px;
 }
 
 /* 文件上传容器 */
@@ -1607,21 +810,199 @@ textarea.form-control:focus {
 }
 
 .file-upload-btn {
-  background-color: #f5f5f5;
-  color: #999;
-  border: 1px solid #ddd;
-  padding: 8px 15px;
-  border-radius: 4px;
-  cursor: not-allowed;
   display: flex;
   align-items: center;
   gap: 5px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  color: #666;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
   font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.file-upload-btn:hover:not(:disabled) {
+  background-color: #eaeaea;
+  color: var(--primary-color, #ba003f);
+}
+
+.file-upload-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .file-upload-hint {
   font-size: 13px;
   color: #999;
   font-style: italic;
+}
+
+/* 优化右侧布局结构 */
+.right-column {
+  width: 55%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 优化总结结果区域 */
+.result-section {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  height: 100%;
+}
+
+.result-content-wrapper {
+  flex-grow: 1;
+  position: relative;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+}
+
+.note-result {
+  height: 100%;
+  flex-grow: 1;
+  display: flex;
+  padding: 16px;
+}
+
+.result-textarea {
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  padding: 16px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  background-color: #fafafa;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333;
+  resize: none;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.result-textarea:focus {
+  outline: none;
+  border-color: var(--primary-color, #ba003f);
+  background-color: #fff;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05), 0 0 0 3px rgba(186, 0, 63, 0.1);
+}
+
+.result-textarea::-webkit-scrollbar {
+  width: 8px;
+}
+
+.result-textarea::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.result-textarea::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.result-textarea::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+.empty-result {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  flex-grow: 1;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  margin: 10px;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.9);
+  z-index: 10;
+  border-radius: 6px;
+}
+
+/* 提示词模态框样式 */
+.prompt-modal {
+  width: 90%;
+  max-width: 800px;
+}
+
+.prompt-content {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 15px;
+  max-height: 60vh;
+  overflow-y: auto;
+  margin-bottom: 15px;
+  border: 1px solid #eee;
+}
+
+.prompt-message {
+  margin-bottom: 20px;
+}
+
+.prompt-role {
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--primary-color, #ba003f);
+}
+
+.prompt-text {
+  white-space: pre-wrap;
+  font-family: monospace;
+  background-color: white;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #eee;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.prompt-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 响应式调整 */
+@media (max-width: 1200px) {
+  .main-container {
+    flex-direction: column;
+  }
+  
+  .input-section, 
+  .right-column {
+    width: 100%;
+  }
+  
+  .result-content-wrapper {
+    min-height: 300px;
+  }
+  
+  .result-textarea {
+    min-height: 300px;
+  }
 }
 </style> 

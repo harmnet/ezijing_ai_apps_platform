@@ -20,10 +20,14 @@ from flask import current_app
 import re
 from urllib.parse import urlparse
 from app.services.aliyun_oss_service import upload_image
+from app.utils.logger import get_image_redraw_logger
+
+# 获取图像重绘专用日志记录器
+image_redraw_logger = get_image_redraw_logger()
 
 # 阿里云API配置
 DASHSCOPE_API_CONFIG = {
-    "api_key": os.environ.get("DASHSCOPE_API_KEY", "sk-0bd59db1b4454d14b499421707900051"),
+    "api_key": os.environ.get("DASHSCOPE_API_KEY", "sk-1f4bdb8a73ee47809ee148a977c39737"),
     "base_url": "https://dashscope.aliyuncs.com/api/v1/services/aigc/image2image/image-synthesis",
     "task_url": "https://dashscope.aliyuncs.com/api/v1/tasks/",
     "model": "wanx2.1-imageedit"
@@ -49,6 +53,16 @@ def create_redraw_task(prompt, base_image_url, mask_image_url, n=1, seed=None, w
         dict: API响应结果，包含任务ID
     """
     try:
+        # 检查API密钥是否设置
+        api_key = DASHSCOPE_API_CONFIG["api_key"]
+        if not api_key or api_key == "sk-0bd59db1b4454d14b499421707900051":
+            image_redraw_logger.warning("使用默认API密钥，建议配置自己的DASHSCOPE_API_KEY环境变量")
+            
+        # 记录请求参数
+        image_redraw_logger.info(f"图片重绘请求参数: prompt='{prompt}', n={n}, seed={seed}, watermark={watermark}")
+        image_redraw_logger.info(f"基础图片URL: {base_image_url[:50]}{'...' if len(base_image_url) > 50 else ''}")
+        image_redraw_logger.info(f"蒙版图片URL: {mask_image_url[:50]}{'...' if len(mask_image_url) > 50 else ''}")
+        
         # 处理基础图片
         base_image_parsed = urlparse(base_image_url) if base_image_url.startswith('http') else None
         base_is_local = base_image_parsed and (base_image_parsed.netloc in ['localhost', '127.0.0.1'] or 
@@ -62,20 +76,24 @@ def create_redraw_task(prompt, base_image_url, mask_image_url, n=1, seed=None, w
                                    mask_image_parsed.netloc.startswith('127.0.0.1:'))
         
         # 判断是否需要上传到OSS
-        base_need_upload = base_is_local or not base_image_url.startswith('http')
-        mask_need_upload = mask_is_local or not mask_image_url.startswith('http')
+        base_need_upload = base_is_local or not base_image_url.startswith('http') or base_image_url.startswith('blob:') or 'mock-' in base_image_url
+        mask_need_upload = mask_is_local or not mask_image_url.startswith('http') or mask_image_url.startswith('blob:') or 'mock-' in mask_image_url
+
+        # 开发模式状态
+        dev_mode = os.environ.get('DEV_MODE', 'true').lower() == 'true'
+        image_redraw_logger.info(f"开发模式: {'启用' if dev_mode else '禁用'}")
         
         image_data = {}
         
         # 处理基础图片上传
         if base_need_upload:
             try:
-                current_app.logger.info(f"开始上传基础图片到阿里云OSS: {'本地URL' if base_is_local else 'Base64数据'}")
+                image_redraw_logger.info(f"开始上传基础图片到阿里云OSS: {'本地URL' if base_is_local else 'Base64数据'}")
                 base_oss_url = upload_image(base_image_url)
-                current_app.logger.info(f"基础图片已上传到OSS，公网URL: {base_oss_url}")
+                image_redraw_logger.info(f"基础图片已上传到OSS，公网URL: {base_oss_url}")
                 image_data["base_image_url"] = base_oss_url
             except Exception as e:
-                current_app.logger.error(f"上传基础图片到OSS失败: {str(e)}")
+                image_redraw_logger.error(f"上传基础图片到OSS失败: {str(e)}")
                 return {
                     "success": False,
                     "error": {
@@ -84,18 +102,18 @@ def create_redraw_task(prompt, base_image_url, mask_image_url, n=1, seed=None, w
                     }
                 }
         else:
-            current_app.logger.info(f"使用公网基础图片URL: {base_image_url}")
+            image_redraw_logger.info(f"使用公网基础图片URL: {base_image_url}")
             image_data["base_image_url"] = base_image_url
         
         # 处理蒙版图片上传
         if mask_need_upload:
             try:
-                current_app.logger.info(f"开始上传蒙版图片到阿里云OSS: {'本地URL' if mask_is_local else 'Base64数据'}")
+                image_redraw_logger.info(f"开始上传蒙版图片到阿里云OSS: {'本地URL' if mask_is_local else 'Base64数据'}")
                 mask_oss_url = upload_image(mask_image_url)
-                current_app.logger.info(f"蒙版图片已上传到OSS，公网URL: {mask_oss_url}")
+                image_redraw_logger.info(f"蒙版图片已上传到OSS，公网URL: {mask_oss_url}")
                 image_data["mask_image_url"] = mask_oss_url
             except Exception as e:
-                current_app.logger.error(f"上传蒙版图片到OSS失败: {str(e)}")
+                image_redraw_logger.error(f"上传蒙版图片到OSS失败: {str(e)}")
                 return {
                     "success": False,
                     "error": {
@@ -104,7 +122,7 @@ def create_redraw_task(prompt, base_image_url, mask_image_url, n=1, seed=None, w
                     }
                 }
         else:
-            current_app.logger.info(f"使用公网蒙版图片URL: {mask_image_url}")
+            image_redraw_logger.info(f"使用公网蒙版图片URL: {mask_image_url}")
             image_data["mask_image_url"] = mask_image_url
             
         # 构建请求体
@@ -135,7 +153,7 @@ def create_redraw_task(prompt, base_image_url, mask_image_url, n=1, seed=None, w
         }
         
         # 记录请求信息
-        current_app.logger.info(f"发送请求到阿里云图片重绘API，提示词: {prompt}, 请求体: {json.dumps(request_body, ensure_ascii=False)}")
+        image_redraw_logger.info(f"发送请求到阿里云图片重绘API，提示词: {prompt}, 请求体: {json.dumps(request_body, ensure_ascii=False)}")
         
         response = requests.post(
             DASHSCOPE_API_CONFIG["base_url"],
@@ -147,7 +165,7 @@ def create_redraw_task(prompt, base_image_url, mask_image_url, n=1, seed=None, w
         # 检查响应状态
         if response.status_code == 200:
             result = response.json()
-            current_app.logger.info(f"阿里云图片重绘任务创建成功 - 任务ID: {result.get('output', {}).get('task_id')}, 完整响应: {json.dumps(result, ensure_ascii=False)}")
+            image_redraw_logger.info(f"阿里云图片重绘任务创建成功 - 任务ID: {result.get('output', {}).get('task_id')}, 完整响应: {json.dumps(result, ensure_ascii=False)}")
             return {
                 "success": True,
                 "data": {
@@ -165,7 +183,7 @@ def create_redraw_task(prompt, base_image_url, mask_image_url, n=1, seed=None, w
             except:
                 pass
                 
-            current_app.logger.error(f"阿里云图片重绘API调用失败 - 状态码: {response.status_code}, 响应: {error_content}")
+            image_redraw_logger.error(f"阿里云图片重绘API调用失败 - 状态码: {response.status_code}, 响应: {error_content}")
             
             return {
                 "success": False,
@@ -178,7 +196,7 @@ def create_redraw_task(prompt, base_image_url, mask_image_url, n=1, seed=None, w
     except Exception as e:
         import traceback
         error_trace = traceback.format_exc()
-        current_app.logger.error(f"创建阿里云图片重绘任务异常: {str(e)}\n{error_trace}")
+        image_redraw_logger.error(f"创建阿里云图片重绘任务异常: {str(e)}\n{error_trace}")
         return {
             "success": False,
             "error": {
@@ -189,71 +207,94 @@ def create_redraw_task(prompt, base_image_url, mask_image_url, n=1, seed=None, w
 
 def query_redraw_task(task_id):
     """
-    查询图片重绘任务状态和结果
+    查询图片重绘任务状态
     
     参数:
         task_id (str): 任务ID
         
     返回:
-        dict: 任务状态和结果
+        dict: 任务状态信息
     """
     try:
-        # 发送API请求
+        api_key = DASHSCOPE_API_CONFIG["api_key"]
+        if not api_key or api_key == "sk-0bd59db1b4454d14b499421707900051":
+            image_redraw_logger.warning("使用默认API密钥，建议配置自己的DASHSCOPE_API_KEY环境变量")
+            
+        # 构建请求URL
+        request_url = f"{DASHSCOPE_API_CONFIG['task_url']}{task_id}"
+        
+        # 构建请求头
         headers = {
-            "Authorization": f"Bearer {DASHSCOPE_API_CONFIG['api_key']}"
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
         }
         
-        # 记录发送请求信息
-        current_app.logger.info(f"正在请求阿里云API查询图片重绘任务: {task_id}")
+        # 记录查询信息
+        image_redraw_logger.info(f"查询阿里云图片重绘任务，任务ID: {task_id}")
         
+        # 发送查询请求
         response = requests.get(
-            f"{DASHSCOPE_API_CONFIG['task_url']}{task_id}",
+            request_url,
             headers=headers,
-            timeout=60
+            timeout=30
         )
         
         # 检查响应状态
         if response.status_code == 200:
             result = response.json()
-            # 记录完整响应以便调试
-            current_app.logger.info(f"阿里云API响应: {json.dumps(result, ensure_ascii=False)}")
-            
             task_status = result.get("output", {}).get("task_status")
             
             # 记录任务状态
-            current_app.logger.info(f"阿里云图片重绘任务查询 - 任务ID: {task_id}, 状态: {task_status}")
+            image_redraw_logger.info(f"阿里云图片重绘任务状态 - 任务ID: {task_id}, 状态: {task_status}")
             
-            # 构建返回结果
-            response_data = {
-                "task_id": task_id,
-                "task_status": task_status,
-                "request_id": result.get("request_id")
-            }
-            
-            # 查看是否有错误信息
-            error_message = result.get("output", {}).get("error", {}).get("message", "")
-            error_code = result.get("output", {}).get("error", {}).get("code", "")
-            if error_message or error_code:
-                current_app.logger.error(f"任务失败 - 错误信息: {error_message}, 错误码: {error_code}")
-                response_data["error"] = {
-                    "message": error_message,
-                    "code": error_code
-                }
-            
-            # 如果任务完成，添加结果URL
+            # 检查任务状态
             if task_status == "SUCCEEDED":
                 results = result.get("output", {}).get("results", [])
+                # 正确提取URL字段
                 image_urls = [item.get("url") for item in results if "url" in item]
-                response_data["image_urls"] = image_urls
-                response_data["submit_time"] = result.get("output", {}).get("submit_time")
-                response_data["end_time"] = result.get("output", {}).get("end_time")
-            
-            return {
-                "success": True,
-                "data": response_data
-            }
+                image_redraw_logger.info(f"任务完成 - 生成图片数量: {len(image_urls)}")
+                
+                # 提取任务时间信息
+                submit_time = result.get("output", {}).get("submit_time", "")
+                end_time = result.get("output", {}).get("end_time", "")
+                
+                return {
+                    "success": True,
+                    "data": {
+                        "task_id": task_id,
+                        "task_status": task_status,
+                        "request_id": result.get("request_id"),
+                        "image_urls": image_urls,
+                        "submit_time": submit_time,
+                        "end_time": end_time
+                    }
+                }
+            elif task_status == "FAILED":
+                # 任务失败，返回错误信息
+                error_code = result.get("code", -1)
+                error_message = result.get("message", "任务执行失败")
+                
+                image_redraw_logger.error(f"任务失败 - 任务ID: {task_id}, 错误码: {error_code}, 错误信息: {error_message}")
+                
+                return {
+                    "success": False,
+                    "error": {
+                        "message": error_message,
+                        "code": error_code
+                    }
+                }
+            else:
+                # 任务进行中，返回状态信息
+                return {
+                    "success": True,
+                    "data": {
+                        "task_id": task_id,
+                        "task_status": task_status,
+                        "request_id": result.get("request_id")
+                    }
+                }
         else:
-            # 记录详细的错误响应
+            # 详细记录错误响应
             error_content = response.text
             try:
                 error_json = response.json()
@@ -261,20 +302,20 @@ def query_redraw_task(task_id):
             except:
                 pass
                 
-            current_app.logger.error(f"阿里云图片重绘任务查询失败 - 状态码: {response.status_code}, 响应: {error_content}")
+            image_redraw_logger.error(f"查询阿里云图片重绘任务失败 - 状态码: {response.status_code}, 响应: {error_content}")
             
             return {
                 "success": False,
                 "error": {
-                    "message": f"任务查询失败: 状态码 {response.status_code}, 响应: {error_content}",
+                    "message": f"查询任务失败: 状态码 {response.status_code}, 响应: {error_content}",
                     "code": response.status_code
                 }
             }
-            
     except Exception as e:
         import traceback
         error_trace = traceback.format_exc()
-        current_app.logger.error(f"查询阿里云图片重绘任务异常: {str(e)}\n{error_trace}")
+        image_redraw_logger.error(f"查询阿里云图片重绘任务异常: {str(e)}\n{error_trace}")
+        
         return {
             "success": False,
             "error": {

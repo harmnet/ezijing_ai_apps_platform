@@ -5,8 +5,9 @@
         <h2>直播脚本生成</h2>
       </div>
       <div class="page-actions">
-        <button class="action-btn" title="创作小贴士" @click="showTips">
-          <i class="ri-lightbulb-line"></i>
+        <button class="learn-button" title="知识学习" @click="showTips">
+          <i class="ri-book-open-line"></i>
+          <span>知识学习</span>
         </button>
       </div>
     </div>
@@ -14,11 +15,11 @@
     <!-- 主要内容区域 - 使用两列布局 -->
     <div class="main-container">
       <!-- 左侧：输入参数 -->
-      <div class="input-section">
+      <div class="input-section content-card">
         <div class="section-header">
-          <h3 class="section-title">
-            <i class="ri-settings-3-line"></i>
-            输入参数
+          <h3 class="section-title content-section-title">
+            <i class="section-icon ri-settings-3-line"></i>
+            <span>输入参数</span>
           </h3>
         </div>
         
@@ -119,33 +120,33 @@
         <div class="form-group">
           <label>脚本元素</label>
           <div class="checkbox-group">
-            <div class="checkbox-item">
+            <div class="checkbox-item" :class="{'checkbox-active': includeOpening}">
               <input type="checkbox" id="includeOpening" v-model="includeOpening">
-              <label for="includeOpening">开场白</label>
+              <label for="includeOpening" class="checkbox-label">开场白</label>
             </div>
-            <div class="checkbox-item">
+            <div class="checkbox-item" :class="{'checkbox-active': includeIntro}">
               <input type="checkbox" id="includeIntro" v-model="includeIntro">
-              <label for="includeIntro">自我介绍</label>
+              <label for="includeIntro" class="checkbox-label">自我介绍</label>
             </div>
-            <div class="checkbox-item">
+            <div class="checkbox-item" :class="{'checkbox-active': includeSegmentTransitions}">
               <input type="checkbox" id="includeSegmentTransitions" v-model="includeSegmentTransitions">
-              <label for="includeSegmentTransitions">环节过渡</label>
+              <label for="includeSegmentTransitions" class="checkbox-label">环节过渡</label>
             </div>
-            <div class="checkbox-item">
+            <div class="checkbox-item" :class="{'checkbox-active': includeAudienceInteraction}">
               <input type="checkbox" id="includeAudienceInteraction" v-model="includeAudienceInteraction">
-              <label for="includeAudienceInteraction">观众互动话术</label>
+              <label for="includeAudienceInteraction" class="checkbox-label">观众互动话术</label>
             </div>
-            <div class="checkbox-item">
+            <div class="checkbox-item" :class="{'checkbox-active': includeQaResponses}">
               <input type="checkbox" id="includeQaResponses" v-model="includeQaResponses">
-              <label for="includeQaResponses">常见问题回应</label>
+              <label for="includeQaResponses" class="checkbox-label">常见问题回应</label>
             </div>
-            <div class="checkbox-item">
+            <div class="checkbox-item" :class="{'checkbox-active': includePromotions}">
               <input type="checkbox" id="includePromotions" v-model="includePromotions">
-              <label for="includePromotions">促销/购买引导</label>
+              <label for="includePromotions" class="checkbox-label">促销/购买引导</label>
             </div>
-            <div class="checkbox-item">
+            <div class="checkbox-item" :class="{'checkbox-active': includeClosing}">
               <input type="checkbox" id="includeClosing" v-model="includeClosing">
-              <label for="includeClosing">结束语</label>
+              <label for="includeClosing" class="checkbox-label">结束语</label>
             </div>
           </div>
         </div>
@@ -190,11 +191,11 @@
       <!-- 右侧：参考案例和结果 -->
       <div class="right-column">
         <!-- 参考案例部分 -->
-        <div class="examples-section">
-          <div class="examples-header">
-            <h3 class="section-title">
-              <i class="ri-lightbulb-flash-line"></i>
-              参考案例
+        <div class="examples-section content-card">
+          <div class="section-header">
+            <h3 class="section-title content-section-title">
+              <i class="section-icon ri-lightbulb-flash-line"></i>
+              <span>参考案例</span>
             </h3>
             <!-- 添加轮播控制按钮 -->
             <div class="carousel-controls">
@@ -228,11 +229,11 @@
         </div>
         
         <!-- 结果展示部分 -->
-        <div class="result-section">
+        <div class="result-section content-card">
           <div class="section-header">
-            <h3 class="section-title">
-              <i class="ri-file-text-line"></i>
-              直播脚本
+            <h3 class="section-title content-section-title">
+              <i class="section-icon ri-file-text-line"></i>
+              <span>直播脚本</span>
             </h3>
             <div class="action-buttons">
               <button @click="generateScript" class="primary-button" :disabled="isGenerating">
@@ -260,13 +261,64 @@
             
             <div v-if="!generatedScript && !isGenerating" class="empty-result">
               <div class="empty-content">
-                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgZmlsbC1vcGFjaXR5PSIuMDgiIGZpbGw9IiNEOEQ4RDgiIGN4PSI2NCIgY3k9IjY0IiByPSI2NCIvPjxwYXRoIGQ9Ik00MS41OTkgNDkuODhjMS4xIDAgMiAuOSAyIDJ2MzIuMjRjMCAxLjEtLjkgMi0yIDJoLTguOTdhLjk3Ljk3IDAgMDEtLjk1LS45NSAwIDAgMCAwLS4wNCAwIDAgMCAwLS4wM3YtMjkuNTFjMC0xLjk5IDEuNjItMy42MiAzLjYyLTMuNjJsMCAwUTQxLjU5OCA0OS44OTggNDEuNTk5IDQ5Ljg4ek04Ni4wNyA0OS44OGMxLjEgMCAyIC45IDIgMnYzMi4yNGMwIDEuMS0uOSAyLTIgMmgtOC45N3MtLjk2LS43OS0uOTYtLjk2VjUyLjgyYzAtMS42MiAxLjMyLTIuOTUgMi45NS0yLjk1bDAgMGg2Ljk4ek02NC4wNyA0Ni44M2MxLjMxIDAgMi4zNyAxLjA2IDIuMzcgMi4zN3YzNC44OGMwIDEuMzEtMS4wNiAyLjM3LTIuMzcgMi4zN2gtOS43YTIuMzcgMi4zNyAwIDAxLTIuMzctMi4zN1Y0OS4yYzAtMS4zMSAxLjA2LTIuMzcgMi4zNy0yLjM3bDAgMGg5LjciIGZpbGw9IiNFMUUxRTEiLz48cGF0aCBkPSJNMzIuNjMgNjkuNzVjMCAyLjYgMi4xMSA0LjcxIDQuNzEgNC43MXMyLjYtMi4xMSA0LjctNC43MS0yLjExLTQuNzEtNC43LTQuNzEtNC43MSAyLjExLTQuNzEgNC43MXpNODcuMDMgNjkuNzVjMCAyLjYtMi4xMSA0LjcxLTQuNzEgNC43MXMtNC43MS0yLjExLTQuNzEtNC43MSAyLjExLTQuNzEgNC43MS00LjcxIDQuNzEgMi4xMSA0LjcxIDQuNzF6TTY0LjQgNjcuMzhjMCAzLjczLTMuMDIgNi43NS02Ljc1IDYuNzVzLTYuNzYtMy4wMi02Ljc2LTYuNzUgMy4wMy02Ljc2IDYuNzYtNi43NiA2Ljc1IDMuMDMgNi43NSA2Ljc2eiIgZmlsbD0iI0JBMDA0MCIgZmlsbC1vcGFjaXR5PSIuNSIvPjwvZz48L3N2Zz4=" class="empty-image" alt="暂无数据" />
+                <img src="@/assets/images/no_data.png" class="empty-image" alt="暂无数据" />
                 <p class="empty-message">暂无脚本内容，请点击"生成直播脚本"按钮开始创作</p>
               </div>
             </div>
             
             <div v-else-if="generatedScript" class="script-result" :class="{'blur-content': isGenerating}">
-              <div class="script-content" v-html="formattedScript"></div>
+              <div class="mobile-device-container">
+                <div class="mobile-device" :data-platform="selectedPlatform">
+                  <div class="mobile-device-frame"></div>
+                  <div class="mobile-device-buttons"></div>
+                  <div class="mobile-device-notch"></div>
+                  <div class="mobile-device-screen-reflection"></div>
+                  <div class="mobile-status-bar">
+                    <div class="status-time">{{ currentTime }}</div>
+                    <div class="status-icons">
+                      <i class="ri-signal-wifi-fill"></i>
+                      <i class="ri-signal-tower-fill"></i>
+                      <i class="ri-battery-fill"></i>
+                    </div>
+                  </div>
+                  <div class="mobile-content-area">
+                    <div class="mobile-app-header">
+                      <div class="platform-info">
+                        <i :class="getPlatformIcon"></i>
+                        <span>{{ getPlatformName }}</span>
+                      </div>
+                      <div class="app-actions">
+                        <i class="ri-search-line"></i>
+                        <i class="ri-more-2-fill"></i>
+                      </div>
+                    </div>
+                    <div class="mobile-script-content" v-html="formattedScript"></div>
+                    <div class="mobile-app-footer">
+                      <div class="footer-icon">
+                        <i class="ri-home-5-line"></i>
+                        <span>首页</span>
+                      </div>
+                      <div class="footer-icon active">
+                        <i class="ri-compass-3-line"></i>
+                        <span>发现</span>
+                      </div>
+                      <div class="footer-icon">
+                        <i class="ri-add-box-line"></i>
+                        <span>创作</span>
+                      </div>
+                      <div class="footer-icon">
+                        <i class="ri-message-2-line"></i>
+                        <span>消息</span>
+                      </div>
+                      <div class="footer-icon">
+                        <i class="ri-user-3-line"></i>
+                        <span>我</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="mobile-device-shadow"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -275,24 +327,35 @@
     
     <!-- 创作小贴士模态框 -->
     <div class="modal" v-if="showTipsModal">
-      <div class="modal-content">
+      <div class="modal-content knowledge-modal-content">
         <div class="modal-header">
-          <h3><i class="ri-lightbulb-line"></i> 创作小贴士</h3>
+          <h3><i class="ri-book-open-line"></i> 知识学习</h3>
           <button class="close-btn" @click="showTipsModal = false">
             <i class="ri-close-line"></i>
           </button>
         </div>
-        <div class="modal-body">
-          <ul class="tips-list">
-            <li>开场前3分钟至关重要，需吸引观众留下来观看</li>
-            <li>设定明确的直播结构和流程，避免冗长拖沓</li>
-            <li>保持与观众的互动，频繁回应弹幕和问题</li>
-            <li>使用简单明了的语言，避免过于专业的术语</li>
-            <li>创造悬念和期待感，保持观众持续关注</li>
-            <li>针对不同直播平台调整内容和风格</li>
-            <li>提前准备好常见问题的回应，避免直播中卡壳</li>
-            <li>在关键节点重申核心信息，加深观众印象</li>
-          </ul>
+        <div class="modal-body knowledge-body">
+          <div class="knowledge-sidebar">
+            <div 
+              v-for="(item, index) in articleKnowledge" 
+              :key="index"
+              class="knowledge-sidebar-item"
+              :class="{ 'active': activeKnowledgeIndex === index }"
+              @click="activeKnowledgeIndex = index"
+            >
+              <i :class="item.icon"></i>
+              <span>{{ item.subtitle }}</span>
+            </div>
+          </div>
+          <div class="knowledge-content">
+            <div v-if="articleKnowledge.length > 0" class="article-knowledge-item">
+              <h3 class="knowledge-title">
+                <i :class="articleKnowledge[activeKnowledgeIndex].icon"></i>
+                {{ articleKnowledge[activeKnowledgeIndex].subtitle }}
+              </h3>
+              <div class="knowledge-text" v-html="formatKnowledgeText(articleKnowledge[activeKnowledgeIndex].text)"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -323,6 +386,9 @@
 
 <script>
 import axios from 'axios'
+import '@/assets/css/text-creation-common.css'
+import { livestreamScriptExamples } from '@/views/example_data.js'
+import { livestreamScriptKnowledge } from '@/views/Knowledge_data.js'
 
 export default {
   name: 'LivestreamScript',
@@ -372,102 +438,31 @@ export default {
       loadingText: '正在生成脚本内容，请耐心等待...',
       lastUsedPrompt: null,
       
+      // 流式输出相关状态
+      isStreaming: false,
+      isLoading: false,
+      isOfflineGenerated: false,
+      
       // 模态框控制
       showTipsModal: false,
       showPromptModal: false,
       
       // 模型选择
-      selectedModel: 'deepseek-v3-vol',
+      selectedModel: 'deepseek-v3',
       modelList: [],
       
       // 轮播设置
       currentExampleIndex: 0,
       exampleTranslateX: 0,
       
-      // 参考案例数据
-      examples: [
-        {
-          id: 'douyin-shopping',
-          title: '化妆品带货',
-          desc: '抖音电商直播',
-          platform: 'douyin',
-          category: 'shopping',
-          icon: 'ri-shopping-cart-line',
-          topic: '春季必备护肤品推荐',
-          audience: '女性，18-35岁，美妆爱好者',
-          keywords: '护肤,春季焕新,保湿,美白,抗氧化',
-          style: '热情活力',
-          duration: '30-90分钟',
-          products: '五款国产高性价比护肤品'
-        },
-        {
-          id: 'bilibili-gaming',
-          title: '游戏攻略',
-          desc: 'B站游戏直播',
-          platform: 'bilibili',
-          category: 'gaming',
-          icon: 'ri-gamepad-line',
-          topic: '《原神》新版本攻略与队伍搭配',
-          audience: '游戏玩家，原神爱好者',
-          keywords: '原神,游戏攻略,角色展示,装备选择,技巧分享',
-          style: '轻松对话型',
-          duration: '1.5-3小时'
-        },
-        {
-          id: 'taobao-makeup',
-          title: '彩妆教程',
-          desc: '淘宝美妆直播',
-          platform: 'taobao',
-          category: 'makeup',
-          icon: 'ri-palette-line',
-          topic: '手把手教你日常通勤妆容',
-          audience: '上班族女性，初学者化妆爱好者',
-          keywords: '日常妆容,通勤妆,底妆技巧,眼妆教程,唇妆选择',
-          style: '专业知识型',
-          duration: '30-90分钟',
-          products: '平价彩妆产品推荐'
-        },
-        {
-          id: 'kuaishou-cooking',
-          title: '家常菜教学',
-          desc: '快手美食直播',
-          platform: 'kuaishou',
-          category: 'cooking',
-          icon: 'ri-restaurant-line',
-          topic: '15分钟快手家常菜',
-          audience: '家庭主妇/夫，上班族，烹饪爱好者',
-          keywords: '快手菜,简单烹饪,家常菜谱,食材处理,烹饪技巧',
-          style: '幽默风趣',
-          duration: '30-90分钟'
-        },
-        {
-          id: 'xiaohongshu-fitness',
-          title: '居家健身',
-          desc: '小红书健身直播',
-          platform: 'xiaohongshu',
-          category: 'fitness',
-          icon: 'ri-run-line',
-          topic: '零基础居家健身指南',
-          audience: '健身新手，想要保持健康的上班族',
-          keywords: '居家健身,无器械训练,核心锻炼,燃脂运动,健康生活',
-          style: '专业知识型',
-          duration: '30-90分钟'
-        },
-        {
-          id: 'jd-knowledge',
-          title: '数码科普',
-          desc: '京东知识直播',
-          platform: 'jd',
-          category: 'knowledge',
-          icon: 'ri-lightbulb-line',
-          topic: '手机选购指南：如何选到性价比最高的手机',
-          audience: '数码爱好者，手机换新需求人群',
-          keywords: '手机选购,数码科普,性价比,参数解读,使用建议',
-          style: '专业知识型',
-          duration: '30-90分钟',
-          products: '各价位段推荐手机型号'
-        }
-      ]
+      // 参考案例数据 - 从example_data.js导入
+      examples: livestreamScriptExamples,
+      
+      // 知识学习内容 - 从Knowledge_data.js导入
+      articleKnowledge: livestreamScriptKnowledge,
+      
+      // 知识学习模态框控制
+      activeKnowledgeIndex: 0
     }
   },
   
@@ -526,6 +521,26 @@ export default {
       
       // 当滚动到最大滚动距离的90%以上时，认为是最后一页
       return Math.abs(this.exampleTranslateX) >= maxScrollX * 0.9;
+    },
+    
+    // 获取平台图标
+    getPlatformIcon() {
+      const platform = this.platforms.find(p => p.id === this.selectedPlatform);
+      return platform ? platform.icon : 'ri-live-line';
+    },
+    
+    // 获取平台名称
+    getPlatformName() {
+      const platform = this.platforms.find(p => p.id === this.selectedPlatform);
+      return platform ? platform.name : '抖音';
+    },
+    
+    // 获取当前时间
+    currentTime() {
+      const now = new Date();
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
     }
   },
   
@@ -541,8 +556,13 @@ export default {
         console.log('获取模型响应:', response);
         
         if (response.data && response.data.status === 'success') {
-          // 获取模型列表
-          this.modelList = response.data.data || [];
+          // 获取模型列表并筛选只保留火山引擎的R1和V3大模型，以及豆包大模型
+          const allModels = response.data.data || [];
+          this.modelList = allModels.filter(model => 
+            model.id === 'deepseek-v3-vol' || 
+            model.id === 'deepseek-r1-vol' || 
+            model.id === 'dongbao'
+          );
           
           // 默认选择火山引擎V3模型
           const volcanoV3 = this.modelList.find(model => model.id === 'deepseek-v3-vol');
@@ -554,6 +574,11 @@ export default {
           }
           
           console.log('已设置默认模型:', this.selectedModel);
+          
+          // 如果筛选后没有可用模型，设置默认值
+          if (this.modelList.length === 0) {
+            this.setupDefaultModels();
+          }
         } else {
           console.error('获取模型列表失败:', response.data?.message);
           // 设置默认值
@@ -570,9 +595,11 @@ export default {
       this.modelList = [
         { id: 'deepseek-v3-vol', name: 'DeepSeek-V3（火山引擎）' },
         { id: 'deepseek-r1-vol', name: 'DeepSeek-R1（火山引擎）' },
-        { id: 'deepseek-r1-sf', name: 'DeepSeek-R1（硅基流动）' },
-        { id: 'deepseek-v3-sf', name: 'DeepSeek-V3（硅基流动）' },
-        { id: 'qwq-32b', name: '通义千问-32B（硅基流动）' }
+        { id: 'dongbao', name: '豆包大模型' }
+        // 注释掉其他模型选项
+        // { id: 'deepseek-r1-sf', name: 'DeepSeek-R1（硅基流动）' },
+        // { id: 'deepseek-v3-sf', name: 'DeepSeek-V3（硅基流动）' },
+        // { id: 'qwq-32b', name: '通义千问-32B（硅基流动）' }
       ];
       this.selectedModel = 'deepseek-v3-vol';
     },
@@ -712,14 +739,11 @@ export default {
       // 获取已选择的元素
       const selectedElements = this.getSelectedElements();
       
-      // 构建系统消息
-      const systemMessage = {
-        role: 'system',
-        content: `你是一位专业的直播脚本策划师，熟悉各大直播平台的内容特点和受众喜好。请根据用户提供的信息，创建一个适合${platformName}平台的${categoryName}类直播脚本。脚本应该符合平台特色、直播类型要求，并且能够有效吸引目标受众。`
-      };
+      // 构建系统消息内容
+      const systemContent = `你是一位专业的直播脚本策划师，熟悉各大直播平台的内容特点和受众喜好。请根据用户提供的信息，创建一个适合${platformName}平台的${categoryName}类直播脚本。脚本应该符合平台特色、直播类型要求，并且能够有效吸引目标受众。`;
       
-      // 构建用户消息
-      let userMessage = `请为我创建一个直播脚本，具体要求如下：
+      // 构建用户消息内容
+      let userPrompt = `请为我创建一个直播脚本，具体要求如下：
 
 直播平台：${platformName}
 直播类型：${categoryName}
@@ -731,33 +755,35 @@ export default {
 `;
 
       // 添加脚本元素要求
-      userMessage += `\n需要包含的脚本元素：${selectedElements}`;
+      userPrompt += `\n需要包含的脚本元素：${selectedElements}`;
       
       // 添加附加说明
       if (this.additionalNotes) {
-        userMessage += `\n\n附加说明：${this.additionalNotes}`;
+        userPrompt += `\n\n附加说明：${this.additionalNotes}`;
       }
       
       // 添加输出格式要求
-      userMessage += `\n\n请按照以下格式输出脚本：
+      userPrompt += `\n\n请按照以下格式输出脚本：
 1. 脚本标题（以"#"开头）
 2. 直播概要（简短介绍直播内容和目的）
 3. 分环节详细脚本，每个环节包含：`;
       
       // 根据选择的元素添加格式要求
-      if (this.includeOpening) userMessage += "\n   - 【开场】开场白内容";
-      if (this.includeIntro) userMessage += "\n   - 【介绍】自我介绍或主题介绍";
-      if (this.includeSegmentTransitions) userMessage += "\n   - 【过渡】环节转换的话术";
-      if (this.includeAudienceInteraction) userMessage += "\n   - 【互动】与观众互动的话术";
-      if (this.includeQaResponses) userMessage += "\n   - 【问答】常见问题的回应";
-      if (this.includePromotions) userMessage += "\n   - 【促销】产品介绍或购买引导";
-      if (this.includeClosing) userMessage += "\n   - 【结束】直播结束语";
+      if (this.includeOpening) userPrompt += "\n   - 【开场】开场白内容";
+      if (this.includeIntro) userPrompt += "\n   - 【介绍】自我介绍或主题介绍";
+      if (this.includeSegmentTransitions) userPrompt += "\n   - 【过渡】环节转换的话术";
+      if (this.includeAudienceInteraction) userPrompt += "\n   - 【互动】与观众互动的话术";
+      if (this.includeQaResponses) userPrompt += "\n   - 【问答】常见问题的回应";
+      if (this.includePromotions) userPrompt += "\n   - 【促销】产品介绍或购买引导";
+      if (this.includeClosing) userPrompt += "\n   - 【结束】直播结束语";
       
-      // 返回完整的提示词
-      return [
-        systemMessage,
-        { role: 'user', content: userMessage }
-      ];
+      // 合并系统提示和用户提示
+      const fullPrompt = `${systemContent}\n\n${userPrompt}`;
+      
+      console.log('完整提示词:', fullPrompt);
+      
+      // 返回单个字符串类型的提示词
+      return fullPrompt;
     },
     
     // 生成脚本
@@ -772,79 +798,139 @@ export default {
       
       // 开始生成
       this.isGenerating = true;
+      this.isLoading = true;
       this.loadingText = '正在生成脚本内容，请耐心等待...';
+      // 清空之前的生成结果
+      this.generatedScript = '';
+      this.isOfflineGenerated = false;
       
       try {
         // 确保选择了模型
         if (!this.selectedModel) {
-          this.selectedModel = 'deepseek-v3-vol';
+          this.selectedModel = 'deepseek-v3';
+        }
+        
+        // 将模型ID从'deepseek-v3-vol'转换为'deepseek-v3'
+        let modelId = this.selectedModel;
+        if (modelId === 'deepseek-v3-vol') {
+          modelId = 'deepseek-v3';
         }
         
         // 构建提示词
         const prompt = this.buildPrompt();
-        this.lastUsedPrompt = prompt;
+        // 记录提示词以供查看
+        this.lastUsedPrompt = [
+          { role: 'system', content: '系统提示词' },
+          { role: 'user', content: prompt }
+        ];
         
-        console.log('使用模型:', this.selectedModel);
-        console.log('发送请求...');
+        console.log('使用模型:', modelId);
+        console.log('发送流式请求...');
         
-        // 调用API生成内容
-        const response = await axios.post('/api/v1/llm/chat', {
-          model: this.selectedModel,
-          messages: prompt,
+        // 构建API请求参数
+        const apiParams = {
+          model: modelId,
+          messages: [{ role: 'user', content: prompt }],
+          stream: true,
           temperature: 0.7,
-          top_p: 0.95,
           max_tokens: 2000
+        };
+        
+        // 标记为流式输出状态
+        this.isStreaming = true;
+        
+        // 使用fetch API发送流式请求
+        const response = await fetch('/api/v1/v1/deepseek_volcano/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream'
+          },
+          body: JSON.stringify(apiParams)
         });
         
-        console.log('API响应:', response);
+        console.log('收到响应, 状态码:', response.status);
         
-        // 处理响应结果
-        if (response.data && response.data.status === 'success') {
-          // 从响应中提取生成的内容
-          let content = '';
+        if (!response.ok) {
+          throw new Error(`服务器返回错误: ${response.status}`);
+        }
+        
+        // 处理流式响应
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        
+        // 读取流数据
+        while (true) {
+          const { done, value } = await reader.read();
           
-          if (response.data.data && response.data.data.choices && response.data.data.choices.length > 0) {
-            // 火山引擎格式
-            const message = response.data.data.choices[0].message;
-            content = message.content || '';
-          } else if (response.data.data && response.data.data.response) {
-            // 硅基流动格式
-            content = response.data.data.response || '';
-          } else if (response.data.data && typeof response.data.data === 'string') {
-            // 直接返回字符串
-            content = response.data.data;
-          } else if (response.data.content) {
-            // 直接包含在内容字段
-            content = response.data.content;
+          if (done) {
+            console.log('流式响应完成');
+            break;
           }
           
-          if (content) {
-            this.generatedScript = content;
-          } else {
-            console.error('无法从响应中提取内容:', response.data);
-            this.generatedScript = '抱歉，生成内容时出现错误，请重试。';
-            
-            // 开发模式下使用示例内容
-            if (process.env.NODE_ENV === 'development') {
-              this.generatedScript = this.getDemoScript();
-              console.log('开发模式：使用示例内容');
+          // 解码二进制数据
+          const decoded = decoder.decode(value, { stream: true });
+          buffer += decoded;
+          
+          // 处理收到的数据
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop() || '';
+          
+          for (const line of lines) {
+            if (line.trim() === '') continue;
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') {
+                console.log('收到结束标志');
+                continue;
+              }
+              
+              try {
+                const parsed = JSON.parse(data);
+                
+                // 处理错误消息
+                if (parsed.error) {
+                  console.error("API错误:", parsed.error);
+                  throw new Error(parsed.error.message || '生成脚本失败');
+                }
+                
+                // 处理火山引擎返回的delta格式数据
+                if (parsed.choices && parsed.choices.length > 0 && parsed.choices[0].delta) {
+                  const delta = parsed.choices[0].delta;
+                  
+                  // 处理内容增量
+                  if (delta.content) {
+                    // 累加收到的内容
+                    this.generatedScript += delta.content;
+                  }
+                }
+              } catch (e) {
+                console.error('解析流式数据失败:', e, data);
+              }
             }
           }
-        } else {
-          console.error('生成内容失败:', response.data?.message || '未知错误');
-          alert('生成内容失败: ' + (response.data?.message || '请重试'));
+        }
+        
+        // 处理完成，移除流式状态
+        this.isStreaming = false;
+        
+        if (!this.generatedScript) {
+          console.error('未能生成有效内容');
+          this.generatedScript = '抱歉，生成内容时出现错误，请重试。';
           
           // 开发模式下使用示例内容
           if (process.env.NODE_ENV === 'development') {
             this.generatedScript = this.getDemoScript();
             console.log('开发模式：使用示例内容');
-          } else {
-            this.generatedScript = '抱歉，生成内容时出现错误，请重试。';
           }
         }
       } catch (error) {
         console.error('生成脚本异常:', error);
         alert('生成内容异常: ' + (error.message || '请重试'));
+        
+        // 结束流式状态
+        this.isStreaming = false;
         
         // 开发模式下使用示例内容
         if (process.env.NODE_ENV === 'development') {
@@ -855,6 +941,7 @@ export default {
         }
       } finally {
         this.isGenerating = false;
+        this.isLoading = false;
       }
     },
     
@@ -891,175 +978,48 @@ export default {
 【互动】如果你们还有任何护肤问题，可以在评论区留言，或者私信我，我都会一一回复！
 
 【结束】感谢大家今天的观看和支持，我们下周同一时间再见，到时候我会带来夏季防晒产品大测评，千万不要错过！拜拜~`;
+    },
+    
+    // 格式化知识文本，将markdown转为HTML
+    formatKnowledgeText(text) {
+      if (!text) return '';
+      
+      // 处理加粗文本
+      let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      
+      // 处理换行符
+      formatted = formatted.replace(/\n\n/g, '</p><p>');
+      formatted = formatted.replace(/\n/g, '<br>');
+      
+      // 包装在段落标签中
+      formatted = '<p>' + formatted + '</p>';
+      
+      return formatted;
     }
   }
 }
 </script>
 
 <style scoped>
-/* 页面整体样式 */
+/* 页面特有样式 - 仅保留未在text-creation-common.css中定义的样式 */
 .livestream-script-page {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background-color: #f8f9fa;
-  color: #333;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", sans-serif;
-  padding: 0;
   margin-top: -40px; /* 与公众号文章页面一致 */
 }
 
-/* 页面头部 */
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  padding: 0;
-  background: transparent;
-  box-shadow: none;
-  border-bottom: none;
-  z-index: 10;
-}
-
-.page-nav h2 {
-  font-size: 24px;
-  color: #333;
-  margin: 0;
-}
-
-.page-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.action-btn {
-  background: none;
-  border: none;
-  color: #666;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s;
-  width: auto;
-  height: auto;
-}
-
-.action-btn:hover {
-  background-color: #f5f5f5;
-  color: #ba003f;
-  transform: scale(1.1);
-  box-shadow: 0 2px 6px rgba(186, 0, 63, 0.2);
-}
-
-/* 主容器布局 */
+/* 主容器布局 - 特有样式 */
 .main-container {
-  display: flex;
-  gap: 20px;
   padding: 20px 20px 0 20px;
-  flex: 1;
-  overflow: hidden;
 }
 
-/* 左侧输入区域 */
+/* 左侧输入区域 - 特有样式 */
 .input-section {
-  flex: 1;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
-  padding: 20px;
-  overflow-y: auto;
   max-width: 500px;
   min-width: 360px;
 }
 
-/* 右侧展示区域 */
+/* 右侧展示区域 - 特有样式 */
 .right-column {
   flex: 1.5;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  overflow-y: auto;
-}
-
-/* 公共区块样式 */
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #333;
-}
-
-.section-title i {
-  color: #ba003f;
-  font-size: 18px;
-}
-
-/* 表单样式 */
-.form-group {
-  margin-bottom: 18px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 8px;
-  color: #333;
-}
-
-.form-group label.required::after {
-  content: "*";
-  color: #ba003f;
-  margin-left: 4px;
-}
-
-.form-control {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: all 0.3s;
-  background-color: #fff;
-}
-
-.form-control:focus {
-  border-color: #ba003f;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-.form-row {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 18px;
-}
-
-.form-row .form-group {
-  flex: 1;
-  margin-bottom: 0;
-}
-
-textarea.form-control {
-  resize: vertical;
-  min-height: 80px;
 }
 
 /* 平台和类别卡片样式 */
@@ -1113,182 +1073,22 @@ textarea.form-control {
   color: #333;
 }
 
-/* 复选框组样式 */
-.checkbox-group {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 12px;
-  margin-top: 10px;
-  background-color: #f9f9f9;
-  border-radius: 6px;
-  padding: 12px;
-  border: 1px solid #eee;
-}
-
-.checkbox-item {
+/* 模型加载 */
+.model-loading {
   display: flex;
   align-items: center;
-  cursor: pointer;
+  gap: 5px;
+  color: #666;
+  font-size: 12px;
+  margin-top: 5px;
 }
 
-.checkbox-item input[type="checkbox"] {
-  margin-right: 8px;
-  cursor: pointer;
+/* 模型加载图标使用通用旋转动画 */
+.model-loading i {
+  animation: spin 1s linear infinite;
 }
 
-.checkbox-item label {
-  margin-bottom: 0;
-  cursor: pointer;
-}
-
-/* 按钮样式 */
-.action-buttons {
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.btn {
-  border: none;
-  border-radius: 6px;
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: all 0.3s;
-  height: 40px;
-}
-
-.btn-primary {
-  background-color: #ba003f;
-  color: white;
-  flex: 2;
-}
-
-.btn-primary:hover {
-  background-color: #d4185b;
-}
-
-.btn-secondary {
-  background-color: #f5f5f5;
-  color: #333;
-  flex: 1;
-  border: 1px solid #e0e0e0;
-}
-
-.btn-secondary:hover {
-  background-color: #e5e5e5;
-}
-
-.btn-primary:disabled,
-.btn-secondary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.primary-button, 
-.secondary-button, 
-.prompt-button {
-  border: none;
-  border-radius: 4px;
-  padding: 6px 12px;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  height: 32px;
-}
-
-.primary-button {
-  background-color: #ba003f;
-  color: white;
-}
-
-.primary-button:hover {
-  background-color: #d4185b;
-}
-
-.secondary-button {
-  background-color: #f5f5f5;
-  color: #555;
-  border: 1px solid #e0e0e0;
-}
-
-.secondary-button:hover {
-  background-color: #e5e5e5;
-}
-
-.prompt-button {
-  background-color: transparent;
-  color: #ba003f;
-  border: 1px solid #ba003f;
-}
-
-.prompt-button:hover {
-  background-color: rgba(186, 0, 63, 0.05);
-}
-
-.primary-button:disabled,
-.secondary-button:disabled,
-.prompt-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* 参考案例区域 */
-.examples-section {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
-  padding: 20px;
-  position: relative;
-}
-
-.examples-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.carousel-controls {
-  display: flex;
-  gap: 8px;
-}
-
-.carousel-control {
-  width: 32px;
-  height: 32px;
-  background: transparent;
-  border: 1px solid #ddd;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: #555;
-}
-
-.carousel-control:hover:not(.disabled) {
-  border-color: #ba003f;
-  color: #ba003f;
-  transform: scale(1.05);
-}
-
-.carousel-control.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
+/* 参考案例特有样式 */
 .example-carousel {
   overflow: hidden;
   position: relative;
@@ -1355,204 +1155,272 @@ textarea.form-control {
   color: #666;
 }
 
-/* 结果区域 */
-.result-section {
-  flex: 1;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  min-height: 400px;
-}
-
+/* 结果展示部分的特有样式 */
 .result-content-wrapper {
-  flex: 1;
-  position: relative;
-  overflow: auto;
   border: 1px solid #eee;
   border-radius: 6px;
   background-color: #fcfcfc;
 }
 
 .script-result {
-  padding: 20px;
   transition: all 0.2s;
 }
 
-.blur-content {
-  filter: blur(2px);
-  pointer-events: none;
-}
-
-.script-content {
-  line-height: 1.6;
-  color: #333;
-  font-size: 14px;
-}
-
-.script-content h1 {
-  font-size: 20px;
-  color: #333;
-  margin-bottom: 15px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
-}
-
-.script-content h2 {
-  font-size: 18px;
-  color: #444;
-  margin: 20px 0 10px;
-}
-
-.script-content h3 {
-  font-size: 16px;
-  color: #ba003f;
-  margin: 16px 0 10px;
-  padding-left: 10px;
-  border-left: 3px solid #ba003f;
-}
-
-.empty-result {
+/* 移动设备模拟样式 - 特有 */
+.mobile-device-container {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 30px;
-  text-align: center;
+  padding: 20px;
+  max-width: 360px;
+  margin: 0 auto;
 }
 
-.empty-content {
+.mobile-device {
+  width: 320px;
+  height: 650px;
+  background: white;
+  border-radius: 30px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border: 12px solid #333;
   display: flex;
   flex-direction: column;
-  align-items: center;
 }
 
-.empty-image {
-  width: 110px;
-  margin-bottom: 16px;
-  opacity: 0.5;
-}
-
-.empty-message {
-  color: #999;
-  font-size: 14px;
-}
-
-/* 加载动画 */
-.loading-overlay {
+.mobile-device-frame {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.85);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 5;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  z-index: 10;
 }
 
-.loading-spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid rgba(186, 0, 63, 0.2);
+.mobile-device-buttons {
+  position: absolute;
+  top: 100px;
+  right: -26px;
+  width: 4px;
+  height: 30px;
+  background-color: #222;
+  border-radius: 4px 0 0 4px;
+  z-index: 10;
+}
+
+.mobile-device-buttons::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: 0;
+  width: 4px;
+  height: 50px;
+  background-color: #222;
+  border-radius: 4px 0 0 4px;
+}
+
+.mobile-device-buttons::after {
+  content: '';
+  position: absolute;
+  top: 40px;
+  right: 0;
+  width: 4px;
+  height: 50px;
+  background-color: #222;
+  border-radius: 4px 0 0 4px;
+}
+
+.mobile-device-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150px;
+  height: 30px;
+  background-color: #222;
+  border-radius: 0 0 15px 15px;
+  z-index: 10;
+}
+
+.mobile-device-shadow {
+  position: absolute;
+  bottom: -5px;
+  width: 90%;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 50%;
-  border-top-color: #ba003f;
-  animation: spin 1s linear infinite;
-  margin-bottom: 15px;
+  filter: blur(10px);
+  z-index: 1;
 }
 
-.loading-text {
-  color: #666;
-  font-size: 14px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.spinning {
-  animation: spin 1s linear infinite;
-}
-
-/* 模态框样式 */
-.modal {
-  position: fixed;
+.mobile-device-screen-reflection {
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.15), transparent 30%);
+  z-index: 9;
+  pointer-events: none;
 }
 
-.modal-content {
-  width: 90%;
-  max-width: 600px;
-  background-color: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-  max-height: 80vh;
-}
-
-.modal-header {
+.mobile-status-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 20px;
+  background-color: #fff;
+  height: 30px;
+  padding: 0 15px;
+  font-size: 12px;
+  color: #333;
   border-bottom: 1px solid #eee;
 }
 
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
+.status-time {
   font-weight: 600;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
-.modal-header h3 i {
+.status-icons {
+  display: flex;
+  gap: 5px;
+}
+
+.mobile-content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mobile-app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid #eee;
+  background-color: #fff;
+}
+
+.platform-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.app-actions {
+  display: flex;
+  gap: 10px;
+  color: #555;
+  font-size: 16px;
+}
+
+.mobile-script-content {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  font-size: 14px;
+  line-height: 1.6;
+  background-color: #fafafa;
+}
+
+.mobile-script-content h1, 
+.mobile-script-content h2, 
+.mobile-script-content h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.mobile-script-content h1 {
+  font-size: 18px;
+}
+
+.mobile-script-content h2 {
+  font-size: 16px;
+}
+
+.mobile-script-content h3 {
+  font-size: 15px;
+}
+
+.mobile-script-content hr {
+  margin: 15px 0;
+  border: 0;
+  border-top: 1px dashed #ddd;
+}
+
+.scene-desc, .dialogue, .text-overlay, .shot, .music, .cta {
+  margin-bottom: 15px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  position: relative;
+}
+
+.scene-desc {
+  background-color: #f0f0f0;
+  border-left: 3px solid #999;
+}
+
+.dialogue {
+  background-color: #e8f4f8;
+  border-left: 3px solid #0088cc;
+}
+
+.text-overlay {
+  background-color: #fff4e5;
+  border-left: 3px solid #ff9500;
+}
+
+.shot {
+  background-color: #f0f8e8;
+  border-left: 3px solid #7ed321;
+}
+
+.music {
+  background-color: #f8e8f8;
+  border-left: 3px solid #cc00cc;
+}
+
+.cta {
+  background-color: #ffe8e8;
+  border-left: 3px solid #ff3b30;
+}
+
+.mobile-app-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid #eee;
+  background-color: #fff;
+}
+
+.footer-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  flex: 1;
+  font-size: 12px;
+  color: #666;
+}
+
+.footer-icon i {
+  font-size: 18px;
+}
+
+.footer-icon.active {
   color: #ba003f;
 }
 
-.close-btn {
-  background: none;
-  border: none;
-  color: #666;
-  font-size: 20px;
-  cursor: pointer;
-}
-
-.modal-body {
-  padding: 20px;
-  overflow-y: auto;
-  max-height: calc(80vh - 60px);
-}
-
-/* 小贴士样式 */
-.tips-list {
-  padding-left: 20px;
-  margin: 0;
-}
-
-.tips-list li {
-  margin-bottom: 12px;
-  color: #555;
-}
-
+/* 提示词模态框特有样式 */
 .prompt-modal .modal-body {
   display: flex;
   flex-direction: column;
@@ -1577,55 +1445,123 @@ textarea.form-control {
   justify-content: flex-end;
 }
 
-/* 脚本内容样式 */
-.scene-desc, .dialogue, .text-overlay, .shot, .music, .cta {
-  margin-bottom: 10px;
-  padding: 10px 12px;
-  border-radius: 4px;
+/* 响应式调整 - 特有 */
+@media (max-width: 1200px) {
+  .input-section {
+    max-width: 400px;
+  }
+}
+
+/* 知识学习模态框样式 */
+.knowledge-modal-content {
+  max-width: 900px;
+  width: 90%;
+  max-height: 80vh;
+}
+
+.knowledge-body {
+  display: flex;
+  height: 70vh;
+  overflow: hidden;
+}
+
+.knowledge-sidebar {
+  width: 220px;
+  background-color: #f8f8f8;
+  border-right: 1px solid #eee;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.knowledge-sidebar-item {
+  padding: 12px 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.knowledge-sidebar-item i {
+  color: #ba003f;
+  font-size: 18px;
+}
+
+.knowledge-sidebar-item span {
   font-size: 14px;
-  line-height: 1.5;
+  color: #333;
 }
 
-.scene-desc {
-  background-color: #f5f5f5;
-  border-left: 3px solid #999;
+.knowledge-sidebar-item:hover {
+  background-color: #f0f0f0;
 }
 
-.dialogue {
-  background-color: #e8f4ff;
-  border-left: 3px solid #4a90e2;
-}
-
-.text-overlay {
-  background-color: #fff0e8;
-  border-left: 3px solid #f5a623;
-}
-
-.shot {
-  background-color: #f0f8e8;
-  border-left: 3px solid #7ed321;
-}
-
-.music {
-  background-color: #f5e8ff;
-  border-left: 3px solid #9013fe;
-}
-
-.cta {
-  background-color: #ffe8e8;
+.knowledge-sidebar-item.active {
+  background-color: #fff;
   border-left: 3px solid #ba003f;
+  color: #ba003f;
 }
 
-/* 响应式样式 */
-@media screen and (max-width: 768px) {
-  .main-container {
+.knowledge-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.article-knowledge-item {
+  margin-bottom: 20px;
+}
+
+.knowledge-title {
+  margin-top: 0;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.knowledge-title i {
+  color: #ba003f;
+  font-size: 22px;
+}
+
+.knowledge-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #444;
+}
+
+.knowledge-text p {
+  margin-bottom: 15px;
+}
+
+.knowledge-text strong {
+  color: #ba003f;
+  font-weight: 600;
+}
+
+/* 响应式调整 - 知识学习模态框 */
+@media (max-width: 768px) {
+  .knowledge-body {
     flex-direction: column;
+    height: auto;
+    max-height: 70vh;
   }
   
-  .input-section, 
-  .right-column {
-    max-width: none;
+  .knowledge-sidebar {
     width: 100%;
+    max-height: 30vh;
+    border-right: none;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .knowledge-content {
+    max-height: 40vh;
   }
 }
 </style>

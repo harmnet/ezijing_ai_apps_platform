@@ -24,22 +24,36 @@
         
         <!-- 文件上传区域 -->
         <div class="form-group">
-          <label for="contract-upload">上传数据集文件</label>
+          <label for="file-upload">上传数据集文件</label>
           <div class="file-upload-container">
+            <input 
+              type="file" 
+              id="file-upload" 
+              ref="fileInput" 
+              class="file-input" 
+              @change="handleFileUpload" 
+              accept=".xlsx,.xls"
+              style="display: none"
+            />
             <button class="file-upload-btn" @click="triggerFileUpload">
               <i class="ri-upload-2-line"></i>
               选择文件
             </button>
-            <input
-              type="file"
-              id="file-upload"
-              ref="fileInput"
-              @change="handleFileUpload"
-              accept=".xlsx,.xls"
-              style="display: none"
-            />
-            <span class="file-name" v-if="selectedFile">{{ selectedFile.name }}</span>
-            <span class="file-upload-hint" v-else>支持xls、xlsx格式</span>
+            <span class="file-upload-hint" v-if="!selectedFile">
+              支持xls、xlsx格式
+            </span>
+            <span class="file-upload-selected" v-else>
+              已选择: {{ selectedFile.name }}
+              <button class="file-clear-btn" @click="clearSelectedFile">
+                <i class="ri-close-line"></i>
+              </button>
+            </span>
+          </div>
+          <div class="file-upload-progress" v-if="isUploading">
+            <div class="progress-bar">
+              <div class="progress-fill" :style="{ width: uploadProgress + '%' }"></div>
+            </div>
+            <span class="progress-text">上传中... {{ uploadProgress }}%</span>
           </div>
         </div>
 
@@ -67,7 +81,23 @@
               <input type="radio" v-model="analysisOption" value="regular_analysis">
               <span>常规数据分析</span>
             </label>
+            <label class="checkbox-container">
+              <input type="radio" v-model="analysisOption" value="user_profile">
+              <span>用户画像</span>
+            </label>
           </div>
+        </div>
+        
+        <!-- 更多提示词要求 -->
+        <div class="form-group">
+          <label for="extra-prompt">更多提示词要求</label>
+          <textarea 
+            id="extra-prompt" 
+            v-model="extraPrompt" 
+            placeholder="请输入额外的分析要求或提示词..." 
+            class="form-control" 
+            rows="6"
+          ></textarea>
         </div>
         
         <!-- 生成按钮 -->
@@ -98,10 +128,6 @@
                 <i class="ri-refresh-line" v-if="!isChecking"></i>
                 <i class="ri-loader-4-line spinning" v-else></i>
                 {{ isChecking ? '分析中...' : '重新分析' }}
-              </button>
-              <button @click="copyText" class="secondary-button" :disabled="isChecking || !checkResult">
-                <i class="ri-file-copy-line"></i>
-                复制文本
               </button>
               <button @click="downloadResult" class="secondary-button" :disabled="isChecking || !checkResult">
                 <i class="ri-download-line"></i>
@@ -181,12 +207,41 @@ export default {
     const fileInput = ref(null)
     const showTipsModal = ref(false)
     const fileId = ref('')
-    const loadingText = ref('正在分析数据集内容...')
+    const loadingText = ref('正在生成分析报告...')
     const messages = ref([])
     const loadingInstance = ref(null)
+    
+    // 新增文件上传相关状态
+    const isUploading = ref(false)
+    const uploadProgress = ref(0)
+    const isStreaming = ref(false)
+    
+    // 新增更多提示词要求
+    const extraPrompt = ref('')
 
     // 检查选项
     const analysisOption = ref('data_quality')
+    
+    // 处理URL参数
+    onMounted(() => {
+      // 获取当前URL的查询参数
+      const queryParams = new URLSearchParams(window.location.search)
+      
+      // 获取URL中的分析选项参数
+      if (queryParams.has('analysisOption')) {
+        analysisOption.value = queryParams.get('analysisOption')
+      }
+      
+      // 获取URL中的额外提示词参数
+      if (queryParams.has('extraPrompt')) {
+        extraPrompt.value = queryParams.get('extraPrompt')
+      }
+      
+      console.log('从URL参数获取的分析选项:', analysisOption.value)
+      if (extraPrompt.value) {
+        console.log('从URL参数获取的额外提示词:', extraPrompt.value.substring(0, 50) + '...')
+      }
+    })
 
     // 格式化结果
     const formattedResult = computed(() => {
@@ -202,14 +257,34 @@ export default {
       fileInput.value.click()
     }
 
+    // 清除已选择的文件
+    const clearSelectedFile = () => {
+      selectedFile.value = null
+      fileId.value = ''
+      // 重置文件输入控件
+      if (fileInput.value) {
+        fileInput.value.value = ''
+      }
+    }
+
     // 处理文件上传
     const handleFileUpload = async (event) => {
       const file = event.target.files[0]
       if (!file) return
 
-      const allowedTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']
+      // 检查文件大小（限制为10MB）
       const maxSize = 10 * 1024 * 1024 // 10MB
+      if (file.size > maxSize) {
+        ElMessage.error('文件大小不能超过10MB')
+        return
+      }
 
+      // 文件类型检查
+      const allowedTypes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+        'application/vnd.ms-excel'
+      ]
+      
       if (!allowedTypes.includes(file.type) && 
           !file.name.endsWith('.xlsx') && 
           !file.name.endsWith('.xls')) {
@@ -217,57 +292,310 @@ export default {
         return
       }
 
-      if (file.size > maxSize) {
-        ElMessage.error('文件大小不能超过10MB')
-        return
-      }
-
+      // 保存选中的文件
       selectedFile.value = file
+      console.log('选择文件:', file.name, '类型:', file.type, '大小:', file.size)
+    }
 
-      // 上传文件到服务器
+    // 上传文件到服务器 - 参考Proofreading.vue实现
+    const uploadFile = async () => {
+      if (!selectedFile.value) return false
+
+      isUploading.value = true
+      uploadProgress.value = 0
+
       try {
-        console.log('开始上传文件:', file.name)
-        const formData = new FormData()
-        formData.append('file', file)
-
-        // 使用完整URL路径进行上传
-        const uploadUrl = `${axios.defaults.baseURL}/api/v1/file_chat/upload`
-        console.log('上传API URL:', uploadUrl)
+        console.log('========== 第1步：上传数据集文件 ==========')
+        console.log('文件信息:', {
+          名称: selectedFile.value.name,
+          类型: selectedFile.value.type,
+          大小: `${(selectedFile.value.size / 1024).toFixed(2)} KB`
+        })
         
-        const response = await axios.post(uploadUrl, formData, {
+        // 创建FormData对象
+        const formData = new FormData()
+        formData.append('file', selectedFile.value)
+        
+        // 模型ID映射表 - 从前端选择器ID到后端支持的ID
+        const modelMap = {
+          'deepseek-v3': 'deepseek-v3-vol', // 火山引擎 DeepSeek V3
+          'deepseek-r1': 'deepseek-r1-vol', // 火山引擎 DeepSeek R1
+          'deepseek-r1-vol': 'deepseek-r1-vol', // 已经是正确格式
+          'douban': 'doubao-pro' // 豆包模型
+        }
+        
+        // 使用默认模型ID
+        const modelId = 'deepseek-v3'
+        const uploadModelId = modelMap[modelId] || modelId
+        
+        console.log('使用的模型ID:', modelId)
+        console.log('文件上传使用的转换后模型ID:', uploadModelId)
+        
+        // 添加模型参数
+        formData.append('model', uploadModelId)
+        
+        // 构建分析提示词
+        let prompt = '请对以下数据集文件内容进行分析，';
+        
+        // 添加分析选项
+        prompt += '重点关注：';
+        
+        if (analysisOption.value === 'data_quality') {
+          prompt += '数据质量，全面评估数据集的完整性、准确性和一致性';
+        } else if (analysisOption.value === 'missing_values') {
+          prompt += '缺失值，识别并分析数据集中的空值或缺失数据';
+        } else if (analysisOption.value === 'duplicate_values') {
+          prompt += '重复值，检测数据集中的重复记录并提供处理建议';
+        } else if (analysisOption.value === 'outliers') {
+          prompt += '异常值，发现数据集中的异常或离群值';
+        } else if (analysisOption.value === 'regular_analysis') {
+          prompt += '常规数据分析，提供基本的统计分析，包括平均值、中位数等';
+        } else if (analysisOption.value === 'user_profile') {
+          prompt += '用户画像，分析数据集中的用户特征和行为模式';
+        }
+        
+        // 添加额外提示词要求
+        if (extraPrompt.value && extraPrompt.value.trim()) {
+          prompt += `。\n\n此外，请特别注意以下要求：${extraPrompt.value.trim()}`;
+        } else {
+          prompt += '。请提供一份详细的分析报告，包括数据集基本信息、主要特征、问题分析和建议。';
+        }
+        
+        formData.append('prompt', prompt)
+        
+        // 文件上传API路径
+        const fileUploadApi = '/api/v1/llm/file_chat'
+        
+        console.log('文件上传参数:', {
+          API路径: fileUploadApi,
+          文件名: selectedFile.value.name,
+          模型ID: uploadModelId,
+          提示词长度: prompt.length
+        })
+        
+        console.log('开始上传文件...')
+        
+        // 上传文件，获取文本内容
+        const uploadResponse = await axios.post(fileUploadApi, formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           },
-          timeout: 60000 // 60秒超时
+          onUploadProgress: (progressEvent) => {
+            uploadProgress.value = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            console.log(`上传进度: ${uploadProgress.value}%`)
+          }
         })
         
-        console.log('文件上传响应:', response.data)
-        if (response.data.success) {
-          fileId.value = response.data.file_id
-          ElMessage.success('文件上传成功')
+        console.log('文件上传完成，响应状态:', uploadResponse.status)
+        console.log('文件上传响应数据结构:', Object.keys(uploadResponse.data))
+        
+        // 检查上传响应
+        if (!uploadResponse.data || uploadResponse.data.status !== 'success') {
+          console.error('文件上传失败:', uploadResponse.data)
+          throw new Error(uploadResponse.data?.message || '文件处理失败')
+        }
+        
+        console.log('文件上传成功，状态:', uploadResponse.data.status)
+        
+        // 检查响应数据结构
+        console.log('响应data字段结构:', Object.keys(uploadResponse.data.data || {}))
+        
+        // 检查是否有提取的文本
+        let extractedText = ''
+        
+        // 处理不同的响应格式
+        if (uploadResponse.data.data && uploadResponse.data.data.extracted_text) {
+          extractedText = uploadResponse.data.data.extracted_text
+          console.log('从extracted_text字段提取到文本')
+        } else if (uploadResponse.data.data && uploadResponse.data.data.text) {
+          extractedText = uploadResponse.data.data.text
+          console.log('从text字段提取到文本')
+        } else if (uploadResponse.data.data && typeof uploadResponse.data.data === 'string') {
+          extractedText = uploadResponse.data.data
+          console.log('从data字段直接提取到文本')
+        } else if (uploadResponse.data.data && uploadResponse.data.data.choices && 
+                  uploadResponse.data.data.choices.length > 0 && 
+                  uploadResponse.data.data.choices[0].message) {
+          
+          // 如果已经有完整结果，直接使用
+          console.log('发现上传响应中已包含完整的分析结果，直接使用')
+          checkResult.value = uploadResponse.data.data.choices[0].message.content || ''
+          return true
         } else {
-          ElMessage.error(response.data.message || '文件上传失败')
+          console.error('无法从响应中提取文本内容:', uploadResponse.data)
+          throw new Error('无法从上传的文件中提取文本')
         }
+        
+        console.log('成功提取文本，长度:', extractedText.length)
+        if (extractedText.length > 100) {
+          console.log('文本前100字符:', extractedText.substring(0, 100) + '...')
+        } else {
+          console.log('提取的文本:', extractedText)
+        }
+        
+        console.log('第1步完成：成功上传数据集文件并读取内容')
+        
+        // 保存提取的文本、提示词和原始模型ID，供后续步骤使用
+        this._extractedText = extractedText
+        this._prompt = prompt
+        this._originalModelId = modelId
+        
+        // 继续执行第2步和第3步
+        await processExtractedText(extractedText, prompt, modelId)
+        
+        return true
       } catch (error) {
-        console.error('文件上传错误:', error)
-        let errorMessage = '文件上传失败，请稍后重试'
+        console.error('文件上传失败:', error)
         
+        // 记录所有可能的错误信息
         if (error.response) {
-          // 服务器返回了状态码
-          console.error('错误状态:', error.response.status)
-          console.error('错误数据:', error.response.data)
-        } else if (error.request) {
-          // 请求发出但没有收到响应
-          console.error('没有收到响应:', error.request)
-          console.error('请求URL:', error.config?.url)
-          console.error('请求方法:', error.config?.method)
+          console.error('错误响应状态:', error.response.status)
+          console.error('错误响应数据:', error.response.data)
+          
+          const errorMsg = error.response.data?.message || error.response.data?.error || '请求参数错误'
+          ElMessage.error(`数据集上传失败: ${errorMsg}`)
+        } else {
+          ElMessage.error(`数据集上传失败: ${error.message || '未知错误'}`)
         }
         
-        ElMessage.error(errorMessage)
+        return false
+      } finally {
+        isUploading.value = false
+      }
+    }
+    
+    // 处理提取的文本并调用流式API - 参考Proofreading.vue实现
+    const processExtractedText = async (extractedText, prompt, modelId) => {
+      console.log('========== 第2步：整理提示词 ==========')
+      // 构建完整提示词（包含文件内容）
+      const fullPrompt = `${prompt}\n\n${extractedText}`
+      console.log('完整提示词长度:', fullPrompt.length)
+      
+      // 保存提示词供后续显示（可选）
+      messages.value = [
+        { role: "user", content: prompt }
+      ]
+      
+      console.log('第2步完成：成功整理完整提示词')
+      
+      // 第3步：调用流式API获取结果
+      console.log('========== 第3步：调用流式API获取结果 ==========')
+      checkResult.value = ''
+      isStreaming.value = true
+      
+      // 流式API使用原始模型ID
+      console.log('流式请求使用原始模型ID:', modelId)
+      
+      // 流式API路径
+      const streamApiUrl = '/api/v1/v1/deepseek_volcano/chat'
+      console.log('流式API路径:', streamApiUrl)
+      
+      try {
+        // 构建API请求参数
+        const requestParams = {
+          model: modelId, // 使用原始模型ID
+          messages: [{ role: 'user', content: fullPrompt }],
+          stream: true,
+          temperature: 0.7,
+          max_tokens: 2000
+        }
+        
+        // 记录API请求详情
+        console.log('流式请求参数:', {
+          model: requestParams.model,
+          stream: requestParams.stream,
+          temperature: requestParams.temperature,
+          max_tokens: requestParams.max_tokens,
+          messages_length: requestParams.messages[0].content.length
+        })
+        
+        // 发送流式请求
+        const response = await fetch(streamApiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream'
+          },
+          body: JSON.stringify(requestParams)
+        })
+        
+        console.log('流式响应状态:', response.status)
+        
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error('流式请求错误响应:', errorText)
+          throw new Error(`流式请求失败: ${response.status}`)
+        }
+        
+        // 处理流式响应
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
+        
+        // 读取流数据
+        console.log('开始读取流数据...')
+        while (true) {
+          const { done, value } = await reader.read()
+          
+          if (done) {
+            console.log('流式响应完成')
+            break
+          }
+          
+          // 解码二进制数据
+          const decoded = decoder.decode(value, { stream: true })
+          buffer += decoded
+          
+          // 处理收到的数据
+          const lines = buffer.split('\n\n')
+          buffer = lines.pop() || ''
+          
+          for (const line of lines) {
+            if (line.trim() === '') continue
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6)
+              if (data === '[DONE]') {
+                console.log('收到结束标志')
+                continue
+              }
+              
+              try {
+                const parsed = JSON.parse(data)
+                
+                // 处理错误消息
+                if (parsed.error) {
+                  console.error("API错误:", parsed.error)
+                  throw new Error(parsed.error.message || '分析失败')
+                }
+                
+                // 处理火山引擎返回的delta格式数据
+                if (parsed.choices && parsed.choices.length > 0 && parsed.choices[0].delta) {
+                  const delta = parsed.choices[0].delta
+                  
+                  // 处理内容增量
+                  if (delta.content) {
+                    // 累加收到的内容
+                    checkResult.value += delta.content
+                  }
+                }
+              } catch (e) {
+                console.error('解析流式数据失败:', e)
+              }
+            }
+          }
+        }
+        
+        console.log('第3步完成，生成分析结果，总字数:', checkResult.value.length)
+        ElMessage.success('数据分析完成！')
+      } catch (error) {
+        console.error('流式请求处理失败:', error)
+        ElMessage.error(`分析失败: ${error.message || '未知错误'}`)
+      } finally {
+        isStreaming.value = false
       }
     }
 
-    // 执行数据分析
+    // 执行数据分析 - 更新为参考Proofreading.vue的实现
     const checkContract = async () => {
       // 验证是否有内容需要检查
       if (!selectedFile.value) {
@@ -279,82 +607,17 @@ export default {
       isChecking.value = true
       checkResult.value = ''
 
-      // 显示加载指示器
+      // 显示加载指示器，直接使用"正在生成分析报告"作为文本
+      loadingText.value = '正在生成分析报告...'
       loadingInstance.value = ElLoading.service({
         lock: true,
-        text: '正在分析数据集内容...',
+        text: '正在生成分析报告...',
         background: 'rgba(255, 255, 255, 0.8)'
       })
 
-      // 更新loading文本
-      setTimeout(() => {
-        loadingText.value = '正在检查数据集内容...'
-      }, 3000)
-      
-      // 设置延时以显示多个loading文本
-      setTimeout(() => {
-        loadingText.value = '正在生成分析报告...'
-      }, 6000)
-
       try {
-        // 构建系统消息和用户消息
-        const systemMessage = {
-          role: "system",
-          content: `你是一位专业的数据分析专家，请详细检查数据集内容并提供专业分析。重点关注以下方面：
-            ${analysisOption.value === 'data_quality' ? '- 数据质量：全面评估数据集的完整性、准确性和一致性' : ''}
-            ${analysisOption.value === 'missing_values' ? '- 缺失值：识别并分析数据集中的空值或缺失数据' : ''}
-            ${analysisOption.value === 'duplicate_values' ? '- 重复值：检测数据集中的重复记录并提供处理建议' : ''}
-            ${analysisOption.value === 'outliers' ? '- 异常值：发现数据集中的异常或离群值' : ''}
-            ${analysisOption.value === 'regular_analysis' ? '- 常规数据分析：提供基本的统计分析，包括平均值、中位数等' : ''}
-            分析后，请提供一份数据分析报告，包括以下部分：
-            1. 数据集基本信息分析
-            2. 主要数据特征概述
-            3. 问题数据分析（以表格形式展示：数据特征|问题描述|修改建议）
-            4. 整体评估和建议
-            请使用markdown格式输出，并确保专业、客观。`
-        }
-
-        const userMessage = {
-          role: "user",
-          content: `我需要你帮我分析一份数据集，请分析其中可能存在的问题并给出修改建议。`
-        }
-
-        // 将消息添加到数组
-        messages.value = [systemMessage, userMessage]
-
-        // 准备请求参数
-        const requestData = {
-          file_id: fileId.value,
-          messages: messages.value,
-          temperature: 0.7,
-          max_tokens: 2000
-        }
-
-        console.log('发送请求数据:', JSON.stringify(requestData))
-        console.log('文件ID检查:', fileId.value)
-
-        // 使用完整URL路径，不依赖axios默认设置
-        const chatUrl = `${axios.defaults.baseURL}/api/v1/file_chat/chat`
-        console.log('聊天API URL:', chatUrl)
-
-        // 发送请求到服务器
-        const chatResponse = await axios.post(chatUrl, requestData, {
-          timeout: 120000, // 增加超时时间到120秒
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
-
-        // 处理响应
-        if (chatResponse.data.success) {
-          console.log("API返回成功，内容长度:", chatResponse.data.content.length);
-          console.log("API返回内容预览:", chatResponse.data.content.substring(0, 100));
-          checkResult.value = chatResponse.data.content;
-        } else {
-          const errorMsg = chatResponse.data?.message || '未知错误'
-          console.error('API返回错误:', errorMsg)
-          ElMessage.error(`数据分析失败: ${errorMsg}`)
-        }
+        // 使用Proofreading.vue的方式直接上传文件并处理
+        await uploadFile()
       } catch (error) {
         console.error('数据分析错误:', error)
         let errorMessage = '数据分析失败，请稍后重试'
@@ -367,11 +630,11 @@ export default {
         } else if (error.request) {
           // 请求发出但没有收到响应
           console.error('没有收到响应:', error.request)
-          // 尝试输出请求详情以便调试
           console.error('请求URL:', error.config?.url)
           console.error('请求方法:', error.config?.method)
-          console.error('请求数据:', JSON.stringify(error.config?.data))
           errorMessage = '服务器没有响应，请检查网络连接或后端服务状态'
+        } else {
+          errorMessage = error.message || '数据分析过程中发生未知错误'
         }
         
         ElMessage.error(errorMessage)
@@ -427,6 +690,10 @@ export default {
       analysisOption.value = 'data_quality'
       checkResult.value = ''
       fileId.value = ''
+      isUploading.value = false
+      uploadProgress.value = 0
+      isStreaming.value = false
+      extraPrompt.value = ''
       
       // 清空文件输入
       if (fileInput.value) {
@@ -443,6 +710,10 @@ export default {
       analysisOption,
       loadingText,
       formattedResult,
+      isUploading,
+      uploadProgress,
+      isStreaming,
+      clearSelectedFile,
       triggerFileUpload,
       handleFileUpload,
       checkContract,
@@ -450,6 +721,7 @@ export default {
       copyText,
       downloadResult,
       showTips,
+      extraPrompt,
     }
   }
 }
@@ -573,43 +845,126 @@ export default {
 
 .file-upload-container {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .file-upload-btn {
   background-color: #f0f0f0;
-  color: #555;
-  border: 1px dashed #ccc;
-  padding: 10px 16px;
+  border: 1px solid #ddd;
   border-radius: 4px;
+  padding: 8px 16px;
   cursor: pointer;
+  color: #333;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.2s;
+  gap: 6px;
+  font-size: 14px;
 }
 
 .file-upload-btn:hover {
-  background-color: #e8e8e8;
-  border-color: #BA0040;
-  color: #BA0040;
-}
-
-.file-name {
-  font-size: 14px;
-  color: #333;
-  padding: 4px 8px;
-  background-color: #f7f7f7;
-  border-radius: 4px;
-  word-break: break-all;
+  background-color: #e0e0e0;
 }
 
 .file-upload-hint {
-  font-size: 12px;
+  color: #888;
+  font-size: 13px;
+}
+
+.file-upload-selected {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #333;
+  font-size: 14px;
+}
+
+.file-clear-btn {
+  background: none;
+  border: none;
   color: #999;
+  cursor: pointer;
+  padding: 2px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.file-clear-btn:hover {
+  color: #666;
+}
+
+.file-upload-progress {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #409eff;
+  transition: width 0.2s;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: #666;
   margin-top: 4px;
+  display: block;
+}
+
+.streaming-indicator {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.dot-typing {
+  position: relative;
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background-color: #666;
+  border-radius: 50%;
+  animation: dot-typing 1.5s infinite linear;
+}
+
+.dot-typing::before,
+.dot-typing::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background-color: #666;
+  border-radius: 50%;
+}
+
+.dot-typing::before {
+  left: -8px;
+  animation: dot-typing 1.5s infinite linear;
+  animation-delay: 0s;
+}
+
+.dot-typing::after {
+  left: 8px;
+  animation: dot-typing 1.5s infinite linear;
+  animation-delay: 0.5s;
+}
+
+@keyframes dot-typing {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.5); opacity: 0.5; }
 }
 
 .checkbox-group {

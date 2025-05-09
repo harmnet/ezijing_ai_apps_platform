@@ -1,13 +1,14 @@
 <template>
   <div class="wechat-article-page">
-    <div class="page-header">
+    <div class="page-header no-border">
       <div class="page-nav">
         <h2>公众号文章生成</h2>
       </div>
       <div class="page-actions">
-        <button class="action-btn" title="创作小贴士" @click="showTips">
-          <i class="ri-lightbulb-line"></i>
-        </button>
+        <div class="learn-button" @click="showTipsModal = true">
+          <i class="ri-lightbulb-flash-line"></i>
+          <span>知识学习</span>
+        </div>
       </div>
     </div>
     
@@ -189,13 +190,18 @@
           
           <div class="example-carousel">
             <div class="example-cards" ref="exampleCarousel">
-              <div class="example-card" v-for="(example, index) in examples" :key="index" @click="loadExample('example' + (index + 1))">
-                <div class="example-icon">
-                  <i :class="example.icon"></i>
+              <div class="example-card" v-for="(example, index) in examples" :key="index" @click="loadExample('example' + (index + 1))" :title="example.title + '：' + example.desc">
+                <div class="example-card-header">
+                  <div class="example-icon">
+                    <i :class="example.icon"></i>
+                  </div>
+                  <div class="example-info">
+                    <div class="example-title">{{ example.title }}</div>
+                    <div class="example-desc">{{ example.type }}</div>
+                  </div>
                 </div>
-                <div class="example-info">
-                  <span class="example-title">{{ example.title }}</span>
-                  <span class="example-desc">{{ example.desc }}</span>
+                <div class="example-content" v-if="example.desc">
+                  <div class="example-detail">{{ example.desc }}</div>
                 </div>
               </div>
             </div>
@@ -223,59 +229,92 @@
                 <i class="ri-code-line"></i>
                 查看提示词
               </button>
+              <button @click="toggleDisplayMode" class="toggle-display-button" :disabled="!generatedArticle">
+                <i :class="isPhoneMode ? 'ri-layout-line' : 'ri-smartphone-line'"></i>
+                {{ isPhoneMode ? '普通视图' : '手机视图' }}
+              </button>
             </div>
           </div>
           
           <div class="result-content-wrapper">
             <!-- 加载动画 -->
-            <div v-if="isLoading" class="loading-overlay">
+            <div v-if="isLoading && !isStreaming" class="loading-overlay">
               <div class="loading-spinner"></div>
               <div class="loading-text">{{ loadingText }}</div>
             </div>
             
-            <div v-if="!generatedArticle && !isLoading" class="empty-result">
+            <div v-if="!generatedArticle && !isLoading && !isStreaming" class="empty-result">
               <div class="empty-content">
-                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgZmlsbC1vcGFjaXR5PSIuMDgiIGZpbGw9IiNEOEQ4RDgiIGN4PSI2NCIgY3k9IjY0IiByPSI2NCIvPjxwYXRoIGQ9Ik00MS41OTkgNDkuODhjMS4xIDAgMiAuOSAyIDJ2MzIuMjRjMCAxLjEtLjkgMi0yIDJoLTguOTdhLjk3Ljk3IDAgMDEtLjk1LS45NSAwIDAgMCAwLS4wNCAwIDAgMCAwLS4wM3YtMjkuNTFjMC0xLjk5IDEuNjItMy42MiAzLjYyLTMuNjJsMCAwUTQxLjU5OCA0OS44OTggNDEuNTk5IDQ5Ljg4ek04Ni4wNyA0OS44OGMxLjEgMCAyIC45IDIgMnYzMi4yNGMwIDEuMS0uOSAyLTIgMmgtOC45N3MtLjk2LS43OS0uOTYtLjk2VjUyLjgyYzAtMS42MiAxLjMyLTIuOTUgMi45NS0yLjk1bDAgMGg2Ljk4ek02NC4wNyA0Ni44M2MxLjMxIDAgMi4zNyAxLjA2IDIuMzcgMi4zN3YzNC44OGMwIDEuMzEtMS4wNiAyLjM3LTIuMzcgMi4zN2gtOS43YTIuMzcgMi4zNyAwIDAxLTIuMzctMi4zN1Y0OS4yYzAtMS4zMSAxLjA2LTIuMzcgMi4zNy0yLjM3bDAgMGg5LjciIGZpbGw9IiNFMUUxRTEiLz48cGF0aCBkPSJNMzIuNjMgNjkuNzVjMCAyLjYgMi4xMSA0LjcxIDQuNzEgNC43MXMyLjYtMi4xMSA0LjctNC43MS0yLjExLTQuNzEtNC43LTQuNzEtNC43MSAyLjExLTQuNzEgNC43MXpNODcuMDMgNjkuNzVjMCAyLjYtMi4xMSA0LjcxLTQuNzEgNC43MXMtNC43MS0yLjExLTQuNzEtNC43MSAyLjExLTQuNzEgNC43MS00LjcxIDQuNzEgMi4xMSA0LjcxIDQuNzF6TTY0LjQgNjcuMzhjMCAzLjczLTMuMDIgNi43NS02Ljc1IDYuNzVzLTYuNzYtMy4wMi02Ljc2LTYuNzUgMy4wMy02Ljc2IDYuNzYtNi43NiA2Ljc1IDMuMDMgNi43NSA2Ljc2eiIgZmlsbD0iI0JBMDA0MCIgZmlsbC1vcGFjaXR5PSIuNSIvPjwvZz48L3N2Zz4=" class="empty-image" alt="暂无数据" />
+                <img src="@/assets/images/no_data.png" class="empty-image" alt="暂无数据" />
                 <p class="empty-message">暂无文章内容，请点击"生成公众号文章"按钮开始创作</p>
               </div>
             </div>
             
-            <div v-else-if="generatedArticle" class="article-result" :class="{'blur-content': isLoading}">
+            <div v-else-if="generatedArticle || isStreaming" class="article-result" :class="{'blur-content': isLoading && !isStreaming, 'streaming': isStreaming}">
               <!-- 添加离线模式提示条 -->
               <div v-if="isOfflineGenerated" class="offline-mode-banner">
                 <i class="ri-information-line"></i>
                 <span>您当前正在使用离线模式，生成的是基础模板文章。要获得AI生成的更优质文章，请联系管理员启动后端服务。</span>
               </div>
               
-              <div class="article-content" v-html="formattedArticle"></div>
+              <!-- 流式生成指示器 -->
+              <div v-if="isStreaming" class="streaming-indicator">
+                <span class="dot-typing"></span>
+              </div>
+              
+              <!-- 普通视图模式 -->
+              <div v-if="!isPhoneMode" class="normal-article-view">
+                <div class="article-content" v-html="formattedArticle"></div>
+                
+                <!-- 普通视图下的流式指示器 -->
+                <div v-if="isStreaming" class="normal-streaming-indicator">
+                  <div class="typing-animation">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                  </div>
+                  <span class="typing-text">AI正在持续创作中...</span>
+                </div>
+              </div>
+              
+              <!-- 手机视图模式 -->
+              <div v-else class="wechat-article-container">
+                <div class="wechat-article">
+                  <div class="wechat-article-header">
+                    <div class="wechat-article-title">{{ this.articleTitle || '公众号文章标题' }}</div>
+                    <div class="wechat-article-info">
+                      <span class="wechat-article-account">易紫荆AI</span>
+                      <span class="wechat-article-date">{{ new Date().toLocaleDateString() }}</span>
+                    </div>
+                  </div>
+                  <div class="wechat-article-content" v-html="formattedArticle"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
     
-    <!-- 创作小贴士模态框 -->
-    <div class="modal" v-if="showTipsModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3><i class="ri-lightbulb-line"></i> 创作小贴士</h3>
-          <button class="close-btn" @click="showTipsModal = false">
-            <i class="ri-close-line"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <ul class="tips-list">
-            <li>公众号文章标题要有吸引力，可以使用"数字+疑问+情感"结构</li>
-            <li>开篇第一段至关重要，要能迅速吸引读者注意力</li>
-            <li>适当使用小标题分段，让文章结构更清晰</li>
-            <li>图文结合的内容更易引起读者共鸣和互动</li>
-            <li>结尾部分可设置互动话题，增加粉丝互动率</li>
-            <li>尝试多种写作风格，找到最适合您目标受众的表达方式</li>
-            <li>定期分析阅读数据，了解读者喜好，针对性优化内容</li>
-          </ul>
+    <!-- 创作小贴士模态框 - 修改为抽屉组件 -->
+    <el-drawer
+      v-model="showTipsModal"
+      title="公众号文章创作指南"
+      direction="rtl"
+      size="30%"
+      :destroy-on-close="false"
+      class="knowledge-drawer"
+    >
+      <div class="knowledge-content">
+        <div v-for="(item, index) in articleKnowledge" :key="index" class="knowledge-section">
+          <h3 class="knowledge-subtitle">
+            <i :class="item.icon" class="knowledge-icon"></i>
+            {{ item.subtitle }}
+          </h3>
+          <div class="knowledge-text" v-html="formatMarkdown(item.text)"></div>
         </div>
       </div>
-    </div>
+    </el-drawer>
     
     <!-- 提示词查看模态框 -->
     <div class="modal" v-if="showPromptModal">
@@ -303,6 +342,10 @@
 
 <script>
 import axios from 'axios'
+import { wechatArticleExamples } from '@/views/example_data.js'
+import { wechatArticleKnowledge } from '@/views/Knowledge_data.js'
+import '@/assets/css/text-creation-common.css' // 引入统一CSS样式文件
+import '@/assets/css/mobile-preview.css' // 引入手机预览样式文件
 
 export default {
   name: 'WechatArticle',
@@ -321,36 +364,20 @@ export default {
       showPromptModal: false,
       lastUsedPrompt: '',
       modelList: [],
-      selectedModel: 'deepseek-v3-vol',
+      selectedModel: 'deepseek-v3',
       isGenerating: false,
       isLoading: false,
       loadingText: '正在生成公众号文章...',
       validationErrors: [],
+      isStreaming: false, // 添加流式输出状态标记
       currentExampleIndex: 0,
       exampleTranslateX: 0,
-      examples: [
-        { title: '农业科技', desc: '智慧农业新趋势', icon: 'ri-seedling-line', 
-          articleType: 'industry', writingStyle: 'professional' },
-        { title: '冰雪产业', desc: '冬奥带动冰雪经济', icon: 'ri-snowy-line', 
-          articleType: 'industry', writingStyle: 'analytical' },
-        { title: '交通出行', desc: '智能交通新时代', icon: 'ri-train-line', 
-          articleType: 'knowledge', writingStyle: 'professional' },
-        { title: '新能源车', desc: '电动未来已来临', icon: 'ri-battery-charge-line', 
-          articleType: 'opinion', writingStyle: 'analytical' },
-        { title: '金融科技', desc: '数字金融新变革', icon: 'ri-bank-line', 
-          articleType: 'industry', writingStyle: 'professional' },
-        { title: '云计算', desc: '云端科技新体验', icon: 'ri-cloud-line', 
-          articleType: 'knowledge', writingStyle: 'professional' },
-        { title: '健康医疗', desc: '智慧医疗新未来', icon: 'ri-heart-pulse-line', 
-          articleType: 'tutorial', writingStyle: 'conversational' },
-        { title: '游戏产业', desc: '元宇宙与游戏融合', icon: 'ri-gamepad-line', 
-          articleType: 'opinion', writingStyle: 'humorous' },
-        { title: '房地产', desc: '智慧地产新模式', icon: 'ri-building-line', 
-          articleType: 'case', writingStyle: 'analytical' },
-        { title: '在线教育', desc: '数字化学习革命', icon: 'ri-book-line', 
-          articleType: 'knowledge', writingStyle: 'inspirational' }
-      ],
-      customParams: []
+      isPhoneMode: false, // 将默认视图改为普通视图
+      imageLoading: true, // 图片加载状态
+      examples: wechatArticleExamples,
+      customParams: [],
+      // 添加公众号文章知识内容
+      articleKnowledge: wechatArticleKnowledge
     }
   },
   
@@ -367,13 +394,52 @@ export default {
         .map(para => {
           // 检查是否为标题 (# 或 ## 开头)
           if (para.startsWith('# ')) {
-            return `<h1>${para.substring(2)}</h1>`;
+            return `<h1 class="article-h1">${para.substring(2)}</h1>`;
           } else if (para.startsWith('## ')) {
-            return `<h2>${para.substring(3)}</h2>`;
+            return `<h2 class="article-h2">${para.substring(3)}</h2>`;
           } else if (para.startsWith('### ')) {
-            return `<h3>${para.substring(4)}</h3>`;
+            return `<h3 class="article-h3">${para.substring(4)}</h3>`;
+          } else if (para.startsWith('> ')) {
+            // 引用样式
+            return `<blockquote class="article-quote">${para.substring(2).replace(/\n/g, '<br>')}</blockquote>`;
+          } else if (para.startsWith('* ') || para.startsWith('- ')) {
+            // 无序列表
+            const items = para.split('\n').map(item => {
+              if (item.startsWith('* ') || item.startsWith('- ')) {
+                return `<li>${item.substring(2)}</li>`;
+              }
+              return `<li>${item}</li>`;
+            }).join('');
+            return `<ul class="article-list">${items}</ul>`;
+          } else if (/^\d+\.\s/.test(para)) {
+            // 有序列表
+            const items = para.split('\n').map(item => {
+              if (/^\d+\.\s/.test(item)) {
+                return `<li>${item.replace(/^\d+\.\s/, '')}</li>`;
+              }
+              return `<li>${item}</li>`;
+            }).join('');
+            return `<ol class="article-list">${items}</ol>`;
+          } else if (para.startsWith('*') && para.endsWith('*')) {
+            // 斜体段落
+            return `<p class="article-italic">${para.substring(1, para.length - 1).replace(/\n/g, '<br>')}</p>`;
           } else {
-            return `<p>${para.replace(/\n/g, '<br>')}</p>`;
+            // 添加关键词高亮
+            let content = para.replace(/\n/g, '<br>');
+            const keywords = this.articleKeywords.split(/[,;，；]/);
+            keywords.forEach(keyword => {
+              if (keyword.trim().length > 1) {
+                const regex = new RegExp(`(${keyword.trim()})`, 'gi');
+                content = content.replace(regex, '<span class="keyword-highlight">$1</span>');
+              }
+            });
+            
+            // 添加随机强调样式（约10%的段落）
+            if (Math.random() < 0.1) {
+              return `<p class="article-emphasis">${content}</p>`;
+            }
+            
+            return `<p class="article-p">${content}</p>`;
           }
         })
         .join('');
@@ -401,7 +467,6 @@ export default {
     async fetchModels() {
       try {
         const response = await axios.get('/api/v1/llm/models');
-        console.log('获取模型响应:', response);
         
         if (response.data.status === 'success') {
           // 获取模型列表
@@ -422,10 +487,8 @@ export default {
             .map(id => models.find(model => model.id === id))
             .filter(model => model !== undefined);
           
-          console.log('可用模型:', this.modelList);
-          
           // 默认选择火山引擎的DeepSeek V3模型
-          this.selectedModel = 'deepseek-v3-vol';
+          this.selectedModel = 'deepseek-v3';
           
           // 如果没有可用模型，创建一个默认列表作为备用
           if (this.modelList.length === 0) {
@@ -443,19 +506,18 @@ export default {
     
     setupDefaultModels() {
       this.modelList = [
-        { id: 'deepseek-v3-vol', name: 'DeepSeek-V3（火山引擎）' },
+        { id: 'deepseek-v3', name: 'DeepSeek-V3（火山引擎）' },
         { id: 'qwen-max', name: '通义千问-Max（阿里云）' },
         { id: 'deepseek-r1-vol', name: 'DeepSeek-R1（火山引擎）' },
         { id: 'deepseek-r1-sf', name: 'DeepSeek-R1（硅基流动）' },
         { id: 'deepseek-v3-sf', name: 'DeepSeek-V3（硅基流动）' },
         { id: 'qwq-32b', name: '通义千问-32B（硅基流动）' }
       ];
-      this.selectedModel = 'deepseek-v3-vol';
+      this.selectedModel = 'deepseek-v3';
     },
     
     // 显示创作小贴士
     showTips() {
-      console.log('显示创作小贴士模态框');
       this.showTipsModal = true;
     },
     
@@ -535,27 +597,45 @@ export default {
       this.articleLength = 'short';
     },
     
+    // 验证表单
+    validateForm() {
+      // 重置验证错误
+      this.validationErrors = [];
+      
+      // 验证必填字段
+      if (!this.articleTitle.trim()) {
+        this.validationErrors.push('文章标题不能为空');
+      }
+      
+      if (!this.targetAudience.trim()) {
+        this.validationErrors.push('目标读者群体不能为空');
+      }
+      
+      if (!this.articleKeywords.trim()) {
+        this.validationErrors.push('文章关键词/内容要点不能为空');
+      }
+      
+      // 自定义参数验证
+      if (this.customParams.length > 0) {
+        for (let i = 0; i < this.customParams.length; i++) {
+          const param = this.customParams[i];
+          if ((param.key.trim() && !param.value.trim()) || (!param.key.trim() && param.value.trim())) {
+            this.validationErrors.push(`自定义参数 #${i+1} 的键和值必须同时填写或同时为空`);
+          }
+        }
+      }
+      
+      // 返回验证结果
+      return this.validationErrors.length === 0;
+    },
+    
     // 生成公众号文章
     async generateArticle() {
-      if (this.isLoading) return;
-      
+      console.log('开始生成公众号文章');
       try {
-        this.validationErrors = [];
-        
-        // 验证必填字段
-        if (!this.articleTitle.trim()) {
-          this.validationErrors.push('请输入文章标题');
-        }
-        if (!this.targetAudience.trim()) {
-          this.validationErrors.push('请输入目标读者群体');
-        }
-        if (!this.articleKeywords.trim()) {
-          this.validationErrors.push('请输入文章关键词或内容要点');
-        }
-        
-        if (this.validationErrors.length > 0) {
-          const errorMsg = this.validationErrors.join('，');
-          this.$message ? this.$message.error(errorMsg) : alert(errorMsg);
+        // 验证表单
+        if (!this.validateForm()) {
+          this.$message ? this.$message.error('请完善表单信息') : alert('请完善表单信息');
           return;
         }
         
@@ -563,6 +643,11 @@ export default {
         this.isLoading = true;
         this.isGenerating = true;
         this.loadingText = '正在生成公众号文章...';
+        // 清空之前的生成结果
+        this.generatedArticle = '';
+        this.isOfflineGenerated = false;
+        // 初始化流式输出状态
+        this.isStreaming = false;
         
         // 构建提示词
         const prompt = this.buildPrompt();
@@ -570,8 +655,8 @@ export default {
         // 调用API并获取结果
         const result = await this.callLLMApi(prompt);
         
-        // 更新文章内容
-        this.generatedArticle = result.text || '';
+        // 不需要再次设置generatedArticle，因为在流式输出中已经设置了
+        // 只需设置离线模式标志
         this.isOfflineGenerated = result.offlineMode || false;
         
         // 如果是离线模式，显示提示
@@ -758,38 +843,198 @@ export default {
           throw new Error('请选择AI模型');
         }
         
-        console.log(`正在调用API，使用模型: ${this.selectedModel}，提示词长度: ${prompt.length}`);
+        // 准备所有消息历史
+        const messages = [{ role: 'user', content: prompt }];
         
         // 构建API请求参数
         const apiParams = {
-          model: this.selectedModel,
-          messages: [{ role: 'user', content: prompt }],
+          model: 'deepseek-v3',  // 使用与CopywritingGenerator.vue相同的模型名称
+          messages: messages,
+          stream: true,
           temperature: 0.7,
-          max_tokens: 3000
+          max_tokens: 2000,
+          return_reasoning: this.selectedModel.includes('r1') // 如果是R1模型，则启用思考过程
         };
         
-        // 记录API请求详情，方便调试
-        console.log('API请求参数:', JSON.stringify(apiParams));
-        
         try {
-          // 发送API请求
-          const response = await axios.post('/api/v1/llm/chat', apiParams, { timeout: 60000 });
-          console.log('API响应:', response);
+          // 重置生成的内容已经在generateArticle方法中完成
+          // 开始流式状态
+          this.isStreaming = true;
           
-          if (response.data.status === 'success') {
-            const content = response.data.data.choices[0].message.content;
-            console.log('成功获取到结果:', content);
-            
-            return {
-              text: content,
-              offlineMode: false
-            };
-          } else {
-            console.error('API返回错误:', response.data.message);
-            throw new Error(`服务器返回错误: ${response.data.message || '未知错误'}`);
+          // 发送API请求，使用fetch API来处理流式响应
+          const response = await fetch('/api/v1/v1/deepseek_volcano/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'text/event-stream'
+            },
+            body: JSON.stringify(apiParams)
+          });
+          
+          if (!response.ok) {
+            throw new Error(`服务器返回错误: ${response.status}`);
           }
+          
+          // 处理流式响应
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          
+          // 读取流数据
+          while (true) {
+            const { done, value } = await reader.read();
+            
+            if (done) {
+              console.log('流式响应完成');
+              break;
+            }
+            
+            // 解码二进制数据
+            const decoded = decoder.decode(value, { stream: true });
+            console.log('收到数据块:', decoded.length, '字节');
+            buffer += decoded;
+            
+            // 处理收到的数据
+            const lines = buffer.split('\n\n');
+            buffer = lines.pop() || '';
+            
+            for (const line of lines) {
+              if (line.trim() === '') continue;
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6);
+                if (data === '[DONE]') {
+                  console.log('收到结束标志');
+                  continue;
+                }
+                
+                try {
+                  console.log('解析数据:', data.substring(0, 100) + '...');
+                  const parsed = JSON.parse(data);
+                  console.log('解析后的数据格式:', Object.keys(parsed));
+                  
+                  // 处理错误消息
+                  if (parsed.error) {
+                    console.error("API错误:", parsed.error);
+                    throw new Error(parsed.error.message || '生成文章失败');
+                  }
+                  
+                  // 处理火山引擎返回的delta格式数据
+                  if (parsed.choices && parsed.choices.length > 0 && parsed.choices[0].delta) {
+                    const delta = parsed.choices[0].delta;
+                    
+                    // 处理思考过程（如果有）
+                    if (delta.reasoning_content) {
+                      console.log("收到思考过程:", delta.reasoning_content);
+                      // 这里可以添加思考过程的处理逻辑，如果需要的话
+                    }
+                    
+                    // 处理内容增量
+                    if (delta.content) {
+                      const contentDelta = delta.content;
+                      console.log("收到内容增量:", contentDelta);
+                      
+                      // 累加收到的内容到数据模型
+                      this.generatedArticle += contentDelta;
+                      
+                      // 创建高亮效果的内容元素
+                      const latestContent = document.createElement('span');
+                      latestContent.textContent = contentDelta;
+                      latestContent.className = 'latest';
+                      
+                      // 根据当前模式选择正确的内容容器
+                      let contentContainer = null;
+                      if (this.isPhoneMode) {
+                        // 手机模式下找到微信文章内容区域
+                        contentContainer = document.querySelector('.wechat-article-content');
+                      } else {
+                        // 普通模式下找到文章内容区域
+                        contentContainer = document.querySelector('.article-content');
+                      }
+                      
+                      // 如果找到了容器并且当前正处于流式输出状态
+                      if (contentContainer && this.isStreaming) {
+                        // 清空当前内容并重新渲染带有高亮效果的内容
+                        // 由于v-html绑定，我们需要特殊处理
+                        
+                        // 1. 暂时移除v-html的绑定
+                        if (this.isPhoneMode) {
+                          const phoneContainer = document.querySelector('.wechat-article-content');
+                          if (phoneContainer) {
+                            // 第一次收到增量内容时替换整个内容区域
+                            if (phoneContainer.getAttribute('v-html')) {
+                              phoneContainer.removeAttribute('v-html');
+                              phoneContainer.innerHTML = this.generatedArticle.slice(0, -contentDelta.length);
+                              phoneContainer.appendChild(latestContent);
+                            } else {
+                              // 后续内容直接添加
+                              phoneContainer.appendChild(latestContent);
+                            }
+                          }
+                        } else {
+                          const normalContainer = document.querySelector('.article-content');
+                          if (normalContainer) {
+                            // 第一次收到增量内容时替换整个内容区域
+                            if (normalContainer.getAttribute('v-html')) {
+                              normalContainer.removeAttribute('v-html');
+                              normalContainer.innerHTML = this.generatedArticle.slice(0, -contentDelta.length);
+                              normalContainer.appendChild(latestContent);
+                            } else {
+                              // 后续内容直接添加
+                              normalContainer.appendChild(latestContent);
+                            }
+                          }
+                        }
+                      }
+                      
+                      // 强制滚动到最新内容区域
+                      this.$nextTick(() => {
+                        const resultArea = this.isPhoneMode 
+                          ? document.querySelector('.wechat-article-container') 
+                          : document.querySelector('.article-result');
+                        if (resultArea) {
+                          resultArea.scrollTop = resultArea.scrollHeight;
+                        }
+                      });
+                    }
+                  }
+                  // 处理标准格式的思考过程
+                  else if (parsed.reasoning) {
+                    console.log("收到标准思考过程:", parsed.reasoning);
+                    // 这里可以添加思考过程的处理逻辑，如果需要的话
+                  }
+                  // 处理完整思考过程
+                  else if (parsed.full_reasoning) {
+                    console.log("收到完整思考过程");
+                    // 这里可以添加完整思考过程的处理逻辑，如果需要的话
+                  }
+                  // 处理旧版格式增量数据（如果有）
+                  else if (parsed.choices && parsed.choices.length > 0 && parsed.choices[0].delta && parsed.choices[0].delta.content) {
+                    const contentDelta = parsed.choices[0].delta.content;
+                    console.log("收到旧版内容增量:", contentDelta);
+                    // 累加收到的内容
+                    this.generatedArticle += contentDelta;
+                    
+                    // 可以添加与上面相同的显示效果代码
+                  }
+                } catch (e) {
+                  console.error('解析流式数据失败:', e, data);
+                }
+              }
+            }
+          }
+          
+          // 处理完成，移除流式状态
+          this.isStreaming = false;
+          
+          return {
+            text: this.generatedArticle,
+            offlineMode: false
+          };
+          
         } catch (error) {
           console.error('API调用异常:', error);
+          // 结束流式状态
+          this.isStreaming = false;
           
           // 判断是否是网络错误或服务器不可用
           if (error.code === 'ECONNABORTED' || !error.response || error.message.includes('Network Error')) {
@@ -803,6 +1048,8 @@ export default {
         }
       } catch (error) {
         console.error('文章生成失败:', error);
+        // 确保结束流式状态
+        this.isStreaming = false;
         
         // 根据错误类型提供更具体的错误信息
         let errorMessage = '生成公众号文章失败';
@@ -1040,425 +1287,36 @@ export default {
         this.$message ? this.$message.error('复制失败，请手动复制文本') : 
           alert('复制失败，请手动复制文本');
       }
-    }
+    },
+    
+    // 切换显示模式
+    toggleDisplayMode() {
+      this.isPhoneMode = !this.isPhoneMode;
+    },
+    
+    // 添加Markdown格式化函数
+    formatMarkdown(text) {
+      if (!text) return '';
+      
+      // 处理加粗文本
+      text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      
+      // 处理列表项
+      text = text.replace(/\n\n/g, '<br><br>');
+      
+      return text;
+    },
   }
 }
 </script>
 
 <style scoped>
+/* 引入统一样式文件 */
+@import "@/assets/css/text-creation-common.css";
+
+/* 只保留特定于WechatArticle的样式，其余使用统一样式 */
 .wechat-article-page {
-  padding: 0;
-  margin-top: -40px; /* 只保留这个负边距使整体上移，数值调大 */
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  padding: 0;
-}
-
-.page-nav h2 {
-  font-size: 24px;
-  color: #333;
-  margin: 0;
-}
-
-.page-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.action-btn {
-  background: none;
-  border: none;
-  color: #666;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s;
-}
-
-.action-btn:hover {
-  background-color: #f5f5f5;
-  color: var(--primary-color, #ba003f);
-  transform: scale(1.1);
-  box-shadow: 0 2px 6px rgba(186, 0, 63, 0.2);
-}
-
-/* 主要内容区域 - 使用两列布局 */
-.main-container {
-  display: flex;
-  gap: 20px;
-}
-
-/* 左侧：输入参数 */
-.input-section {
-  width: 45%;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  padding: 15px;
-}
-
-.form-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.form-group {
-  flex: 1;
-  margin-bottom: 16px;
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.form-group:hover label {
-  color: var(--primary-color, #ba003f);
-}
-
-/* 标签动画效果 */
-.form-group label {
-  transition: color 0.3s ease;
-  font-weight: 500;
-  display: block;
-  margin-bottom: 6px;
-}
-
-/* 焦点状态下整个表单组的效果 */
-.form-group:focus-within {
-  transform: translateY(-2px);
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #444;
-  font-size: 14px;
-}
-
-.required:after {
-  content: " *";
-  color: var(--primary-color, #ba003f);
-}
-
-.form-control {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.form-control:focus {
-  border-color: var(--primary-color, #ba003f);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-/* 下拉菜单的自定义样式 */
-select.form-control {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
-  background-repeat: no-repeat;
-  background-position: calc(100% - 12px) center;
-  background-size: 12px;
-  padding-right: 32px;
-  cursor: pointer;
-  transition: all 0.3s;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-select.form-control:hover {
-  border-color: #bbb;
-  background-color: #f9f9f9;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-}
-
-select.form-control:focus {
-  border-color: var(--primary-color, #ba003f);
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23ba003f' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
-}
-
-/* 优化下拉选项样式 */
-select.form-control option {
   padding: 10px;
-  font-size: 14px;
-}
-
-/* 禁用状态样式 */
-select.form-control:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #f5f5f5;
-}
-
-/* 文本区域样式优化 */
-textarea.form-control {
-  min-height: 100px;
-  line-height: 1.5;
-  resize: vertical;
-  background-color: #fafafa;
-  transition: all 0.3s ease;
-}
-
-textarea.form-control:focus {
-  background-color: #fff;
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-/* 操作按钮 */
-.action-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 15px;
-}
-
-.btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  height: 54px; /* 原来36px的1.5倍 */
-  padding: 0 16px;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  border: none;
-}
-
-.btn:active {
-  transform: scale(0.96);
-}
-
-.btn i {
-  font-size: 16px;
-}
-
-.btn-primary {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  flex: 1;
-}
-
-.btn-primary:hover {
-  background-color: #980034;
-  box-shadow: 0 4px 12px rgba(186, 0, 63, 0.2);
-  transform: translateY(-2px);
-}
-
-.btn-primary:disabled {
-  background-color: #ddd;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background-color: #f5f5f5;
-  color: #333;
-  border: 1px solid #eee;
-}
-
-.btn-secondary:hover {
-  background-color: #e5e5e5;
-  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.15);
-  transform: translateY(-2px);
-}
-
-/* 右侧：参考案例和结果 */
-.right-column {
-  width: 55%;
-  display: flex;
-  flex-direction: column;
-  gap: 15px; /* 添加参考案例和结果之间的间距 */
-}
-
-/* 参考案例部分 - 轮播形式 */
-.examples-section {
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 12px 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  margin-bottom: 0; /* 移除底部边距 */
-}
-
-.examples-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.section-title {
-  display: flex;
-  align-items: center;
-  color: #333;
-  font-size: 16px;
-  margin: 0 0 10px 0;
-  font-weight: 600;
-}
-
-.section-title i {
-  margin-right: 8px;
-  font-size: 20px;
-  color: var(--primary-color, #ba003f);
-}
-
-.example-carousel {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  padding-bottom: 5px; /* 添加底部间距避免阴影被裁剪 */
-}
-
-.example-cards {
-  display: flex;
-  gap: 15px;
-  transition: transform 0.3s ease;
-  will-change: transform;
-  padding: 5px 0;
-  width: max-content; /* 确保足够宽以容纳所有内容 */
-}
-
-.example-card {
-  flex: 0 0 170px; /* 减小固定宽度，显示更多案例 */
-  display: flex;
-  align-items: center;
-  background-color: #fff;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 12px 15px;
-  cursor: pointer;
-  transition: all 0.3s;
-  flex-direction: row;
-  gap: 12px;
-  overflow: hidden; /* 防止内容溢出 */
-}
-
-.example-card:hover {
-  border-color: var(--primary-color, #ba003f);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-.example-icon {
-  width: 45px;
-  height: 45px;
-  min-width: 45px;
-  background-color: rgba(186, 0, 63, 0.1);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0;
-}
-
-.example-icon i {
-  font-size: 24px;
-  color: var(--primary-color, #ba003f);
-}
-
-.example-info {
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  font-size: 14px;
-  overflow: hidden; /* 防止溢出 */
-}
-
-.example-title {
-  font-weight: 600;
-  margin-bottom: 4px;
-  font-size: 15px;
-}
-
-.example-desc {
-  font-size: 14px;
-  color: #666;
-  display: block; /* 始终显示描述 */
-  overflow: hidden;
-  text-overflow: ellipsis; /* 文本过长时显示省略号 */
-  white-space: nowrap; /* 确保单行显示 */
-}
-
-/* 轮播控制按钮样式 */
-.carousel-controls {
-  display: flex;
-  gap: 10px;
-}
-
-.carousel-control {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid #ddd;
-  background-color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.carousel-control:hover {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  border-color: var(--primary-color, #ba003f);
-}
-
-.carousel-control i {
-  font-size: 18px;
-}
-
-/* 结果展示部分 */
-.result-section {
-  flex: 1;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  padding: 0; /* 移除内边距 */
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 15px;
-  border-bottom: 1px solid #eee;
-  background-color: #fff;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-}
-
-.section-header h2 {
-  margin: 0;
-  font-size: 18px; /* 减小标题大小 */
-}
-
-.result-content-wrapper {
-  position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 300px; /* 确保有足够的高度显示加载动画 */
 }
 
 /* 文章结果特有样式 */
@@ -1516,246 +1374,97 @@ textarea.form-control:focus {
   margin-bottom: 8px;
 }
 
-.primary-button {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  border: none;
-  padding: 6px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 14px;
-}
-
-.primary-button:hover {
-  background-color: #980034;
-}
-
-.secondary-button {
-  background-color: #f5f5f5;
-  color: #333;
-  border: 1px solid #eee;
-  padding: 6px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 14px;
-}
-
-.secondary-button:hover {
-  background-color: #e5e5e5;
-}
-
-.section-header-fixed {
+/* 流式输出相关样式 */
+.streaming {
   position: relative;
-  top: 0;
-  background-color: #fff;
-  z-index: 100;
-  padding: 15px 15px 20px; /* 增加底部内边距从10px到20px */
-  margin: -15px -15px 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.section-header-placeholder {
-  display: none;
-}
-
-/* 模态框样式 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+.streaming-indicator {
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  padding: 10px 20px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  z-index: 9999;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
 }
 
-.modal-content {
-  background-color: #fff;
-  border-radius: 8px;
-  width: 80%;
-  max-width: 800px;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
-  animation: modal-pop 0.3s ease-out;
+.dot-typing {
+  position: relative;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--primary-color, #ba003f);
+  box-shadow: 0 0 5px rgba(186, 0, 63, 0.5);
+  animation: dot-typing 1.2s infinite linear;
 }
 
-@keyframes modal-pop {
-  0% { transform: scale(0.9); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.modal-header h3 i {
-  color: var(--primary-color, #ba003f);
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: #666;
-  font-size: 20px;
-  cursor: pointer;
-}
-
-.modal-body {
-  padding: 20px;
-  overflow-y: auto;
-  max-height: calc(80vh - 60px);
-}
-
-/* 小贴士样式 */
-.tips-list {
-  padding-left: 20px;
-  margin: 0;
-}
-
-.tips-list li {
-  margin-bottom: 12px;
-  color: #555;
-}
-
-.loading-overlay {
+.dot-typing::before,
+.dot-typing::after {
+  content: '';
   position: absolute;
   top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(255, 255, 255, 0.8);
-  z-index: 5;
-  border-radius: 0 0 8px 8px; /* 圆角与结果区域一致 */
-}
-
-.loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 5px solid rgba(186, 0, 63, 0.1);
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  border-top-color: var(--primary-color, #ba003f);
-  animation: spin 1s ease-in-out infinite;
-  margin: 0 auto 20px;
+  background-color: var(--primary-color, #ba003f);
+  box-shadow: 0 0 5px rgba(186, 0, 63, 0.5);
+  animation: dot-typing 1.2s infinite linear;
 }
 
-.loading-text {
-  font-size: 16px;
+.dot-typing::before {
+  left: -12px;
+  animation-delay: 0s;
+}
+
+.dot-typing::after {
+  left: 12px;
+  animation-delay: 0.8s;
+}
+
+@keyframes dot-typing {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.6;
+  }
+}
+
+/* 添加打字机效果 */
+.streaming .article-content {
+  position: relative;
+}
+
+.streaming .article-content::after {
+  content: '|';
+  display: inline-block;
   color: var(--primary-color, #ba003f);
-  font-weight: 500;
+  font-weight: bold;
+  font-size: 20px;
+  animation: blink 0.5s infinite;
+  position: relative;
+  margin-left: 4px;
+  vertical-align: middle;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.empty-result {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  min-height: 350px;
+/* 普通视图模式样式 */
+.normal-article-view {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
   background-color: #fff;
   border-radius: 8px;
-  color: #666;
-  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.empty-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-}
-
-.empty-image {
-  width: 120px;
-  height: 120px;
-  margin-bottom: 20px;
-}
-
-.empty-message {
-  margin: 0 0 20px;
-  font-size: 16px;
-  color: #666;
-}
-
-/* 禁用状态的轮播按钮 */
-.carousel-control.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.carousel-control.disabled:hover {
-  background-color: #fff;
-  color: inherit;
-  border-color: #ddd;
-}
-
-.blur-content {
-  filter: blur(1px);
-  opacity: 0.6;
-  pointer-events: none; /* 防止与模糊内容交互 */
-}
-
-/* 为按钮添加禁用状态样式 */
-.primary-button:disabled,
-.secondary-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #ccc;
-  color: #666;
-  border-color: #ccc;
-}
-
-.primary-button:disabled:hover {
-  background-color: #ccc;
-  transform: none;
-  box-shadow: none;
-}
-
-.secondary-button:disabled:hover {
-  background-color: #f5f5f5;
-  transform: none;
-}
-
-/* 添加旋转动画样式 */
-.spinning {
-  animation: spin 1.5s linear infinite;
-  display: inline-block;
-}
-
+/* 离线模式提示条 */
 .offline-mode-banner {
   display: flex;
   align-items: center;
@@ -1791,89 +1500,132 @@ textarea.form-control:focus {
   background-color: #980034;
 }
 
-.prompt-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #ccc;
-  color: #666;
+.toggle-display-button {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: #495057;
+}
+
+.toggle-display-button:hover {
+  background-color: #e5e5e5;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* 手机视图模式样式 */
+.phone-preview-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
 }
 
 /* 提示词模态框样式 */
-.prompt-modal {
-  width: 90%;
-  max-width: 1000px;
+.prompt-modal .modal-body {
+  padding: 0;
 }
 
 .prompt-content {
-  background-color: #f5f5f5;
-  border-radius: 6px;
-  padding: 15px;
+  padding: 20px;
+  background-color: #272822; /* Monokai背景色 */
+  border-radius: 0 0 8px 8px;
   overflow-x: auto;
-  font-family: Consolas, Monaco, 'Andale Mono', monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #333;
-  white-space: pre-wrap;
-  max-height: 50vh;
-  overflow-y: auto;
 }
 
 .prompt-content pre {
   margin: 0;
+  color: #f8f8f2; /* Monokai文本色 */
+  font-family: "Consolas", "Monaco", monospace;
+  line-height: 1.6;
+  font-size: 14px;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
 .prompt-actions {
+  padding: 15px;
+  background-color: #f8f9fa;
   display: flex;
   justify-content: flex-end;
-  margin-top: 15px;
+  border-radius: 0 0 8px 8px;
+  border-top: 1px solid #eee;
 }
 
-/* 响应式布局 */
-@media (max-width: 1400px) {
-  .example-card {
-    flex: 0 0 160px; /* 在较窄的屏幕上减小卡片宽度 */
-  }
+/* 添加知识学习抽屉的样式 */
+.knowledge-content {
+  padding: 20px;
 }
 
-@media (max-width: 1200px) {
-  .example-card {
-    flex: 0 0 140px; /* 在更窄的屏幕上进一步减小卡片宽度 */
-  }
+.knowledge-section {
+  margin-bottom: 25px;
 }
 
-@media (max-width: 992px) {
-  .main-container {
-    flex-direction: column;
-  }
-  
-  .input-section, .right-column {
-    width: 100%;
-  }
+.knowledge-subtitle {
+  color: var(--primary-color, #ba003f);
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(186, 0, 63, 0.2);
+  padding-bottom: 8px;
+  display: flex;
+  align-items: center;
 }
 
-@media (max-width: 768px) {
-  .example-cards {
-    justify-content: flex-start;
-  }
-  
-  .example-card {
-    flex: 0 0 130px;
-  }
-  
-  .form-row {
-    flex-direction: column;
-    gap: 0;
-  }
+.knowledge-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.knowledge-text p {
+  margin-bottom: 12px;
+}
+
+.knowledge-text ul, .knowledge-text ol {
+  padding-left: 20px;
+  margin-bottom: 12px;
+}
+
+.knowledge-text li {
+  margin-bottom: 8px;
+}
+
+.knowledge-text strong {
+  color: var(--primary-color, #ba003f);
+  font-weight: 600;
+}
+
+.knowledge-text a {
+  color: var(--primary-color, #ba003f);
+  text-decoration: none;
+}
+
+.knowledge-text a:hover {
+  text-decoration: underline;
+}
+
+.knowledge-icon {
+  margin-right: 8px;
+  font-size: 20px;
 }
 
 /* 自定义参数样式 */
 .custom-params-section {
-  margin-top: 15px;
-  border: 1px dashed #ddd;
+  border: 1px solid #eee;
   border-radius: 8px;
   padding: 15px;
+  margin-top: 15px;
   background-color: #fafafa;
 }
 
@@ -1884,142 +1636,144 @@ textarea.form-control:focus {
   margin-bottom: 15px;
 }
 
-.custom-param-tip {
-  font-weight: normal;
-  font-size: 13px;
-  color: #666;
-}
-
 .add-param-btn {
-  background-color: #f0f0f0;
-  border: 1px solid #ddd;
+  background-color: #e9ecef;
+  border: none;
+  padding: 6px 12px;
   border-radius: 4px;
-  padding: 6px 10px;
-  font-size: 13px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 4px;
-  transition: all 0.2s;
+  gap: 5px;
+  font-size: 14px;
+  color: #495057;
 }
 
 .add-param-btn:hover {
-  background-color: #e0e0e0;
-  color: var(--primary-color, #ba003f);
+  background-color: #dee2e6;
+}
+
+.custom-param-tip {
+  font-size: 12px;
+  color: #6c757d;
+  font-weight: normal;
 }
 
 .empty-params-tip {
-  color: #666;
-  font-size: 14px;
-  padding: 10px;
-  background-color: #f5f5f5;
+  background-color: #f8f9fa;
+  padding: 15px;
   border-radius: 4px;
+  color: #6c757d;
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.empty-params-tip i {
+  font-size: 20px;
+  color: #adb5bd;
 }
 
 .custom-param-item {
   margin-bottom: 10px;
-  animation: fade-in 0.3s ease-out;
 }
 
 .param-input-group {
   display: flex;
-  gap: 8px;
-  align-items: flex-start;
+  gap: 10px;
 }
 
 .param-key {
-  flex: 0 0 150px;
+  width: 30%;
+  flex-shrink: 0;
 }
 
 .param-value {
-  flex: 1;
+  flex-grow: 1;
 }
 
 .remove-param-btn {
   background: none;
   border: none;
-  color: #999;
+  color: #dc3545;
   cursor: pointer;
+  padding: 0 5px;
   font-size: 18px;
-  padding: 6px;
-  border-radius: 4px;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  align-self: center;
 }
 
 .remove-param-btn:hover {
-  color: #d9534f;
-  background-color: rgba(217, 83, 79, 0.1);
+  color: #bd2130;
 }
 
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* 服务不可用提示 */
+.service-unavailable {
+  padding: 12px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* 模型选择下拉菜单特殊样式 */
-#model-select {
-  background-color: #f8f8f8;
-  border: 1px solid #ddd;
-  font-weight: 500;
-  position: relative;
+.service-unavailable i {
+  font-size: 20px;
 }
 
-#model-select:focus {
-  background-color: #fff;
-  border-color: var(--primary-color, #ba003f);
-}
-
-/* 下拉菜单选项样式 */
-select.form-control option {
-  font-weight: normal;
-  background-color: white;
-  color: #333;
-  padding: 8px;
-}
-
-/* 加载状态指示器样式 */
 .model-loading {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
-  color: #777;
-  margin-top: 6px;
+  margin-top: 5px;
+  font-size: 14px;
+  color: #6c757d;
 }
 
 .model-loading i {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 2px solid rgba(186, 0, 63, 0.3);
-  border-radius: 50%;
-  border-top-color: var(--primary-color, #ba003f);
-  animation: modelSpin 1s linear infinite;
+  animation: spin 1s linear infinite;
 }
 
-@keyframes modelSpin {
+@keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-/* 生成结果容器样式 */
-.generated-content {
-  transition: all 0.5s ease;
+.mobile-preview {
+  width: 375px;
+  height: 667px;
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
 }
 
-.generated-content:hover {
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+/* 高亮关键词样式 */
+.keyword-highlight {
+  background-color: rgba(186, 0, 63, 0.1);
+  color: var(--primary-color, #ba003f);
+  padding: 0 2px;
+  border-radius: 2px;
+  font-weight: 500;
 }
+
+/* 文章强调段落样式 */
+.article-emphasis {
+  border-left: 3px solid var(--primary-color, #ba003f);
+  padding-left: 15px;
+  font-weight: 500;
+}
+
+/* 文章引用样式 */
+.article-quote {
+  background-color: #f3f4f6;
+  border-left: 4px solid #ced4da;
+  padding: 12px 15px;
+  margin: 15px 0;
+  font-style: italic;
+  color: #495057;
+}
+
+/* 手机预览样式已经在mobile-preview.css中定义 */
 </style> 

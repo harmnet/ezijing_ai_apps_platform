@@ -21,8 +21,14 @@ from flask import current_app
 MINIMAX_API_CONFIG = {
     "base_url": "https://api.minimax.chat/v1/image_generation",
     "model": "image-01",
-    "api_key": os.environ.get("MINIMAX_API_KEY", "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJHcm91cE5hbWUiOiLog6Hohb7lrociLCJVc2VyTmFtZSI6IuiDoeiFvuWuhyIsIkFjY291bnQiOiIiLCJTdWJqZWN0SUQiOiIxODU1OTUwMjUwNTM2MDc5NDU0IiwiUGhvbmUiOiIxMzY4MTU0NDMxOSIsIkdyb3VwSUQiOiIxODU1OTUwMjUwNTI3NjkwODQ2IiwiUGFnZU5hbWUiOiIiLCJNYWlsIjoiIiwiQ3JlYXRlVGltZSI6IjIwMjUtMDMtMjYgMTk6MTc6NDIiLCJUb2tlblR5cGUiOjEsImlzcyI6Im1pbmltYXgifQ.pxrEAOhsUC1wQ34o7Zkxx3ridJgrfQz8rXjdaDrv5oEC_lCrPU0ivfhoaqOZjhRz9bZFC6jDwj3uOUpc6Efii4jSXPCWEMJvuocJY7PJ_eDTcmSb8eapaAYuDzRgNqd811P_QZRiro_TtjOOUKpDs4c5eCT87fn3oo-a-gjrW4KhlP37M3vm_SLUCRhBGaeIZYLQLg9VqLs4lF9som-bykPD6nLkWvGMygUZtDGK3u-j1Jj9m9iS7732iywAJqkFwWj_x-nmn523tfT9QU2LCqMjcvLVnLJINus83ojh_oYVldJOMW5dcztrQAkZrTglTPiaz236IDduEBO4vtyKPA")
+    "api_key": os.environ.get("MINIMAX_API_KEY", "")
 }
+
+# 检查API密钥是否已配置
+if not MINIMAX_API_CONFIG["api_key"]:
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.error("MINIMAX_API_KEY环境变量未设置，文生图功能将不可用")
 
 def get_aspect_ratio(width, height):
     """根据宽高计算长宽比"""

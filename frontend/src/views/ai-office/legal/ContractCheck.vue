@@ -1,12 +1,13 @@
 <template>
-  <div class="contract-check-page">
+  <div class="contract-check-page text-creation-page">
     <div class="page-header">
       <div class="page-nav">
         <h2>合同检查</h2>
       </div>
       <div class="page-actions">
-        <button class="action-btn" title="使用说明" @click="showTips">
-          <i class="ri-lightbulb-line"></i>
+        <button class="learn-button" title="知识学习" @click="showTips">
+          <i class="ri-book-open-line"></i>
+          知识学习
         </button>
       </div>
     </div>
@@ -59,29 +60,29 @@
         <div class="form-group">
           <label>检查重点</label>
           <div class="checkbox-group">
-            <label class="checkbox-container">
+            <label class="checkbox-item" :class="{'checkbox-active': checkOptions.rights}">
               <input type="checkbox" v-model="checkOptions.rights">
-              <span>权利义务</span>
+              <span class="checkbox-label">权利义务</span>
             </label>
-            <label class="checkbox-container">
+            <label class="checkbox-item" :class="{'checkbox-active': checkOptions.risks}">
               <input type="checkbox" v-model="checkOptions.risks">
-              <span>风险条款</span>
+              <span class="checkbox-label">风险条款</span>
             </label>
-            <label class="checkbox-container">
+            <label class="checkbox-item" :class="{'checkbox-active': checkOptions.terms}">
               <input type="checkbox" v-model="checkOptions.terms">
-              <span>关键条款</span>
+              <span class="checkbox-label">关键条款</span>
             </label>
-            <label class="checkbox-container">
+            <label class="checkbox-item" :class="{'checkbox-active': checkOptions.penalties}">
               <input type="checkbox" v-model="checkOptions.penalties">
-              <span>违约责任</span>
+              <span class="checkbox-label">违约责任</span>
             </label>
-            <label class="checkbox-container">
+            <label class="checkbox-item" :class="{'checkbox-active': checkOptions.compliance}">
               <input type="checkbox" v-model="checkOptions.compliance">
-              <span>合规性</span>
+              <span class="checkbox-label">合规性</span>
             </label>
-            <label class="checkbox-container">
+            <label class="checkbox-item" :class="{'checkbox-active': checkOptions.language}">
               <input type="checkbox" v-model="checkOptions.language">
-              <span>语言表述</span>
+              <span class="checkbox-label">语言表述</span>
             </label>
           </div>
         </div>
@@ -136,7 +137,7 @@
             <!-- 空状态 -->
             <div v-if="!checkResult && !isChecking" class="empty-result">
               <div class="empty-content">
-                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgZmlsbC1vcGFjaXR5PSIuMDgiIGZpbGw9IiNEOEQ4RDgiIGN4PSI2NCIgY3k9IjY0IiByPSI2NCIvPjxwYXRoIGQ9Ik00MS41OTkgNDkuODhjMS4xIDAgMiAuOSAyIDJ2MzIuMjRjMCAxLjEtLjkgMi0yIDJoLTguOTdhLjk3Ljk3IDAgMDEtLjk1LS45NSAwIDAgMCAwLS4wNCAwIDAgMCAwLS4wM3YtMjkuNTFjMC0xLjk5IDEuNjItMy42MiAzLjYyLTMuNjJsMCAwUTQxLjU5OCA0OS44OTggNDEuNTk5IDQ5Ljg4ek04Ni4wNyA0OS44OGMxLjEgMCAyIC45IDIgMnYzMi4yNGMwIDEuMS0uOSAyLTIgMmgtOC45N3MtLjk2LS43OS0uOTYtLjk2VjUyLjgyYzAtMS42MiAxLjMyLTIuOTUgMi45NS0yLjk1bDAgMGg2Ljk4ek02NC4wNyA0Ni44M2MxLjMxIDAgMi4zNyAxLjA2IDIuMzcgMi4zN3YzNC44OGMwIDEuMzEtMS4wNiAyLjM3LTIuMzcgMi4zN2gtOS43YTIuMzcgMi4zNyAwIDAxLTIuMzctMi4zN1Y0OS4yYzAtMS4zMSAxLjA2LTIuMzcgMi4zNy0yLjM3bDAgMGg5LjciIGZpbGw9IiNFMUUxRTEiLz48cGF0aCBkPSJNMzIuNjMgNjkuNzVjMCAyLjYgMi4xMSA0LjcxIDQuNzEgNC43MXMyLjYtMi4xMSA0LjctNC43MS0yLjExLTQuNzEtNC43LTQuNzEtNC43MSAyLjExLTQuNzEgNC43MXpNODcuMDMgNjkuNzVjMCAyLjYtMi4xMSA0LjcxLTQuNzEgNC43MXMtNC43MS0yLjExLTQuNzEtNC43MSAyLjExLTQuNzEgNC43MS00LjcxIDQuNzEgMi4xMSA0LjcxIDQuNzF6TTY0LjQgNjcuMzhjMCAzLjczLTMuMDIgNi43NS02Ljc1IDYuNzVzLTYuNzYtMy4wMi02Ljc2LTYuNzUgMy4wMy02Ljc2IDYuNzYtNi43NiA2Ljc1IDMuMDMgNi43NSA2Ljc2eiIgZmlsbD0iI0JBMDA0MCIgZmlsbC1vcGFjaXR5PSIuNSIvPjwvZz48L3N2Zz4=" class="empty-image" alt="暂无数据" />
+                <img src="@/assets/images/no_data.png" class="empty-image" alt="暂无数据" />
                 <p class="empty-message">请上传合同文件后进行检查</p>
               </div>
             </div>
@@ -152,32 +153,26 @@
       </div>
     </div>
     
-    <!-- 使用说明模态框 -->
-    <div class="modal" v-if="showTipsModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3><i class="ri-lightbulb-line"></i> 合同检查使用说明</h3>
-          <button class="close-btn" @click="showTipsModal = false">
-            <i class="ri-close-line"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <ul class="tips-list">
-            <li>📄 <b>文件支持</b> - 支持上传txt、doc、docx、pdf格式的合同文件</li>
-            <li>🔍 <b>选择重点</b> - 勾选需要重点检查的合同内容方面</li>
-            <li>⚖️ <b>权利义务</b> - 分析合同中双方权利义务是否对等</li>
-            <li>⚠️ <b>风险条款</b> - 识别可能存在风险的条款并提出建议</li>
-            <li>📋 <b>关键条款</b> - 突出显示合同中的关键条款</li>
-            <li>💰 <b>违约责任</b> - 检查违约责任条款是否明确且合理</li>
-            <li>🔒 <b>合规性</b> - 基于常见法律法规检查合同合规性</li>
-            <li>🔤 <b>语言表述</b> - 提供语言表述方面的改进建议</li>
-          </ul>
-          <div class="tips-note">
-            <p><b>注意：</b>本工具仅提供参考建议，不构成法律意见。重要合同仍建议咨询专业律师。</p>
-          </div>
+    <!-- 知识学习侧边抽屉 -->
+    <el-drawer
+      v-model="showTipsModal"
+      title="文章总结知识学习"
+      direction="rtl"
+      size="30%"
+      class="knowledge-drawer"
+      :with-header="true"
+      :destroy-on-close="false"
+    >
+      <div class="knowledge-content">
+        <div v-for="(item, index) in summaryKnowledge" :key="index" class="knowledge-section">
+          <h3 class="knowledge-subtitle">
+            <i :class="item.icon"></i>
+            {{ item.subtitle }}
+          </h3>
+          <div class="knowledge-text" v-html="formatKnowledgeText(item.text)"></div>
         </div>
       </div>
-    </div>
+    </el-drawer>
   </div>
 </template>
 
@@ -187,6 +182,7 @@ import axios from 'axios'
 import { ElMessage, ElLoading } from 'element-plus'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import { summaryKnowledge } from '../../../views/Knowledge_data.js'
 
 export default {
   name: 'ContractCheck',
@@ -450,6 +446,13 @@ export default {
       showTipsModal.value = true
     }
 
+    // 格式化知识学习文本
+    const formatKnowledgeText = (text) => {
+      return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n\n/g, '<br><br>')
+                .replace(/\n/g, '<br>');
+    };
+
     // 组件挂载
     onMounted(() => {
       // 初始化
@@ -471,60 +474,22 @@ export default {
       copyText,
       downloadResult,
       resetForm,
-      showTips
+      showTips,
+      summaryKnowledge,
+      formatKnowledgeText
     }
   }
 }
 </script>
 
 <style scoped>
+@import '../../../assets/css/text-creation-common.css';
+
 .contract-check-page {
   height: 100%;
   display: flex;
   flex-direction: column;
   background-color: #f7f7f7;
-}
-
-.page-header {
-  height: 60px;
-  background-color: #fff;
-  border-bottom: 1px solid #eaeaea;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 20px;
-}
-
-.page-nav h2 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.page-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.action-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: #555;
-  font-size: 18px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.action-btn:hover {
-  background-color: #f0f0f0;
-  color: #BA0040;
 }
 
 .main-container {
@@ -541,27 +506,6 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 16px;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.section-title i {
-  color: #BA0040;
 }
 
 .form-group {
@@ -615,8 +559,8 @@ export default {
 
 .file-upload-btn:hover {
   background-color: #e8e8e8;
-  border-color: #BA0040;
-  color: #BA0040;
+  border-color: var(--primary-color, #BA0040);
+  color: var(--primary-color, #BA0040);
 }
 
 .file-name {
@@ -634,65 +578,6 @@ export default {
   margin-top: 4px;
 }
 
-.checkbox-group {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.checkbox-container {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: #555;
-  cursor: pointer;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: auto;
-  margin-bottom: 8px;
-}
-
-.btn {
-  padding: 10px 16px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background-color: #BA0040;
-  color: #fff;
-  flex: 1;
-}
-
-.btn-primary:hover {
-  background-color: #A10038;
-}
-
-.btn-primary:disabled {
-  background-color: #E6A0B8;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background-color: #f0f0f0;
-  color: #555;
-}
-
-.btn-secondary:hover {
-  background-color: #e0e0e0;
-}
-
 /* 右侧结果区域 */
 .right-column {
   flex: 1;
@@ -700,80 +585,6 @@ export default {
   flex-direction: column;
   gap: 16px;
   overflow: hidden;
-}
-
-.result-section {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.result-content-wrapper {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
-
-.result-content {
-  padding: 16px 24px;
-  height: 100%;
-  overflow-y: auto;
-}
-
-.empty-result {
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.empty-content {
-  text-align: center;
-  padding: 24px;
-}
-
-.empty-image {
-  width: 128px;
-  height: 128px;
-  margin-bottom: 16px;
-}
-
-.empty-message {
-  color: #999;
-  font-size: 14px;
-}
-
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.8);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 10;
-}
-
-.loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 3px solid rgba(186, 0, 64, 0.2);
-  border-top-color: #BA0040;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-.loading-text {
-  margin-top: 16px;
-  font-size: 14px;
-  color: #BA0040;
 }
 
 /* 结果内容 */
@@ -830,7 +641,7 @@ export default {
 }
 
 .modal-header h3 i {
-  color: #BA0040;
+  color: var(--primary-color, #BA0040);
 }
 
 .close-btn {
@@ -882,57 +693,53 @@ export default {
 }
 
 /* 动画 */
-.spinning {
-  animation: spin 1s linear infinite;
-}
-
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-.primary-button {
-  padding: 6px 12px;
-  border-radius: 4px;
-  background-color: #BA0040;
-  color: white;
-  border: none;
-  font-size: 13px;
-  cursor: pointer;
+/* 知识学习抽屉额外样式 */
+.knowledge-drawer :deep(.el-drawer__header) {
+  margin-bottom: 15px;
+  padding: 15px 20px;
+  border-bottom: 1px solid rgba(186, 0, 63, 0.1);
+}
+
+.knowledge-drawer :deep(.el-drawer__title) {
+  color: var(--primary-color, #ba003f);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.knowledge-section {
+  margin-bottom: 25px;
+}
+
+.knowledge-subtitle {
+  color: var(--primary-color, #ba003f);
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(186, 0, 63, 0.2);
+  padding-bottom: 8px;
   display: flex;
   align-items: center;
-  gap: 4px;
 }
 
-.primary-button:hover {
-  background-color: #A10038;
+.knowledge-subtitle i {
+  margin-right: 8px;
+  font-size: 20px;
 }
 
-.primary-button:disabled {
-  background-color: #E6A0B8;
-  cursor: not-allowed;
+.knowledge-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333;
 }
 
-.secondary-button {
-  padding: 6px 12px;
-  border-radius: 4px;
-  background-color: #f0f0f0;
-  color: #555;
-  border: none;
-  font-size: 13px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.secondary-button:hover {
-  background-color: #e0e0e0;
-}
-
-.secondary-button:disabled {
-  background-color: #f0f0f0;
-  color: #bbb;
-  cursor: not-allowed;
+.knowledge-text strong {
+  color: var(--primary-color, #ba003f);
+  font-weight: 600;
 }
 </style> 

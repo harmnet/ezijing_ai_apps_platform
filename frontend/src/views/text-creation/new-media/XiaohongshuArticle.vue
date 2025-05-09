@@ -1,12 +1,13 @@
 <template>
-  <div class="xiaohongshu-article-page">
+  <div class="xiaohongshu-article-page text-creation-page">
     <div class="page-header">
       <div class="page-nav">
         <h2>小红书笔记生成</h2>
       </div>
       <div class="page-actions">
-        <button class="action-btn" title="创作小贴士" @click="showTips">
-          <i class="ri-lightbulb-line"></i>
+        <button class="learn-button" title="知识学习" @click="showTips">
+          <i class="ri-book-open-line"></i>
+          知识学习
         </button>
       </div>
     </div>
@@ -94,30 +95,30 @@
         <div class="form-group">
           <label>内容元素</label>
           <div class="checkbox-group">
-            <label class="checkbox-container">
-              <input type="checkbox" v-model="includeEmoji">
-              <span>表情符号</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" v-model="includeRating">
-              <span>评分</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" v-model="includeProsCons">
-              <span>优缺点</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" v-model="includeTips">
-              <span>小贴士</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" v-model="includeHashtags">
-              <span>话题标签</span>
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" v-model="includeImageDesc">
-              <span>图片建议</span>
-            </label>
+            <div class="checkbox-item" :class="{'checkbox-active': includeEmoji}">
+              <input type="checkbox" v-model="includeEmoji" id="emoji-checkbox">
+              <label for="emoji-checkbox" class="checkbox-label">表情符号</label>
+            </div>
+            <div class="checkbox-item" :class="{'checkbox-active': includeRating}">
+              <input type="checkbox" v-model="includeRating" id="rating-checkbox">
+              <label for="rating-checkbox" class="checkbox-label">评分</label>
+            </div>
+            <div class="checkbox-item" :class="{'checkbox-active': includeProsCons}">
+              <input type="checkbox" v-model="includeProsCons" id="proscons-checkbox">
+              <label for="proscons-checkbox" class="checkbox-label">优缺点</label>
+            </div>
+            <div class="checkbox-item" :class="{'checkbox-active': includeTips}">
+              <input type="checkbox" v-model="includeTips" id="tips-checkbox">
+              <label for="tips-checkbox" class="checkbox-label">小贴士</label>
+            </div>
+            <div class="checkbox-item" :class="{'checkbox-active': includeHashtags}">
+              <input type="checkbox" v-model="includeHashtags" id="hashtags-checkbox">
+              <label for="hashtags-checkbox" class="checkbox-label">话题标签</label>
+            </div>
+            <div class="checkbox-item" :class="{'checkbox-active': includeImageDesc}">
+              <input type="checkbox" v-model="includeImageDesc" id="imagedesc-checkbox">
+              <label for="imagedesc-checkbox" class="checkbox-label">图片建议</label>
+            </div>
           </div>
         </div>
         
@@ -161,86 +162,43 @@
         <!-- 参考案例部分 -->
         <div class="examples-section">
           <div class="examples-header">
-            <h3 class="section-title">
-              <i class="ri-lightbulb-flash-line"></i>
+            <div class="section-title">
+              <i class="ri-file-list-3-line"></i>
               参考案例
-            </h3>
-            <!-- 添加轮播控制按钮 -->
-            <div class="carousel-controls">
-              <button class="carousel-control prev" @click="prevExample" :disabled="currentExampleIndex <= 0" :class="{ 'disabled': currentExampleIndex <= 0 }">
+            </div>
+            <div class="carousel-controls" v-if="examples.length > 0">
+              <button class="carousel-control" @click="prevExample" :class="{ disabled: exampleIndex === 0 }">
                 <i class="ri-arrow-left-s-line"></i>
               </button>
-              <button class="carousel-control next" @click="nextExample" :disabled="!$refs.exampleCarousel || isLastPage" :class="{ 'disabled': !$refs.exampleCarousel || isLastPage }">
+              <button class="carousel-control" @click="nextExample" :class="{ disabled: isLastPage }">
                 <i class="ri-arrow-right-s-line"></i>
               </button>
             </div>
           </div>
-          
           <div class="example-carousel">
-            <div class="example-cards" ref="exampleCarousel" :style="{transform: `translateX(${exampleTranslateX}px)`}">
-              <div class="example-card" v-for="(example, index) in examples" :key="index" @click="loadExample(example.id)">
-                <div class="example-icon">
-                  <!-- 使用固定的紫荆红色SVG图标，确保一定能显示 -->
-                  <svg v-if="example.id === 'skincare1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M7 21h10V9a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v12z"></path>
-                    <path d="M12 16a3 3 0 0 0 0-6"></path>
-                    <path d="M8 5.5v-1C8 3.12 8.9 2 10 2h4c1.1 0 2 1.12 2 2.5v1"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'food1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 10h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2"></path>
-                    <path d="M11 18a3 3 0 0 1-3 3H4l1-7h5l1 4"></path>
-                    <path d="M7 14l7-7"></path>
-                    <path d="M16 3l1.5 1.5"></path>
-                    <path d="M19 6l-1.5-1.5"></path>
-                    <path d="M12 8l-2-2"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'travel1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="4" y="8" width="16" height="12" rx="2"></rect>
-                    <path d="M8 8V5c0-1.1.9-2 2-2h4a2 2 0 0 1 2 2v3"></path>
-                    <line x1="12" y1="16" x2="12" y2="16"></line>
-                  </svg>
-                  <svg v-else-if="example.id === 'lifestyle1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20 12l-8-8-8 8"></path>
-                    <path d="M20 12l-8 8-8-8"></path>
-                    <path d="M4 12h16"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'fashion1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 7l9 4-9 4"></path>
-                    <path d="M21 7l-9 4 9 4"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'workout1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="7" r="3"></circle>
-                    <line x1="8" y1="21" x2="10" y2="17"></line>
-                    <line x1="16" y1="21" x2="14" y2="17"></line>
-                    <path d="M8 13V7"></path>
-                    <path d="M16 13V7"></path>
-                    <path d="M12 21v-8"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'makeup1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 3l18 18"></path>
-                    <path d="M9 5a5 5 0 0 0 8 6m2.007-9.003A5 5 0 0 0 12 5"></path>
-                    <path d="M7 19a2 2 0 1 0 0-4"></path>
-                    <path d="M12 19c1.657 0 3-1.325 3-2.959 0-1.47-1.156-2.633-2.79-2.746"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'book1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'tech1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
-                    <line x1="12" y1="18" x2="12.01" y2="18"></line>
-                  </svg>
-                  <svg v-else-if="example.id === 'diy1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
-                  </svg>
-                  <svg v-else xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                  </svg>
+            <div class="example-cards" ref="exampleCards" :style="exampleCardsStyle">
+              <div v-for="(example, index) in examples" :key="index" class="example-card" @click="selectExample(example)">
+                <div class="example-card-header">
+                  <div class="xiaohongshu-example-icon" :class="{'has-svg': example.title === '这款面霜真的绝了'}">
+                    <!-- 为面霜案例添加特殊处理 -->
+                    <svg v-if="example.title === '这款面霜真的绝了'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" class="cream-icon">
+                      <path fill="none" d="M0 0h24v24H0z"/>
+                      <path d="M15.5 2a3.5 3.5 0 0 1 3.437 4.163l-.015.066a6.5 6.5 0 0 1 .943 9.337l-.177.221a6.5 6.5 0 0 1-7.602 1.645l-.313-.158-2.697 2.697-1.414-1.414 2.697-2.697-.158-.313a6.5 6.5 0 0 1 1.645-7.602l.221-.177a6.5 6.5 0 0 1 9.403.043A3.5 3.5 0 0 1 15.5 2zm0 2a1.5 1.5 0 0 0-1.493 1.65l.008.1.017.047a6.5 6.5 0 0 1-1.14 9.539l-.31.223a6.5 6.5 0 0 1-1.241.794c-.439.22-.87.377-1.285.466l-.385.071.144.182a4.5 4.5 0 0 0 5.975.141l.174-.156a4.5 4.5 0 0 0 .16-6.175l-.156-.174a6.5 6.5 0 0 1-1.217-2.592l-.037-.283a1.5 1.5 0 0 0 .768-1.266L17 6.5A1.5 1.5 0 0 0 15.5 4zM10 8a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zm0 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z" fill="#ba003f"/>
+                    </svg>
+                    
+                    <!-- 其他案例的图标 -->
+                    <i v-else-if="example.icon" :class="example.icon"></i>
+                    <i v-else class="ri-file-text-line"></i>
+                    
+                    <!-- 备选方案 -->
+                    <span v-if="!example.icon && example.title !== '这款面霜真的绝了'" class="fallback-icon">
+                      {{ example.title ? example.title.charAt(0) : '例' }}
+                    </span>
+                  </div>
+                  <div class="example-title" :title="example.title">{{ example.title }}</div>
                 </div>
-                <div class="example-info">
-                  <span class="example-title">{{example.title}}</span>
-                  <span class="example-desc">{{example.type}}</span>
+                <div class="example-content">
+                  <div class="example-desc" :title="example.desc">{{ example.desc }}</div>
                 </div>
               </div>
             </div>
@@ -280,40 +238,104 @@
             
             <div v-if="!generatedNote && !isGenerating" class="empty-result">
               <div class="empty-content">
-                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgZmlsbC1vcGFjaXR5PSIuMDgiIGZpbGw9IiNEOEQ4RDgiIGN4PSI2NCIgY3k9IjY0IiByPSI2NCIvPjxwYXRoIGQ9Ik00MS41OTkgNDkuODhjMS4xIDAgMiAuOSAyIDJ2MzIuMjRjMCAxLjEtLjkgMi0yIDJoLTguOTdhLjk3Ljk3IDAgMDEtLjk1LS45NSAwIDAgMCAwLS4wNCAwIDAgMCAwLS4wM3YtMjkuNTFjMC0xLjk5IDEuNjItMy42MiAzLjYyLTMuNjJsMCAwUTQxLjU5OCA0OS44OTggNDEuNTk5IDQ5Ljg4ek04Ni4wNyA0OS44OGMxLjEgMCAyIC45IDIgMnYzMi4yNGMwIDEuMS0uOSAyLTIgMmgtOC45N3MtLjk2LS43OS0uOTYtLjk2VjUyLjgyYzAtMS42MiAxLjMyLTIuOTUgMi45NS0yLjk1bDAgMGg2Ljk4ek02NC4wNyA0Ni44M2MxLjMxIDAgMi4zNyAxLjA2IDIuMzcgMi4zN3YzNC44OGMwIDEuMzEtMS4wNiAyLjM3LTIuMzcgMi4zN2gtOS43YTIuMzcgMi4zNyAwIDAxLTIuMzctMi4zN1Y0OS4yYzAtMS4zMSAxLjA2LTIuMzcgMi4zNy0yLjM3bDAgMGg5LjciIGZpbGw9IiNFMUUxRTEiLz48cGF0aCBkPSJNMzIuNjMgNjkuNzVjMCAyLjYgMi4xMSA0LjcxIDQuNzEgNC43MXMyLjYtMi4xMSA0LjctNC43MS0yLjExLTQuNzEtNC43LTQuNzEtNC43MSAyLjExLTQuNzEgNC43MXpNODcuMDMgNjkuNzVjMCAyLjYtMi4xMSA0LjcxLTQuNzEgNC43MXMtNC43MS0yLjExLTQuNzEtNC43MSAyLjExLTQuNzEgNC43MS00LjcxIDQuNzEgMi4xMSA0LjcxIDQuNzF6TTY0LjQgNjcuMzhjMCAzLjczLTMuMDIgNi43NS02Ljc1IDYuNzVzLTYuNzYtMy4wMi02Ljc2LTYuNzUgMy4wMy02Ljc2IDYuNzYtNi43NiA2Ljc1IDMuMDMgNi43NSA2Ljc2eiIgZmlsbD0iI0JBMDA0MCIgZmlsbC1vcGFjaXR5PSIuNSIvPjwvZz48L3N2Zz4=" class="empty-image" alt="暂无数据" />
+                <img src="@/assets/images/no_data.png" class="empty-image" alt="暂无数据" />
                 <p class="empty-message">暂无笔记内容，请点击"生成笔记"按钮开始创作</p>
               </div>
             </div>
             
             <div v-else-if="generatedNote" class="note-result" :class="{'blur-content': isGenerating}">
-              <textarea v-model="generatedNote" class="result-textarea" readonly></textarea>
+              <div class="iphone-mockup">
+                <div class="iphone-notch"></div>
+                <div class="iphone-header">
+                  <div class="status-bar">
+                    <div class="time">10:30</div>
+                    <div class="status-icons">
+                      <i class="ri-battery-fill"></i>
+                      <i class="ri-wifi-fill"></i>
+                      <i class="ri-signal-wifi-3-fill"></i>
+                    </div>
+                  </div>
+                  <div class="app-header">
+                    <div class="app-title">
+                      <i class="ri-arrow-left-s-line"></i>
+                      <span>小红书</span>
+                    </div>
+                    <div class="app-actions">
+                      <i class="ri-more-2-fill"></i>
+                    </div>
+                  </div>
+                </div>
+                <div class="phone-content">
+                  <div class="redbook-post">
+                    <div class="post-header">
+                      <div class="user-avatar">
+                        <i class="ri-user-3-fill"></i>
+                      </div>
+                      <div class="user-info">
+                        <div class="username">AI助手</div>
+                        <div class="publish-info">刚刚 · 小红书 iPhone</div>
+                      </div>
+                      <div class="follow-btn">关注</div>
+                    </div>
+                    <div class="post-title">{{ noteTitle || "今日份分享" }}</div>
+                    <div class="post-content" v-if="generatedNote">
+                      <div v-html="formatContent(generatedNote)"></div>
+                    </div>
+                    <div class="post-content-placeholder" v-else>
+                      <p>点击"生成笔记"按钮开始创作精彩内容...</p>
+                    </div>
+                    <div class="post-tags">
+                      <span class="tag" v-for="(tag, idx) in generateRandomTags()" :key="idx">
+                        {{ tag }}
+                      </span>
+                    </div>
+                    <div class="post-stats">
+                      <div class="stat-item">
+                        <i class="ri-heart-line"></i>
+                        <span>赞</span>
+                      </div>
+                      <div class="stat-item">
+                        <i class="ri-chat-1-line"></i>
+                        <span>评论</span>
+                      </div>
+                      <div class="stat-item">
+                        <i class="ri-star-line"></i>
+                        <span>收藏</span>
+                      </div>
+                      <div class="stat-item">
+                        <i class="ri-share-forward-line"></i>
+                        <span>分享</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="home-indicator"></div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
     
-    <!-- 创作小贴士模态框 -->
-    <div class="modal" v-if="showTipsModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3><i class="ri-lightbulb-line"></i> 创作小贴士</h3>
-          <button class="close-btn" @click="showTipsModal = false">
-            <i class="ri-close-line"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <ul class="tips-list">
-            <li>📱 吸引注意的标题 - 标题要简洁、吸引人，使用数字、emoji和问句效果更好</li>
-            <li>📷 高质量图片 - 准备6-9张高质量图片，第一张最重要，要有吸引力</li>
-            <li>🔍 内容结构 - 开头直接切入主题，中间详细描述体验，结尾总结或发问引导互动</li>
-            <li>🏷️ 合适的话题 - 使用3-5个相关话题标签，提高内容曝光率</li>
-            <li>👩‍💼 个人观点 - 分享真实的个人体验和观点，增加内容可信度</li>
-            <li>❤️ 互动引导 - 结尾提出问题或邀请留言，增加互动性</li>
-          </ul>
+    <!-- 创作小贴士模态框 - 修改为抽屉组件 -->
+    <el-drawer
+      v-model="showTipsModal"
+      title="小红书内容创作指南"
+      direction="rtl"
+      size="30%"
+      :destroy-on-close="false"
+      class="knowledge-drawer"
+    >
+      <div class="knowledge-content">
+        <div v-for="(item, index) in articleKnowledge" :key="index" class="knowledge-section">
+          <h3 class="knowledge-subtitle">
+            <i :class="item.icon" class="knowledge-icon"></i>
+            {{ item.subtitle }}
+          </h3>
+          <div class="knowledge-text" v-html="formatMarkdown(item.text)"></div>
         </div>
       </div>
-    </div>
+    </el-drawer>
 
     <!-- 提示词模态框 -->
     <div class="modal" v-if="showPromptModal">
@@ -347,9 +369,11 @@
 
 <script>
 import axios from 'axios';
+import { xiaohongshuArticleExamples } from '@/views/example_data.js';
+import { xiaohongshuArticleKnowledge } from '@/views/Knowledge_data.js';
 
 export default {
-  name: 'XiaohongshuArticle',
+  name: 'XiaohongshuArticle_v2',
   data() {
     return {
       // 表单数据
@@ -384,123 +408,14 @@ export default {
       modelList: [],
       
       // 轮播控制
+      exampleIndex: 0,
+      
+      // 示例案例
+      examples: xiaohongshuArticleExamples,
       currentExampleIndex: 0,
-      exampleTranslateX: 0,
       
-      // 示例数据
-      examples: [
-        { id: 'skincare1', title: '这款面霜真的绝了', type: '护肤测评', icon: 'ri-lotion-line' },
-        { id: 'food1', title: '隐藏在巷子里的神级小吃', type: '美食探店', icon: 'ri-restaurant-line' },
-        { id: 'travel1', title: '三亚度假攻略', type: '旅游攻略', icon: 'ri-suitcase-line' },
-        { id: 'lifestyle1', title: '提升生活品质的10个小物件', type: '好物分享', icon: 'ri-gift-line' },
-        { id: 'fashion1', title: '春季穿搭指南', type: '穿搭分享', icon: 'ri-t-shirt-line' },
-        { id: 'workout1', title: '15分钟居家燃脂运动', type: '健身分享', icon: 'ri-run-line' },
-        { id: 'makeup1', title: '日常妆容分享', type: '美妆教程', icon: 'ri-paint-brush-line' },
-        { id: 'book1', title: '这本书改变了我的思考方式', type: '读书笔记', icon: 'ri-book-open-line' },
-        { id: 'tech1', title: '最新数码产品测评', type: '数码科技', icon: 'ri-smartphone-line' },
-        { id: 'diy1', title: '超简单的家居DIY改造', type: 'DIY手工', icon: 'ri-tools-line' }
-      ],
-      
-      // 示例数据模板
-      exampleData: {
-        'skincare1': {
-          noteType: 'product-review',
-          noteTitle: '这款面霜真的绝了！敏感肌救星✨',
-          productName: 'XXX舒缓修复面霜',
-          description: '适合敏感肌和干燥肌肤的保湿面霜，质地轻薄但很滋润，使用后皮肤屏障有明显改善',
-          writingStyle: 'enthusiastic',
-          includeEmoji: true,
-          includeRating: true,
-          includeProsCons: true
-        },
-        'food1': {
-          noteType: 'food',
-          noteTitle: '隐藏在巷子里的神级小吃！排队两小时值得吗？',
-          description: '探访藏在老城区小巷里的网红美食店，特色小吃和招牌菜品的味道体验',
-          writingStyle: 'humorous',
-          includeEmoji: true,
-          includeRating: true,
-          includeHashtags: true,
-          includeImageDesc: true
-        },
-        'travel1': {
-          noteType: 'travel',
-          noteTitle: '三亚度假攻略｜看这一篇就够了',
-          description: '三亚三天两晚深度游攻略，包含景点、酒店、美食推荐和实用小贴士',
-          writingStyle: 'informative',
-          includeEmoji: true,
-          includeProsCons: false,
-          includeHashtags: true,
-          includeTips: true,
-          includeImageDesc: true
-        },
-        'lifestyle1': {
-          noteType: 'lifestyle',
-          noteTitle: '提升生活品质的10个小物件',
-          description: '分享近期入手的提升生活品质和幸福感的小物件，包括厨房用品和居家好物',
-          writingStyle: 'friendly',
-          includeEmoji: true,
-          includeHashtags: true,
-          includeImageDesc: true
-        },
-        'fashion1': {
-          noteType: 'fashion',
-          noteTitle: '春季穿搭指南｜5套百搭Look',
-          description: '适合春季的5套日常穿搭分享，包含单品推荐和搭配技巧',
-          writingStyle: 'enthusiastic',
-          includeEmoji: true,
-          includeHashtags: true,
-          includeImageDesc: true
-        },
-        'workout1': {
-          noteType: 'lifestyle',
-          noteTitle: '15分钟居家燃脂运动｜无需器械',
-          description: '适合没有健身器材的居家运动方案，每天15分钟高效燃脂',
-          writingStyle: 'professional',
-          includeEmoji: true,
-          includeTips: true,
-          includeHashtags: true
-        },
-        'makeup1': {
-          noteType: 'lifestyle',
-          noteTitle: '上班族日常妆容分享｜5分钟搞定',
-          description: '适合职场女性的快速日常妆容教程，突出重点部位，提升精神面貌',
-          writingStyle: 'friendly',
-          includeEmoji: true,
-          includeHashtags: true,
-          includeImageDesc: true
-        },
-        'book1': {
-          noteType: 'lifestyle',
-          noteTitle: '这本书改变了我的思考方式｜读书笔记',
-          description: '分享一本关于心理学的书籍读后感，以及对日常生活的启发和应用',
-          writingStyle: 'informative',
-          includeEmoji: true,
-          includeHashtags: true,
-          includeProsCons: false
-        },
-        'tech1': {
-          noteType: 'product-review',
-          noteTitle: '最新旗舰手机深度测评｜值不值得买？',
-          productName: 'XX旗舰手机',
-          description: '全面测试新款旗舰手机的性能、拍照、续航等关键特性，帮助你决定是否值得购买',
-          writingStyle: 'professional',
-          includeEmoji: true,
-          includeRating: true,
-          includeProsCons: true,
-          includeHashtags: true
-        },
-        'diy1': {
-          noteType: 'lifestyle',
-          noteTitle: '超简单的家居DIY改造｜旧物改造新生',
-          description: '用简单的材料和工具，将家中的旧物改造成实用又美观的装饰品',
-          writingStyle: 'friendly',
-          includeEmoji: true,
-          includeHashtags: true,
-          includeImageDesc: true,
-          includeTips: true
-        }
-      }
+      // 添加知识内容
+      articleKnowledge: xiaohongshuArticleKnowledge
     };
   },
   mounted() {
@@ -513,17 +428,30 @@ export default {
     }
     
     console.log('默认选择模型:', this.selectedModel);
+    console.log('参考案例数据:', this.examples);
+    
+    // 使用更安全的方式初始化
+    this.exampleIndex = 0;
+    
+    // 通过延迟执行确保组件已完全挂载
+    setTimeout(() => {
+      this.updateExamplesTranslation();
+    }, 100);
   },
   computed: {
     isLastPage() {
-      if (!this.$refs.exampleCarousel) return true;
-      const cardWidth = 215; // 卡片宽度+间距
-      const containerWidth = this.$refs.exampleCarousel.parentElement.clientWidth;
+      if (!this.$refs.exampleCards) return true;
+      const cardWidth = 220; // 卡片宽度+间距，调整为220px
+      const containerWidth = this.$refs.exampleCards.parentElement.clientWidth;
       const totalWidth = this.examples.length * cardWidth;
       const maxScrollX = totalWidth - containerWidth;
       
       // 当滚动到最大滚动距离的90%以上时，认为是最后一页
-      return Math.abs(this.exampleTranslateX) >= maxScrollX * 0.9;
+      return Math.abs(this.exampleIndex * cardWidth) >= maxScrollX * 0.9;
+    },
+    exampleCardsStyle() {
+      // 避免在渲染时访问DOM元素
+      return { transform: `translateX(-${Math.max(0, this.exampleIndex * 220)}px)` };
     }
   },
   methods: {
@@ -776,14 +704,55 @@ ${this.productName || '熬夜星人'}的福音来啦！😍 这款补水面霜�
       const textToCopy = this.generatedNote;
       if (!textToCopy) return;
       
-      navigator.clipboard.writeText(textToCopy)
-        .then(() => {
+      // 首先尝试使用navigator.clipboard API
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textToCopy)
+          .then(() => {
+            alert('内容已复制到剪贴板');
+          })
+          .catch(err => {
+            console.error('使用clipboard API复制失败:', err);
+            // 如果clipboard API失败，使用后备方法
+            this.fallbackCopyText(textToCopy);
+          });
+      } else {
+        // 直接使用后备方法
+        this.fallbackCopyText(textToCopy);
+      }
+    },
+    
+    // 后备复制方法
+    fallbackCopyText(text) {
+      try {
+        // 创建临时文本区域
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        
+        // 设置样式使元素不可见
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        textArea.style.top = '0';
+        textArea.style.left = '0';
+        
+        // 添加到DOM
+        document.body.appendChild(textArea);
+        
+        // 选择文本并执行复制
+        textArea.select();
+        const successful = document.execCommand('copy');
+        
+        // 移除临时元素
+        document.body.removeChild(textArea);
+        
+        if (successful) {
           alert('内容已复制到剪贴板');
-        })
-        .catch(err => {
-          console.error('复制失败:', err);
+        } else {
           alert('复制失败，请手动选择并复制');
-        });
+        }
+      } catch (err) {
+        console.error('后备复制方法失败:', err);
+        alert('复制失败，请手动选择并复制');
+      }
     },
     
     // 显示提示词模态框
@@ -804,13 +773,21 @@ ${this.productName || '熬夜星人'}的福音来啦！😍 这款补水面霜�
         .map(msg => `【${msg.role === 'system' ? '系统提示词' : '用户提示词'}】\n${msg.content}`)
         .join('\n\n');
         
-      navigator.clipboard.writeText(promptText)
-        .then(() => {
-          alert('提示词已复制到剪贴板');
-        })
-        .catch(err => {
-          console.error('复制失败:', err);
-        });
+      // 首先尝试使用navigator.clipboard API
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(promptText)
+          .then(() => {
+            alert('提示词已复制到剪贴板');
+          })
+          .catch(err => {
+            console.error('使用clipboard API复制失败:', err);
+            // 如果clipboard API失败，使用后备方法
+            this.fallbackCopyText(promptText);
+          });
+      } else {
+        // 直接使用后备方法
+        this.fallbackCopyText(promptText);
+      }
     },
     
     // 下载生成的文本
@@ -826,952 +803,566 @@ ${this.productName || '熬夜星人'}的福音来啦！😍 这款补水面霜�
       document.body.removeChild(element);
     },
     
-    // 前一个示例
-    prevExample() {
-      if (this.currentExampleIndex <= 0) return;
-      
-      const cardWidth = 215; // 卡片宽度+间距
-      const visibleCards = Math.floor(this.$refs.exampleCarousel.parentElement.clientWidth / cardWidth);
-      
-      this.currentExampleIndex -= visibleCards;
-      if (this.currentExampleIndex < 0) this.currentExampleIndex = 0;
-      
-      this.exampleTranslateX = -(this.currentExampleIndex * cardWidth);
-      console.log('前一个示例', this.currentExampleIndex, this.exampleTranslateX);
-    },
-    
-    // 后一个示例
+    // 下一个示例
     nextExample() {
-      if (!this.$refs.exampleCarousel) return;
+      if (this.examples.length === 0) return;
       
-      const cardWidth = 215; // 卡片宽度+间距
-      const containerWidth = this.$refs.exampleCarousel.parentElement.clientWidth;
-      const visibleCards = Math.floor(containerWidth / cardWidth);
-      const maxIndex = this.examples.length - visibleCards;
-      
-      if (this.currentExampleIndex >= maxIndex) return;
-      
-      this.currentExampleIndex += visibleCards;
-      if (this.currentExampleIndex > maxIndex) this.currentExampleIndex = maxIndex;
-      
-      this.exampleTranslateX = -(this.currentExampleIndex * cardWidth);
-      console.log('后一个示例', this.currentExampleIndex, this.exampleTranslateX);
-    },
-    
-    // 加载示例数据
-    loadExample(exampleId) {
-      const example = this.exampleData[exampleId];
-      if (!example) {
-        console.warn(`未找到示例ID: ${exampleId} 的数据`);
+      // 安全检查
+      if (!this.$refs.exampleCards) {
+        console.warn('示例卡片容器未加载');
         return;
       }
       
-      console.log(`加载示例: ${exampleId}`, example);
-      
-      // 清空现有数据
-      this.resetForm();
-      
-      // 填充表单数据
-      Object.keys(example).forEach(key => {
-        if (this[key] !== undefined) {
-          this[key] = example[key];
-        }
+      this.exampleIndex = (this.exampleIndex + 1) % this.examples.length;
+      this.$nextTick(() => {
+        this.updateExamplesTranslation();
       });
+    },
+    
+    // 上一个示例
+    prevExample() {
+      if (this.examples.length === 0) return;
       
-      // 特别处理产品名称，确保正确设置
-      if (example.noteType === 'product-review' && example.productName) {
-        this.productName = example.productName;
-        console.log('设置产品名称:', this.productName);
+      // 安全检查
+      if (!this.$refs.exampleCards) {
+        console.warn('示例卡片容器未加载');
+        return;
       }
       
-      // 滚动到表单顶部
-      const formElement = document.querySelector('.input-section');
-      if (formElement) {
-        formElement.scrollTop = 0;
+      this.exampleIndex = (this.exampleIndex - 1 + this.examples.length) % this.examples.length;
+      this.$nextTick(() => {
+        this.updateExamplesTranslation();
+      });
+    },
+    
+    // 选择示例
+    selectExample(example) {
+      this.loadExample(example);
+    },
+    
+    // 处理选择示例
+    loadExample(example) {
+      // 直接使用example对象的属性
+      this.noteType = example.noteType || 'product-review';
+      this.noteTitle = example.noteTitle || '';
+      this.productName = example.productName || '';
+      this.description = example.desc || '';
+      this.writingStyle = example.writingStyle || 'friendly';
+      
+      // 设置内容元素选项
+      this.includeEmoji = example.includeEmoji !== undefined ? example.includeEmoji : true;
+      this.includeRating = example.includeRating !== undefined ? example.includeRating : true;
+      this.includeProsCons = example.includeProsCons !== undefined ? example.includeProsCons : true;
+      this.includeTips = example.includeTips !== undefined ? example.includeTips : false;
+      this.includeHashtags = example.includeHashtags !== undefined ? example.includeHashtags : true;
+      this.includeImageDesc = example.includeImageDesc !== undefined ? example.includeImageDesc : true;
+      
+      // 生成随机标签
+      this.keywords = this.generateRandomTags();
+    },
+    
+    // 生成随机标签
+    generateRandomTags() {
+      // 根据笔记类型生成对应的标签
+      const tagsByType = {
+        'product-review': ['种草笔记', '好物推荐', '测评', '实用好物', '拔草指南'],
+        'lifestyle': ['生活方式', '日常', '生活记录', '理想生活', '生活向上'],
+        'travel': ['旅行', '旅游攻略', '周末去哪儿', '探店', '旅行记录'],
+        'food': ['美食推荐', '吃货', '美食记录', '探店', '美食分享'],
+        'fashion': ['穿搭', '时尚', '搭配', '穿搭分享', '时尚博主'],
+        'beauty': ['美妆', '护肤', '化妆教程', '美妆分享', '护肤心得']
+      };
+      
+      // 获取当前笔记类型的标签
+      const typeTags = tagsByType[this.noteType] || ['小红书', '生活记录', '分享'];
+      
+      // 生成3个随机标签
+      const tags = [];
+      
+      // 先添加一个当前笔记类型的标签
+      tags.push(typeTags[Math.floor(Math.random() * typeTags.length)]);
+      
+      // 添加通用标签
+      const commonTags = ['生活记录', '分享心得', '小红书', '好物推荐', '干货分享', '经验分享'];
+      
+      // 再添加2个通用随机标签，确保不重复
+      while (tags.length < 3) {
+        const randomTag = commonTags[Math.floor(Math.random() * commonTags.length)];
+        if (!tags.includes(randomTag)) {
+          tags.push(randomTag);
+        }
       }
-    }
+      
+      return tags.join(', ');
+    },
+    formatContent(content) {
+      if (!content) return '';
+      
+      // 处理换行符
+      let formatted = content.replace(/\n/g, '<br>');
+      
+      // 处理Markdown风格的标题
+      formatted = formatted.replace(/^#\s+(.+)$/gm, '<strong style="font-size:18px;">$1</strong>');
+      formatted = formatted.replace(/^##\s+(.+)$/gm, '<strong style="font-size:16px;">$1</strong>');
+      
+      // 处理Markdown风格的粗体
+      formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      
+      // 处理Markdown风格的斜体
+      formatted = formatted.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      
+      // 处理列表
+      formatted = formatted.replace(/^-\s+(.+)$/gm, '• $1<br>');
+      
+      // 处理表情符号 (保持原样)
+      
+      return formatted;
+    },
+    // 获取示例描述信息
+    getExampleDescription(example) {
+      return example.desc || '';
+    },
+    
+    // 更新示例卡片的位移
+    updateExamplesTranslation() {
+      // 不直接操作DOM，改为通过更新exampleIndex间接触发更新
+      if (this.examples.length > 0) {
+        // 确保exampleIndex不超出边界
+        this.exampleIndex = Math.min(this.exampleIndex, this.examples.length - 1);
+      }
+    },
+    // 添加Markdown格式化函数
+    formatMarkdown(text) {
+      if (!text) return '';
+      
+      // 处理加粗文本
+      text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      
+      // 处理列表项
+      text = text.replace(/\n\n/g, '<br><br>');
+      
+      return text;
+    },
   }
 };
 </script>
 
 <style scoped>
-.xiaohongshu-article-page {
-  padding: 0;
-  margin-top: -40px;
-}
+@import "@/assets/css/text-creation-common.css";
 
-.page-header {
+/* 以下是特定于小红书的样式，未在公共样式中定义的部分 */
+
+/* 修改后的示例卡片样式 */
+.example-card-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding: 0;
-}
-
-.page-nav h2 {
-  font-size: 24px;
-  color: #333;
-  margin: 0;
-}
-
-.page-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.action-btn {
-  background: none;
-  border: none;
-  color: #666;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s;
-}
-
-.action-btn:hover {
-  background-color: #f5f5f5;
-  color: var(--primary-color, #ba003f);
-  transform: scale(1.1);
-  box-shadow: 0 2px 6px rgba(186, 0, 63, 0.2);
-}
-
-/* 主要内容区域 - 使用两列布局 */
-.main-container {
-  display: flex;
-  gap: 20px;
-  min-height: calc(100vh - 120px);
-}
-
-/* 左侧：输入参数 */
-.input-section {
-  width: 45%;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.section-title {
-  font-size: 18px;
-  color: #333;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.section-title i {
-  color: var(--primary-color, #ba003f);
-}
-
-.form-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.form-group {
-  flex: 1;
-  margin-bottom: 16px;
+  align-items: flex-start;
   position: relative;
-  transition: all 0.3s ease;
-}
-
-.form-group:hover label {
-  color: var(--primary-color, #ba003f);
-}
-
-/* 标签动画效果 */
-.form-group label {
-  transition: color 0.3s ease;
-  font-weight: 500;
-  display: block;
-  margin-bottom: 6px;
-}
-
-/* 焦点状态下整个表单组的效果 */
-.form-group:focus-within {
-  transform: translateY(-2px);
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #444;
-  font-size: 14px;
-}
-
-.required:after {
-  content: " *";
-  color: var(--primary-color, #ba003f);
-}
-
-.form-control {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.form-control:focus {
-  border-color: var(--primary-color, #ba003f);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-/* 下拉菜单的自定义样式 */
-select.form-control {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
-  background-repeat: no-repeat;
-  background-position: calc(100% - 12px) center;
-  background-size: 12px;
-  padding-right: 32px;
-  cursor: pointer;
-  transition: all 0.3s;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-select.form-control:hover {
-  border-color: #bbb;
-  background-color: #f9f9f9;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-}
-
-select.form-control:focus {
-  border-color: var(--primary-color, #ba003f);
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23ba003f' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
-}
-
-/* 优化下拉选项样式 */
-select.form-control option {
-  padding: 10px;
-  font-size: 14px;
-}
-
-/* 禁用状态样式 */
-select.form-control:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #f5f5f5;
-}
-
-/* 文本区域样式优化 */
-textarea.form-control {
-  min-height: 100px;
-  line-height: 1.5;
-  resize: vertical;
-  background-color: #fafafa;
-  transition: all 0.3s ease;
-}
-
-textarea.form-control:focus {
-  background-color: #fff;
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-/* 复选框样式 */
-.checkbox-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 10px;
-}
-
-.checkbox-container {
-  display: flex;
-  align-items: center;
-  background-color: #f9f9f9;
-  padding: 8px 14px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid transparent;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
-  position: relative;
-}
-
-.checkbox-container:hover {
-  background-color: #f0f0f0;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
-}
-
-.checkbox-container input {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-  height: 0;
-  width: 0;
-}
-
-.checkbox-container span {
-  padding-left: 24px;
-  position: relative;
-  font-weight: 500;
-  color: #555;
-}
-
-.checkbox-container span:before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  background-color: #fff;
-  transition: all 0.2s ease;
-}
-
-.checkbox-container input:checked + span:before {
-  background-color: var(--primary-color, #ba003f);
-  border-color: var(--primary-color, #ba003f);
-}
-
-.checkbox-container input:checked + span:after {
-  content: '';
-  position: absolute;
-  left: 6px;
-  top: 3px;
-  width: 6px;
-  height: 10px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-.checkbox-container input:focus + span:before {
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-.checkbox-container:active {
-  transform: scale(0.98);
-}
-
-/* 操作按钮 */
-.action-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 15px;
-}
-
-.btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  height: 44px;
-  padding: 0 16px;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  border: none;
-}
-
-.btn:active {
-  transform: scale(0.96);
-}
-
-.btn i {
-  font-size: 16px;
-}
-
-.btn-primary {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  flex: 1;
-}
-
-.btn-primary:hover {
-  background-color: #d4004c;
-  box-shadow: 0 4px 12px rgba(186, 0, 63, 0.3);
-  transform: translateY(-2px);
-}
-
-.btn-primary:disabled {
-  background-color: #e0e0e0;
-  color: #999;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.btn-secondary {
-  background-color: #f5f5f5;
-  color: #666;
-}
-
-.btn-secondary:hover {
-  background-color: #eaeaea;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-/* 右侧：输出内容 */
-.right-column {
-  width: 55%;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* 示例区域 */
-.examples-section {
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 12px 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  margin-bottom: 0;
-  transition: all 0.3s;
-}
-
-.examples-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.carousel-controls {
-  display: flex;
-  gap: 10px;
-}
-
-.carousel-control {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid #ddd;
-  background-color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: #666;
-}
-
-.carousel-control:hover:not(.disabled):not(:disabled) {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  border-color: var(--primary-color, #ba003f);
-  transform: scale(1.05);
-}
-
-.carousel-control.disabled,
-.carousel-control:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.carousel-control i {
-  font-size: 18px;
-}
-
-.example-carousel {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  padding-bottom: 5px;
-}
-
-.example-cards {
-  display: flex;
-  transition: transform 0.3s ease;
-  padding: 8px 0;
-  gap: 0;
-}
-
-.example-card {
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 12px;
-  margin-right: 15px;
-  width: 200px;
-  min-width: 200px;
-  max-width: 200px;
-  height: 150px;
-  min-height: 150px;
-  max-height: 150px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.3s;
-  background-color: #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  overflow: hidden;
-  box-sizing: border-box;
-}
-
-.example-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(186, 0, 63, 0.15);
-  border-color: var(--primary-color, #ba003f);
-}
-
-.example-icon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background-color: rgba(186, 0, 63, 0.1);
-  margin-bottom: 12px;
-}
-
-.example-icon svg {
-  width: 32px;
-  height: 32px;
-  color: #BA003F;
-}
-
-.example-info {
-  display: flex;
-  flex-direction: column;
-  text-align: center;
-  overflow: hidden;
-  width: 100%;
+  padding-left: 80px; /* 为图标预留空间 */
+  min-height: 85px;
 }
 
 .example-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 5px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.example-desc {
-  font-size: 12px;
-  color: #888;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-/* 结果区域 */
-.result-section {
   flex: 1;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
 }
 
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 15px;
-  border-bottom: 1px solid #eee;
-  background-color: #fff;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.section-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-}
-
-.section-title {
-  display: flex;
-  align-items: center;
-  color: #333;
-  font-size: 16px;
-  margin: 0;
-  font-weight: 600;
-}
-
-.section-title i {
-  margin-right: 8px;
-  font-size: 20px;
-  color: var(--primary-color, #ba003f);
-}
-
-.result-content-wrapper {
-  position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 300px;
-}
-
-.loading-overlay {
+/* 自定义图标样式，避免与全局样式冲突 */
+.xiaohongshu-example-icon {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.9);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-}
-
-.loading-spinner {
+  left: 16px;
+  top: 15px;
   width: 50px;
   height: 50px;
-  border: 3px solid rgba(186, 0, 63, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(186, 0, 63, 0.1);
   border-radius: 50%;
-  border-top-color: var(--primary-color, #ba003f);
-  animation: spin 1s linear infinite;
-  margin-bottom: 15px;
+  box-shadow: 0 3px 6px rgba(186, 0, 63, 0.1);
 }
 
-.loading-text {
-  font-size: 14px;
-  color: #666;
+.xiaohongshu-example-icon i {
+  font-size: 26px;
+  color: #ba003f;
 }
 
-.empty-result {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-  text-align: center;
-}
-
-.empty-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.empty-image {
-  width: 120px;
-  height: 120px;
-  margin-bottom: 20px;
-}
-
-.empty-message {
-  margin: 0 0 20px;
-  font-size: 16px;
-  color: #666;
-}
-
+/* 手机模拟器样式 */
 .note-result {
   flex: 1;
   padding: 15px;
   overflow: hidden;
   display: flex;
   height: 100%;
-}
-
-.result-textarea {
-  width: 100%;
-  height: 100%;
-  min-height: 300px;
-  padding: 15px;
-  border: 1px solid #eee;
-  border-radius: 6px;
-  font-size: 15px;
-  line-height: 1.6;
-  color: #333;
-  resize: none;
-  background-color: #f9f9f9;
-  outline: none;
-  overflow-y: auto;
-  transition: border-color 0.3s;
-}
-
-.result-textarea:focus {
-  border-color: var(--primary-color, #ba003f);
-}
-
-.blur-content {
-  filter: blur(1px);
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* 模态框 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 1000;
 }
 
-.modal-content {
-  background-color: white;
-  border-radius: 10px;
-  max-width: 600px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+.iphone-mockup {
+  position: relative;
+  width: 360px;
+  height: 680px;
+  background-color: #fff;
+  border-radius: 40px;
+  overflow: hidden;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2),
+              inset 0 0 0 2px rgba(0, 0, 0, 0.05),
+              inset 0 0 0 6px #f2f2f2,
+              inset 0 0 0 10px #fff;
+  border: 12px solid #333;
 }
 
-.modal-header {
+.iphone-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 180px;
+  height: 30px;
+  background-color: #000;
+  border-radius: 0 0 20px 20px;
+  z-index: 10;
+}
+
+.iphone-header {
+  background: linear-gradient(to right, #FF2C55, #FF4F5E);
+  padding: 30px 15px 10px;
+  position: relative;
+  z-index: 5;
+}
+
+.status-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
+  width: 100%;
+  padding: 5px 15px;
 }
 
-.modal-header h3 {
-  margin: 0;
+.time {
+  font-size: 14px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.status-icons {
+  display: flex;
+  gap: 7px;
+}
+
+.status-icons i {
+  font-size: 14px;
+  color: #fff;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 5px 10px;
+}
+
+.app-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-title i {
+  font-size: 22px;
+  color: #fff;
+}
+
+.app-title span {
   font-size: 18px;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  color: #fff;
+  font-weight: 600;
 }
 
-.close-btn {
-  background: none;
-  border: none;
+.app-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.app-actions i {
   font-size: 20px;
-  color: #666;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  color: #fff;
 }
 
-.modal-body {
-  padding: 20px;
-}
-
-.tips-list {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
-.tips-list li {
-  margin-bottom: 12px;
-  padding-left: 20px;
-  position: relative;
-  line-height: 1.5;
-}
-
-.tips-list li:before {
-  content: "•";
+.phone-content {
   position: absolute;
+  top: 110px;
   left: 0;
-  color: var(--primary-color, #ba003f);
-  font-weight: bold;
+  right: 0;
+  bottom: 20px;
+  padding: 10px;
+  overflow-y: auto;
+  background-color: #f7f7f7;
+  max-height: 540px;
 }
 
-/* 响应式调整 */
-@media (max-width: 1200px) {
-  .main-container {
-    flex-direction: column;
-  }
-  
-  .input-section, .right-column {
-    width: 100%;
-  }
+.redbook-post {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
-/* 新增公众号风格按钮样式 */
-.primary-button {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
+.post-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  background-color: #f3f3f3;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+}
+
+.user-avatar i {
+  font-size: 22px;
+  color: #999;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.username {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.publish-info {
+  font-size: 12px;
+  color: #999;
+}
+
+.follow-btn {
+  background-color: #fe496c;
+  color: #fff;
   border: none;
-  padding: 0 16px;
-  height: 36px;
-  border-radius: 4px;
-  font-size: 14px;
+  border-radius: 15px;
+  padding: 4px 12px;
+  font-size: 12px;
   font-weight: 500;
-  cursor: pointer;
+}
+
+.post-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #333;
+  line-height: 1.4;
+}
+
+.post-content {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.post-content-placeholder {
+  font-size: 14px;
+  color: #999;
+  line-height: 1.6;
+  margin-bottom: 15px;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.post-tags {
   display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.tag {
+  background-color: #f6f6f6;
+  color: #666;
+  border-radius: 15px;
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+.post-stats {
+  display: flex;
+  border-top: 1px solid #f3f3f3;
+  padding-top: 12px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: all 0.2s ease;
+  flex: 1;
+  color: #666;
+  font-size: 12px;
 }
 
-.primary-button:hover {
-  background-color: #d4004c;
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(186, 0, 63, 0.2);
+.stat-item i {
+  font-size: 18px;
+  margin-bottom: 5px;
 }
 
-.primary-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.home-indicator {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 5px;
   background-color: #ccc;
-  color: #666;
-  transform: none;
-  box-shadow: none;
-}
-
-.secondary-button {
-  background-color: #f5f5f5;
-  color: #666;
-  border: 1px solid #e0e0e0;
-  padding: 0 16px;
-  height: 36px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: all 0.2s ease;
-}
-
-.secondary-button:hover {
-  background-color: #eaeaea;
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-}
-
-.secondary-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #f5f5f5;
-  color: #aaa;
-  transform: none;
-  box-shadow: none;
-}
-
-.prompt-button {
-  background-color: white;
-  color: var(--primary-color, #ba003f);
-  border: 1px solid var(--primary-color, #ba003f);
-  padding: 0 16px;
-  height: 36px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: all 0.2s ease;
-}
-
-.prompt-button:hover {
-  background-color: rgba(186, 0, 63, 0.05);
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(186, 0, 63, 0.1);
-}
-
-.prompt-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  color: #aaa;
-  border-color: #e0e0e0;
-  transform: none;
-  box-shadow: none;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 0;
+  border-radius: 3px;
 }
 
 /* 提示词模态框样式 */
 .prompt-modal {
+  max-width: 700px;
   width: 90%;
-  max-width: 900px;
 }
 
 .prompt-content {
-  background-color: #f9f9f9;
-  border-radius: 6px;
-  padding: 20px;
-  overflow-x: auto;
-  font-size: 15px;
-  line-height: 1.6;
-  color: #333;
-  white-space: normal;
-  max-height: 60vh;
+  max-height: 400px;
   overflow-y: auto;
+  margin-bottom: 15px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 10px;
 }
 
 .prompt-message {
-  margin-bottom: 16px;
-  padding-bottom: 16px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
   border-bottom: 1px solid #eee;
 }
 
 .prompt-message:last-child {
   border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
 }
 
 .prompt-role {
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
   color: var(--primary-color, #ba003f);
-  font-size: 16px;
 }
 
 .prompt-text {
   white-space: pre-wrap;
-  word-break: break-word;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .prompt-actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 15px;
+}
+
+.tips-list {
+  padding-left: 20px;
+  margin: 0;
+}
+
+.tips-list li {
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.fallback-icon {
+  font-size: 26px;
+  font-weight: bold;
+  color: #ba003f;
+}
+
+.xiaohongshu-example-icon.has-svg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cream-icon {
+  width: 30px;
+  height: 30px;
+}
+
+/* 添加知识学习抽屉的样式 */
+.knowledge-content {
+  padding: 20px;
+}
+
+.knowledge-section {
+  margin-bottom: 25px;
+}
+
+.knowledge-subtitle {
+  color: var(--primary-color, #ff2442);
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 36, 66, 0.2);
+  padding-bottom: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.knowledge-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.knowledge-text p {
+  margin-bottom: 12px;
+}
+
+.knowledge-text ul, .knowledge-text ol {
+  padding-left: 20px;
+  margin-bottom: 12px;
+}
+
+.knowledge-text li {
+  margin-bottom: 8px;
+}
+
+.knowledge-text strong {
+  color: var(--primary-color, #ff2442);
+  font-weight: 600;
+}
+
+.knowledge-text a {
+  color: var(--primary-color, #ff2442);
+  text-decoration: none;
+}
+
+.knowledge-text a:hover {
+  text-decoration: underline;
+}
+
+.knowledge-icon {
+  margin-right: 8px;
+  font-size: 20px;
+}
+
+/* 确保抽屉样式正确 */
+:deep(.knowledge-drawer .el-drawer__header) {
+  margin-bottom: 0;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  color: var(--primary-color, #ff2442);
+  font-weight: 600;
+}
+
+:deep(.knowledge-drawer .el-drawer__body) {
+  padding: 0;
+  overflow-y: auto;
 }
 </style> 

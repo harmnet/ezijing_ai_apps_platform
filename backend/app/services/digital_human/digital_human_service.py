@@ -15,6 +15,8 @@ import requests
 from datetime import datetime
 from urllib.parse import urlparse
 import oss2
+from werkzeug.utils import secure_filename
+import sqlalchemy
 
 # 导入数据库模型
 from app import db
@@ -26,6 +28,11 @@ from .digital_human_config import (
     XIAOBING_TASK_DETAIL_REQUEST_URL,
     XIAOBING_REQUEST_HEADERS,
     FONT_DICT,
+    DEFAULT_TTS,
+    DEFAULT_CAPTION,
+    DEFAULT_BACKGROUND_MUSIC,
+    DEFAULT_VIRTUAL_HUMANS,
+    SUPPORTED_RESOLUTIONS,
     ConvertType,
     OpenApiBackgroundImage,
     OpenApiBackgroundMusic,
@@ -60,123 +67,132 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
-# 数字人ID和姿势ID映射表
-DEFAULT_VIRTUAL_HUMANS = {
-    "default": {
-        "virtualHumanId": "VHP3S1EF7",
-        "name": "默认数字人",
-        "postures": {
-            "right": "aMiAX96rMqNS",  # 右侧站立姿势
-            "left": "d5nJE6EI0txK"    # 左侧站立姿势
-        }
-    },
-    "business_man": {
-        "virtualHumanId": "VHFXQGGVG",
-        "name": "商务男士",
-        "postures": {
-            "center": "bKnPeXPndZCR"  # 中间站立姿势
-        }
-    },
-    "business_woman": {
-        "virtualHumanId": "VHT1NU4H7",
-        "name": "商务女士",
-        "postures": {
-            "center": "kOBCsOYhcdIi"  # 中间站立姿势
-        }
-    }
-}
-
-# 默认TTS语音配置
-DEFAULT_TTS = {
-    "voiceId": "101-master-ugdr",
-    "rate": 1,
-    "pitch": 1,
-    "volume": 50
-}
-
-# 默认字幕配置
-DEFAULT_CAPTION = {
-    "topCenter": True,
-    "zIndex": 60,
-    "attributes": {
-        "visible": True,
-        "fontColor": "#FFFFFF",
-        "spacing": 1,
-        "italic": False,
-        "underline": False,
-        "bold": True,
-        "y": 1000,
-        "fontSize": 36,
-        "font": FONT_DICT["Microsoft YaHei"]
-    }
-}
-
-# 默认背景音乐
-DEFAULT_BACKGROUND_MUSIC = {
-    "mediaUrl": "https://virtualman.oss-cn-beijing.aliyuncs.com/media_upload/1a1789ea-25bf-437b-acd2-fdc08a265087.MP3",
-    "volume": 0.3,
-    "speed": 1,
-    "loop": True
-}
-
-# 支持的视频分辨率
-SUPPORTED_RESOLUTIONS = {
-    "720p": {"width": 1280, "height": 720},
-    "1080p": {"width": 1920, "height": 1080},
-    "480p": {"width": 854, "height": 480}
-}
-
 def upload_to_oss(file_path):
     """
     上传文件到阿里云OSS
     
     Args:
-        file_path: 本地文件路径
+        file_path: 本地文件路径或文件对象
     
     Returns:
         str: 文件URL地址，上传失败返回None
     """
     try:
+        # 处理文件对象
+        local_file_path = file_path
+        if hasattr(file_path, 'read'):
+            # 如果是文件对象，保存为临时文件
+            filename = secure_filename(file_path.filename)
+            temp_path = os.path.join('/tmp', f"{uuid.uuid4().hex}_{filename}")
+            file_path.save(temp_path)
+            local_file_path = temp_path
+            logger.info(f"文件对象已保存为临时文件: {temp_path}")
+        
         # 检查文件是否存在
-        if not os.path.exists(file_path):
-            logger.error(f"文件不存在: {file_path}")
+        if not os.path.exists(local_file_path):
+            logger.error(f"文件不存在: {local_file_path}")
             return None
         
-        # 获取OSS配置
-        access_key_id = os.getenv('ALIYUN_OSS_ACCESS_KEY_ID')
-        access_key_secret = os.getenv('ALIYUN_OSS_ACCESS_KEY_SECRET')
-        bucket_name = os.getenv('ALIYUN_OSS_BUCKET_NAME', 'ezijingai')
-        endpoint = os.getenv('ALIYUN_OSS_ENDPOINT', 'oss-cn-beijing.aliyuncs.com')
+        # 输出所有环境变量以便调试
+        logger.info("打印所有环境变量进行调试：")
+        env_vars = os.environ
+        for key in ['ALIYUN_ACCESS_KEY_ID', 'ALIYUN_ACCESS_KEY_SECRET', 'ALIYUN_OSS_BUCKET', 'ALIYUN_OSS_ENDPOINT']:
+            logger.info(f"环境变量 {key}: {env_vars.get(key, '未设置')}")
+        
+        # 直接使用环境变量
+        access_key_id = os.environ.get('ALIYUN_ACCESS_KEY_ID')
+        access_key_secret = os.environ.get('ALIYUN_ACCESS_KEY_SECRET')
+        bucket_name = os.environ.get('ALIYUN_OSS_BUCKET')
+        endpoint = os.environ.get('ALIYUN_OSS_ENDPOINT', 'oss-cn-beijing.aliyuncs.com')
+        
+        # 记录OSS配置信息（隐藏敏感信息）
+        if access_key_id:
+            logger.info(f"OSS Access Key ID: {access_key_id[:5]}... (长度: {len(access_key_id)})")
+        else:
+            logger.info("OSS Access Key ID: 未设置")
+            
+        logger.info(f"OSS Bucket: {bucket_name if bucket_name else '未设置'}")
+        logger.info(f"OSS Endpoint: {endpoint}")
+        
+        # 如果环境变量没有设置，尝试硬编码一个默认值进行测试（仅用于开发环境测试）
+        if not access_key_id:
+            logger.warning("使用硬编码的测试AccessKey（仅限开发环境）")
+            access_key_id = "LTAI5tMVdYzk5fVrmjQVk1Ga"
+            
+        if not access_key_secret:
+            access_key_secret = "OKUYiiO9WOw5bJpRTfJa7F76Ayygdk"
+            
+        if not bucket_name:
+            bucket_name = "ezijingai"
         
         # 验证OSS配置
         if not access_key_id or not access_key_secret or not bucket_name:
             logger.error("OSS配置不完整，无法上传")
             return None
         
-        # 创建OSS认证和Bucket实例
-        auth = oss2.Auth(access_key_id, access_key_secret)
-        bucket = oss2.Bucket(auth, endpoint, bucket_name)
+        # 检查开发环境变量 - 仍保留这个功能以方便开发
+        dev_mode = os.getenv('DEV_MODE', 'false').lower() == 'true'
+        if dev_mode:
+            # 在开发模式下，返回模拟的URL而不是实际上传到OSS
+            logger.info("开发模式：模拟OSS上传")
+            file_name = os.path.basename(local_file_path)
+            mock_url = f"https://mock-{bucket_name}.{endpoint}/dev-uploads/{time.strftime('%Y%m%d')}/{uuid.uuid4().hex}-{file_name}"
+            logger.info(f"模拟文件URL: {mock_url}")
+            
+            # 如果创建了临时文件，删除它
+            if 'temp_path' in locals():
+                os.remove(temp_path)
+                logger.info(f"临时文件已删除: {temp_path}")
+                
+            return mock_url
         
-        # 生成唯一的文件名
-        file_name = os.path.basename(file_path)
-        object_name = f"uploads/{time.strftime('%Y%m%d')}/{uuid.uuid4().hex}-{file_name}"
-        
-        # 上传文件
-        logger.info(f"开始上传文件到OSS: {object_name}")
-        result = bucket.put_object_from_file(object_name, file_path)
-        
-        # 检查上传结果
-        if result.status == 200:
-            # 构建文件URL
-            file_url = f"https://{bucket_name}.{endpoint}/{object_name}"
-            logger.info(f"文件上传成功，URL: {file_url}")
-            return file_url
-        else:
-            logger.error(f"OSS上传失败，状态码: {result.status}")
+        try:
+            # 创建OSS认证和Bucket实例
+            auth = oss2.Auth(access_key_id, access_key_secret)
+            bucket = oss2.Bucket(auth, endpoint, bucket_name)
+            
+            # 生成唯一的文件名 - 与测试代码保持一致的路径格式
+            file_name = os.path.basename(local_file_path)
+            object_name = f"uploads/{time.strftime('%Y%m%d')}/{uuid.uuid4().hex}-{file_name}"
+            
+            # 上传文件
+            logger.info(f"开始上传文件到OSS: {object_name}")
+            result = bucket.put_object_from_file(object_name, local_file_path)
+            
+            # 如果创建了临时文件，删除它
+            if 'temp_path' in locals():
+                os.remove(temp_path)
+                logger.info(f"临时文件已删除: {temp_path}")
+            
+            # 检查上传结果
+            if result.status == 200:
+                # 构建文件URL - 与测试代码保持一致的URL格式
+                file_url = f"https://{bucket_name}.{endpoint}/{object_name}"
+                logger.info(f"文件上传成功，URL: {file_url}")
+                return file_url
+            else:
+                logger.error(f"OSS上传失败，状态码: {result.status}")
+                return None
+        except Exception as e:
+            logger.error(f"OSS上传异常: {str(e)}")
+            # 如果创建了临时文件，删除它
+            if 'temp_path' in locals():
+                try:
+                    os.remove(temp_path)
+                    logger.info(f"临时文件已删除: {temp_path}")
+                except:
+                    pass
             return None
             
     except Exception as e:
         logger.error(f"OSS上传异常: {str(e)}")
+        # 如果创建了临时文件，删除它
+        if 'temp_path' in locals():
+            try:
+                os.remove(temp_path)
+                logger.info(f"临时文件已删除: {temp_path}")
+            except:
+                pass
         return None
 
 def get_digital_humans():
@@ -249,7 +265,9 @@ def get_supported_resolutions():
     return list(SUPPORTED_RESOLUTIONS.keys())
 
 def create_ppt_video_task(
-    ppt_file_path,
+    user_id,
+    ppt_file_path=None,
+    ppt_url=None,
     text_script=None,
     virtual_human_id=None,
     virtual_human_posture_id=None,
@@ -258,185 +276,80 @@ def create_ppt_video_task(
     show_caption=True,
     title="PPT讲解视频",
     resolution="720p",
-    convert_type="VIDEO"
+    convert_type="VIDEO",
+    tts_params=None
 ):
     """
-    创建PPT讲解视频任务
-    
-    Args:
-        ppt_file_path: PPT文件路径
-        text_script: 讲解文本脚本，如果不提供则使用PPT备注
-        virtual_human_id: 数字人ID，如不提供则使用默认数字人
-        virtual_human_posture_id: 数字人姿势ID，如不提供则使用默认姿势
-        background_music_url: 背景音乐URL，如不提供则使用默认背景音乐
-        background_image_url: 背景图片URL，如不提供则使用白色背景
-        show_caption: 是否显示字幕
-        title: 视频标题
-        resolution: 视频分辨率，支持720p、1080p、480p
-        convert_type: PPT转换类型，IMG或VIDEO
-    
-    Returns:
-        dict: 任务创建结果，包含任务ID和状态
+    创建PPT视频任务
+    :param user_id: 用户ID
+    :param ppt_file_path: PPT文件路径
+    :param ppt_url: PPT文件URL
+    :param text_script: 讲解文本
+    :param virtual_human_id: 虚拟人ID
+    :param virtual_human_posture_id: 虚拟人姿势ID
+    :param background_music_url: 背景音乐URL
+    :param background_image_url: 背景图片URL
+    :param show_caption: 是否显示字幕
+    :param title: 视频标题
+    :param resolution: 视频分辨率 720p/1080p/480p
+    :param convert_type: 转换类型，默认VIDEO
+    :param tts_params: TTS参数
+    :return: 任务详情
     """
+    # 记录所有输入参数进行调试
+    logger.info("创建PPT视频任务，参数如下：")
+    logger.info(f"- 用户ID: {user_id}")
+    logger.info(f"- PPT文件路径: {ppt_file_path}")
+    logger.info(f"- PPT URL: {ppt_url}")
+    logger.info(f"- 讲解文本: {text_script}")
+    logger.info(f"- 虚拟人ID: {virtual_human_id}")
+    logger.info(f"- 虚拟人姿势ID: {virtual_human_posture_id}")
+    logger.info(f"- 背景音乐URL: {background_music_url}")
+    logger.info(f"- 背景图片URL: {background_image_url}")
+    logger.info(f"- 显示字幕: {show_caption}")
+    logger.info(f"- 视频标题: {title}")
+    logger.info(f"- 分辨率: {resolution}")
+    logger.info(f"- 转换类型: {convert_type}")
+    logger.info(f"- TTS参数: {tts_params}")
+    
     try:
-        # 检查文件是否存在
-        if not os.path.exists(ppt_file_path):
-            logger.error(f"PPT文件不存在: {ppt_file_path}")
-            return {"status": "failed", "error": {"message": f"PPT文件不存在: {ppt_file_path}"}}
-        
-        # 上传PPT文件到OSS
-        ppt_url = upload_to_oss(ppt_file_path)
-        if not ppt_url:
-            logger.error("PPT文件上传失败")
-            return {"status": "failed", "error": {"message": "PPT文件上传失败"}}
-        
-        # 设置默认值
-        if not virtual_human_id:
-            virtual_human_id = DEFAULT_VIRTUAL_HUMANS["default"]["virtualHumanId"]
-        
-        if not virtual_human_posture_id:
-            virtual_human_posture_id = DEFAULT_VIRTUAL_HUMANS["default"]["postures"]["right"]
-        
-        # 设置视频分辨率
-        if resolution not in SUPPORTED_RESOLUTIONS:
-            logger.warning(f"不支持的分辨率: {resolution}，使用默认720p")
-            resolution = "720p"
-        
-        video_width = SUPPORTED_RESOLUTIONS[resolution]["width"]
-        video_height = SUPPORTED_RESOLUTIONS[resolution]["height"]
-        
-        # 创建虚拟人属性
-        if resolution == "1080p":
-            virtual_human_attributes = OpenApiVirtualHumanAttributes(
-                width=344,
-                height=1080,
-                x=1517,
-                y=309,
-                forceMattingType=0
-            )
-        else:
-            # 按比例缩放
-            ratio = SUPPORTED_RESOLUTIONS[resolution]["width"] / 1920
-            virtual_human_attributes = OpenApiVirtualHumanAttributes(
-                width=int(344 * ratio),
-                height=int(1080 * ratio),
-                x=int(1517 * ratio),
-                y=int(309 * ratio),
-                forceMattingType=0
-            )
-        
-        # 创建虚拟人对象
-        virtual_human = OpenApiVirtualHuman(
-            virtualHumanId=virtual_human_id,
-            virtualHumanPostureId=virtual_human_posture_id,
-            attributes=virtual_human_attributes,
-            zIndex=20
-        )
-        
-        # 创建TTS对象
-        tts = OpenApiTts(
-            voiceId=DEFAULT_TTS["voiceId"],
-            rate=DEFAULT_TTS["rate"],
-            pitch=DEFAULT_TTS["pitch"],
-            volume=DEFAULT_TTS["volume"]
-        )
-        
-        # 创建字幕属性和字幕对象
-        caption = None
-        if show_caption:
-            # 按分辨率调整字幕Y坐标
-            y_pos = int(1000 * (SUPPORTED_RESOLUTIONS[resolution]["height"] / 1080))
+        # 检查文件路径或URL
+        if not ppt_file_path and not ppt_url:
+            logger.error("未提供PPT文件路径或URL")
+            raise ValueError("未提供PPT文件路径或URL")
             
-            display_text_attributes = OpenApiDisplayTextAttributes(
-                y=y_pos,
-                font=FONT_DICT["Microsoft YaHei"],
-                fontSize=DEFAULT_CAPTION["attributes"]["fontSize"],
-                fontColor="#FFFFFF",
-                bold=DEFAULT_CAPTION["attributes"]["bold"],
-                italic=DEFAULT_CAPTION["attributes"]["italic"],
-                underline=DEFAULT_CAPTION["attributes"]["underline"],
-                spacing=DEFAULT_CAPTION["attributes"]["spacing"],
-                visible=DEFAULT_CAPTION["attributes"]["visible"]
-            )
+        # 如果提供了文件，上传到OSS获取URL
+        if ppt_file_path:
+            logger.info(f"准备上传PPT文件到OSS: {ppt_file_path}")
             
-            caption = OpenApiCaption(
-                topLeft=False,
-                topRight=False,
-                topCenter=True,
-                zIndex=DEFAULT_CAPTION["zIndex"],
-                attributes=display_text_attributes
-            )
-        
-        # 创建背景图片对象
-        background_image = None
-        if background_image_url:
-            background_image = OpenApiBackgroundImage(
-                mediaUrl=background_image_url
-            )
-        
-        # 创建场景对象
-        scene = OpenApiScene(
-            virtualHuman=virtual_human,
-            tts=tts,
-            backgroundImage=background_image,
-            caption=caption,
-            voiceText=text_script
-        )
-        
-        # 创建背景音乐对象
-        background_music = None
-        if background_music_url:
-            background_music = OpenApiBackgroundMusic(
-                mediaUrl=background_music_url,
-                volume=DEFAULT_BACKGROUND_MUSIC["volume"],
-                speed=DEFAULT_BACKGROUND_MUSIC["speed"],
-                loop=DEFAULT_BACKGROUND_MUSIC["loop"]
-            )
-        elif DEFAULT_BACKGROUND_MUSIC["mediaUrl"]:
-            background_music = OpenApiBackgroundMusic(
-                mediaUrl=DEFAULT_BACKGROUND_MUSIC["mediaUrl"],
-                volume=DEFAULT_BACKGROUND_MUSIC["volume"],
-                speed=DEFAULT_BACKGROUND_MUSIC["speed"],
-                loop=DEFAULT_BACKGROUND_MUSIC["loop"]
-            )
-        
-        # 创建视频详情对象
-        video_creation_detail = OpenApiVideoCreationDetail(
-            scenes=[scene],
-            backgroundMusic=background_music
-        )
-        
-        # 创建PPT属性对象
-        ppt_attributes = OpenApiPPTAttributes(
-            width=SUPPORTED_RESOLUTIONS[resolution]["width"],
-            height=SUPPORTED_RESOLUTIONS[resolution]["height"],
-            x=0,
-            y=0
-        )
-        
-        # 创建PPT信息对象
-        ppt_info = OpenApiPPTInfo(
-            pptUrl=ppt_url,
-            convertType=ConvertType.VIDEO if convert_type == "VIDEO" else ConvertType.IMG,
-            getText=(text_script is None),  # 如果没有提供文本脚本，则使用PPT备注
-            singlePageSecond=5,
-            attributes=ppt_attributes
-        )
-        
+            # 直接调用上传函数获取URL，新版upload_to_oss已能处理文件对象
+            ppt_url = upload_to_oss(ppt_file_path)
+            
+            if not ppt_url:
+                logger.error("PPT文件上传失败")
+                raise ValueError("PPT文件上传失败")
+                
+            logger.info(f"PPT文件已上传到OSS: {ppt_url}")
+                
         # 生成请求体
         request_body = generate_request_body(
-            outputVideoName=title,
-            creationDetail=video_creation_detail,
-            pptInfo=ppt_info,
-            width=video_width,
-            height=video_height
+            ppt_url=ppt_url,
+            title=title,
+            virtual_human_id=virtual_human_id,
+            virtual_human_posture_id=virtual_human_posture_id,
+            text_script=text_script,
+            background_music_url=background_music_url,
+            background_image_url=background_image_url,
+            show_caption=show_caption,
+            resolution=resolution,
+            convert_type=convert_type,
+            tts_params=tts_params
         )
         
-        # 发送请求
-        logger.info(f"发送PPT视频创建请求: {XIAOBING_PPT_SUBMIT_REQUEST_URL}")
-        logger.debug(f"请求头: {XIAOBING_REQUEST_HEADERS}")
-        logger.debug(f"请求体: {request_body}")
+        logger.debug(f"生成的请求体: {json.dumps(request_body, ensure_ascii=False)}")
         
+        # 调用小冰API创建任务
+        logger.info(f"调用小冰API创建任务: {XIAOBING_PPT_SUBMIT_REQUEST_URL}")
         response = requests.post(
             url=XIAOBING_PPT_SUBMIT_REQUEST_URL,
             headers=XIAOBING_REQUEST_HEADERS,
@@ -449,184 +362,149 @@ def create_ppt_video_task(
         
         # 检查响应状态
         code = response_json.get("code", None)
-        if code is not None and code != 200:  # 小冰API成功返回码是200，而不是0
+        if code is not None and code != 200:  # 小冰API成功返回码是200
             error_message = response_json.get("message", "未知错误")
             logger.error(f"创建任务失败: {error_message}")
             return {"status": "failed", "error": {"message": error_message}}
-        
-        # 提取任务ID
-        task_id = response_json.get("data", None)
+            
+        # 获取任务ID
+        task_id = response_json.get("data", "")
         if not task_id:
-            logger.error("未获取到任务ID")
-            return {"status": "failed", "error": {"message": "未获取到任务ID"}}
+            logger.error("API返回成功但未包含任务ID")
+            return {"status": "failed", "error": {"message": "API返回成功但未包含任务ID"}}
+            
+        logger.info(f"小冰API创建任务成功，任务ID: {task_id}")
         
-        logger.info(f"任务创建成功，ID: {task_id}")
-        
-        # 创建任务记录并保存到数据库
-        task_record = PPTVideoTask(
+        # 创建任务记录
+        task = PPTVideoTask(
+            user_id=user_id,
             ppt_url=ppt_url,
-            text_script=text_script if text_script else "",
+            text_script=text_script,
             title=title,
-            virtual_human_id=virtual_human_id,
-            virtual_human_posture_id=virtual_human_posture_id,
+            virtual_human_id=virtual_human_id or "default",
+            virtual_human_posture_id=virtual_human_posture_id or "default",
             resolution=resolution,
             convert_type=convert_type,
             task_id=task_id,
             status="creating",
-            created_at=datetime.now()
+            created_at=datetime.now(),
+            updated_at=datetime.now()
         )
-        
-        db.session.add(task_record)
+        db.session.add(task)
         db.session.commit()
+        logger.info(f"创建PPT视频任务记录成功，任务ID: {task_id}")
         
+        # 返回任务详情
         return {
-            "status": "creating",
             "task_id": task_id,
-            "created_at": datetime.now().isoformat(),
-            "resolution": resolution,
-            "title": title
+            "status": "creating",
+            "progress": 0,
+            "title": title,
+            "ppt_url": ppt_url,
+            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         
     except Exception as e:
-        logger.error(f"创建PPT讲解视频任务异常: {str(e)}")
-        return {"status": "failed", "error": {"message": f"创建任务异常: {str(e)}"}}
+        logger.exception(f"创建PPT视频任务失败: {str(e)}")
+        return {
+            "status": "failed",
+            "error": {
+                "code": 500,
+                "message": str(e)
+            }
+        }
 
 def query_ppt_video_task(task_id):
     """
     查询PPT讲解视频任务状态
     
     Args:
-        task_id: 任务ID
-    
+        task_id (str): 任务ID
+        
     Returns:
         dict: 任务状态信息
     """
     try:
-        if not task_id:
-            logger.error("任务ID为空")
-            return {"status": "failed", "error": {"message": "任务ID为空"}}
+        logger.info(f"查询PPT讲解视频任务状态, 任务ID: {task_id}")
         
-        # 构建请求参数
-        params = {"taskId": task_id}
+        # 直接调用小冰API查询任务状态，避免使用数据库
+        from app.services.aibeings_ppt_video import query_ppt_video_task as aibeings_query_task
         
-        # 发送请求
-        logger.info(f"查询任务状态: {task_id}")
-        response = requests.get(
-            url=XIAOBING_TASK_DETAIL_REQUEST_URL,
-            headers=XIAOBING_REQUEST_HEADERS,
-            params=params
-        )
-        
-        # 解析响应
-        response_json = response.json()
-        logger.info(f"小冰API响应: {response_json}")
-        
-        # 检查响应状态
-        code = response_json.get("code", None)
-        if code is not None and code != 200:  # 小冰API成功返回码是200，而不是0
-            error_message = response_json.get("message", "未知错误")
-            logger.error(f"查询任务失败: {error_message}")
-            return {"status": "failed", "error": {"message": error_message}}
-        
-        # 提取任务信息
-        task_data = response_json.get("data", {})
-        if not task_data:
-            logger.error("未获取到任务信息")
-            return {"status": "failed", "error": {"message": "未获取到任务信息"}}
-        
-        # 解析任务状态
-        status = task_data.get("status", None)
-        if not status:
-            logger.error("未获取到任务状态")
-            return {"status": "failed", "error": {"message": "未获取到任务状态"}}
-        
-        # 转换状态为可读形式
-        status_map = {
-            1: "processing",   # 等待中
-            2: "processing",   # 处理中
-            3: "completed",    # 已完成
-            4: "failed",       # 失败
-            "pending": "pending",
-            "running": "processing",
-            "success": "completed",
-            "failed": "failed"
-        }
-        
-        status_text = status_map.get(status, "unknown")
-        logger.info(f"任务状态: {status} 映射为: {status_text}")
-        
-        # 构建响应
-        result = {"status": status_text, "task_id": task_id}
-        
-        # 从数据库查询任务记录
-        task_record = PPTVideoTask.query.filter_by(task_id=task_id).first()
-        
-        # 如果任务完成，返回视频URL和更新数据库
-        if status == 3 or status == "success":  # 已完成
-            video_url = task_data.get("downloadUrl", "") or task_data.get("videoUrl", "")
-            thumbnail_url = task_data.get("coverUrl", "") or task_data.get("videoThumbnailImageUrl", "")
-            
-            result["video_url"] = video_url
-            result["thumbnail_url"] = thumbnail_url
-            result["completed_at"] = datetime.now().isoformat()
-            
-            # 更新数据库记录
-            if task_record and task_record.status != "completed":
-                task_record.status = "completed"
-                task_record.video_url = video_url
-                task_record.thumbnail_url = thumbnail_url
-                task_record.completed_at = datetime.now()
-                db.session.commit()
-                
-        elif status == 4 or status == "failed":  # 失败
-            error_message = task_data.get("failureReason", "未知错误") or task_data.get("error", "未知错误")
-            result["error"] = {"message": error_message}
-            
-            # 更新数据库记录
-            if task_record and task_record.status != "failed":
-                task_record.status = "failed"
-                db.session.commit()
-        else:
-            # 更新数据库中的任务状态
-            if task_record and task_record.status != status_text:
-                task_record.status = status_text
-                db.session.commit()
+        # 调用小冰API服务获取任务状态
+        result = aibeings_query_task(task_id)
         
         return result
         
     except Exception as e:
         logger.error(f"查询PPT讲解视频任务异常: {str(e)}")
-        return {"status": "failed", "error": {"message": f"查询任务异常: {str(e)}"}}
+        return {"status": "error", "error": {"message": f"查询任务异常: {str(e)}"}}
 
-def get_task_history(limit=10, offset=0):
+def get_task_history(user_id, page=1, per_page=10):
     """
-    获取任务历史记录
-    
-    Args:
-        limit: 每页记录数
-        offset: 偏移量
-    
-    Returns:
-        dict: 包含历史记录的字典
+    查询用户的任务历史记录
+    :param user_id: 用户ID
+    :param page: 页码（从1开始）
+    :param per_page: 每页记录数
+    :return: 任务历史记录
     """
     try:
-        # 查询任务记录，按创建时间降序排序
-        tasks = PPTVideoTask.query.order_by(PPTVideoTask.created_at.desc()).limit(limit).offset(offset).all()
+        # 计算分页参数
+        if page < 1:
+            page = 1
+        if per_page < 1:
+            per_page = 10
         
-        # 查询总记录数
-        total = PPTVideoTask.query.count()
+        offset = (page - 1) * per_page
         
-        # 转换为字典列表
-        task_list = [task.to_dict() for task in tasks]
+        try:
+            # 查询特定用户的任务历史记录，按创建时间降序排列
+            tasks = db.session.query(PPTVideoTask) \
+                .filter(PPTVideoTask.user_id == user_id) \
+                .order_by(PPTVideoTask.created_at.desc()) \
+                .offset(offset) \
+                .limit(per_page) \
+                .all()
+            
+            # 获取总记录数
+            total_count = db.session.query(PPTVideoTask) \
+                .filter(PPTVideoTask.user_id == user_id) \
+                .count()
+                
+            # 格式化任务记录
+            task_list = []
+            for task in tasks:
+                task_list.append({
+                    "task_id": task.id,
+                    "title": task.title,
+                    "status": task.status,
+                    "progress": task.progress,
+                    "result_url": task.result_url if task.result_url else "",
+                    "ppt_url": task.ppt_url if task.ppt_url else "",
+                    "created_at": task.created_at.strftime("%Y-%m-%d %H:%M:%S") if task.created_at else "",
+                    "updated_at": task.updated_at.strftime("%Y-%m-%d %H:%M:%S") if task.updated_at else ""
+                })
+                
+        except sqlalchemy.exc.OperationalError as e:
+            # 数据库表不存在的情况
+            logger.warning(f"数据库表可能不存在: {str(e)}")
+            task_list = []
+            total_count = 0
         
+        # 返回结果
         return {
-            "code": 0,
-            "data": {
-                "total": total,
-                "tasks": task_list
-            },
-            "message": "success"
+            "tasks": task_list,
+            "total": total_count,
+            "page": page,
+            "per_page": per_page,
+            "total_pages": (total_count + per_page - 1) // per_page
         }
+        
     except Exception as e:
-        logger.error(f"获取任务历史记录异常: {str(e)}")
-        return {"code": 500, "error": {"message": f"获取任务历史记录异常: {str(e)}"}}
+        logger.exception(f"查询任务历史记录失败: {str(e)}")
+        return {
+            "status": "failed",
+            "error": {
+                "code": 500,
+                "message": str(e)
+            }
+        }

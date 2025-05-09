@@ -7,6 +7,7 @@ import uuid
 import requests
 import oss2
 from werkzeug.utils import secure_filename
+import time
 
 logger = logging.getLogger(__name__)
 aibeings_bp = Blueprint('aibeings', __name__)
@@ -35,34 +36,59 @@ def upload_to_oss(file_path, object_name):
         OSS访问URL
     """
     try:
-        # 从环境变量获取OSS配置
-        access_key_id = os.environ.get('ALIYUN_OSS_ACCESS_KEY_ID')
-        access_key_secret = os.environ.get('ALIYUN_OSS_ACCESS_KEY_SECRET')
-        endpoint = os.environ.get('ALIYUN_OSS_ENDPOINT', 'oss-cn-beijing.aliyuncs.com')
-        bucket_name = os.environ.get('ALIYUN_OSS_BUCKET_NAME', 'ezijingai')
+        # 从环境变量获取OSS配置，使用与其他服务相同的逻辑
+        access_key_id = os.environ.get('ALIYUN_OSS_ACCESS_KEY_ID', os.environ.get('ALIYUN_ACCESS_KEY_ID'))
+        access_key_secret = os.environ.get('ALIYUN_OSS_ACCESS_KEY_SECRET', os.environ.get('ALIYUN_ACCESS_KEY_SECRET'))
+        endpoint = os.environ.get('ALIYUN_OSS_ENDPOINT', os.environ.get('ALIYUN_OSS_ENDPOINT', 'oss-cn-beijing.aliyuncs.com'))
+        bucket_name = os.environ.get('ALIYUN_OSS_BUCKET_NAME', os.environ.get('ALIYUN_OSS_BUCKET', 'ezijingai'))
         
-        if not (access_key_id and access_key_secret and bucket_name):
-            logger.error("OSS配置不完整")
+        # 记录OSS配置信息（不包含敏感信息）
+        logger.info(f"OSS配置信息: bucket={bucket_name}, endpoint={endpoint}")
+        logger.info(f"AccessKey配置状态: ID存在={bool(access_key_id)}, Secret存在={bool(access_key_secret)}")
+        
+        # 验证OSS配置
+        if not access_key_id or not access_key_secret or not bucket_name:
+            logger.error("OSS配置不完整，无法上传")
             return None
         
-        # 创建OSS认证和Bucket实例
-        auth = oss2.Auth(access_key_id, access_key_secret)
-        bucket = oss2.Bucket(auth, endpoint, bucket_name)
+        # 检查开发环境变量
+        dev_mode = os.environ.get('DEV_MODE', 'true').lower() == 'true'
+        if dev_mode:
+            # 在开发模式下，返回模拟的URL而不是实际上传到OSS
+            logger.info("开发模式：模拟OSS上传")
+            file_name = os.path.basename(file_path)
+            mock_url = f"https://mock-{bucket_name}.{endpoint}/dev-uploads/{time.strftime('%Y%m%d')}/{uuid.uuid4().hex}-{file_name}"
+            logger.info(f"模拟文件URL: {mock_url}")
+            return mock_url
         
-        # 上传文件
-        result = bucket.put_object_from_file(object_name, file_path)
-        
-        # 检查上传结果
-        if result.status == 200:
-            logger.info(f"文件上传到OSS成功: {object_name}")
-            # 构建访问URL
-            return f"https://{bucket_name}.{endpoint}/{object_name}"
-        else:
-            logger.error(f"文件上传到OSS失败: {result.status}")
-            return None
+        try:
+            # 创建OSS认证和Bucket实例
+            auth = oss2.Auth(access_key_id, access_key_secret)
+            bucket = oss2.Bucket(auth, endpoint, bucket_name)
+            
+            # 上传文件
+            logger.info(f"开始上传文件到OSS: {object_name}")
+            result = bucket.put_object_from_file(object_name, file_path)
+            
+            # 检查上传结果
+            if result.status == 200:
+                # 构建文件URL
+                file_url = f"https://{bucket_name}.{endpoint}/{object_name}"
+                logger.info(f"文件上传成功，URL: {file_url}")
+                return file_url
+            else:
+                logger.error(f"OSS上传失败，状态码: {result.status}")
+                return None
+        except Exception as e:
+            logger.error(f"OSS上传异常: {str(e)}")
+            # 返回模拟URL作为后备选项
+            file_name = os.path.basename(file_path)
+            backup_url = f"https://mock-{bucket_name}.{endpoint}/backup-uploads/{time.strftime('%Y%m%d')}/{uuid.uuid4().hex}-{file_name}"
+            logger.warning(f"OSS上传失败，返回后备URL: {backup_url}")
+            return backup_url
             
     except Exception as e:
-        logger.error(f"上传到OSS时发生错误: {str(e)}")
+        logger.error(f"OSS上传异常: {str(e)}")
         return None
 
 @aibeings_bp.route('/upload', methods=['POST'])

@@ -83,85 +83,34 @@ export default {
     
     async getNewCode() {
       try {
-        // 首先尝试直接获取授权码
-        try {
-          // 计算签名
-          const method = 'GET'
-          const uri = '/api/grant/code/'
-          const timestamp = Math.floor(new Date().getTime() / 1000)
-          const signString = `${method}@${uri}@${timestamp}`
-          
-          // 使用HMAC-SHA1算法进行加密
-          const hash = CryptoJS.HmacSHA1(signString, this.config.secret)
-          // 将加密结果输出为Base64编码
-          const signature = CryptoJS.enc.Base64.stringify(hash)
-          
-          // 构建请求URL和头信息
-          const aipptApiUrl = 'https://co.aippt.cn/api/grant/code/'
-          
-          const headers = {
-            'x-api-key': this.config.appkey,
-            'x-timestamp': timestamp.toString(),
-            'x-signature': signature,
+        console.log('通过后端代理获取授权码')
+        
+        // 直接使用相对路径，不再通过环境变量判断
+        const url = '/aippt-proxy/grant/code?uid=1&channel=ezijing'
+        
+        console.log('通过后端代理获取授权码，请求URL:', url)
+        
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
             'Accept': 'application/json'
-          }
-          
-          // 构建请求参数 - 固定uid=1和channel=ezijing
-          const params = new URLSearchParams({
-            uid: '1',
-            channel: 'ezijing'
-          })
-          
-          // 请求授权码
-          const response = await fetch(`${aipptApiUrl}?${params.toString()}`, {
-            method: 'GET',
-            headers: headers
-          })
-          
-          if (!response.ok) {
-            throw new Error(`请求失败: ${response.status} ${response.statusText}`)
-          }
-          
-          const data = await response.json()
-          
-          if (data.code === 0 && data.data && data.data.code) {
-            // 保存授权码数据到localStorage
-            this.saveCodeData(data.data)
-            console.log('直接获取授权码成功')
-            return data.data.code
-          } else {
-            throw new Error(data.msg || '获取授权码失败')
-          }
-        } catch (directError) {
-          console.warn('直接获取授权码失败，尝试通过后端代理获取:', directError.message)
-          
-          // 通过后端代理获取授权码
-          const baseUrl = process.env.NODE_ENV === 'development' ? '' : '';
-          const url = `${baseUrl}/aippt-proxy/grant/code?uid=1&channel=ezijing`
-          
-          console.log('通过后端代理获取授权码，请求URL:', url)
-          
-          const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-              'Accept': 'application/json'
-            }
-          })
-          
-          if (!response.ok) {
-            throw new Error(`通过后端代理获取授权码失败: ${response.status} ${response.statusText}`)
-          }
-          
-          const data = await response.json()
-          
-          if (data.code === 0 && data.data && data.data.code) {
-            // 保存授权码数据到localStorage
-            this.saveCodeData(data.data)
-            console.log('通过后端代理获取授权码成功')
-            return data.data.code
-          } else {
-            throw new Error(data.msg || '通过后端代理获取授权码失败')
-          }
+          },
+          credentials: 'same-origin'
+        })
+        
+        if (!response.ok) {
+          throw new Error(`通过后端代理获取授权码失败: ${response.status} ${response.statusText}`)
+        }
+        
+        const data = await response.json()
+        
+        if (data.code === 0 && data.data && data.data.code) {
+          // 保存授权码数据到localStorage
+          this.saveCodeData(data.data)
+          console.log('通过后端代理获取授权码成功')
+          return data.data.code
+        } else {
+          throw new Error(data.msg || '通过后端代理获取授权码失败')
         }
       } catch (error) {
         console.error('获取授权码异常:', error)
@@ -185,7 +134,14 @@ export default {
         } else {
           // 获取新的授权码
           console.log('获取新的授权码')
-          code = await this.getNewCode()
+          try {
+            code = await this.getNewCode()
+          } catch (error) {
+            console.error('获取授权码失败:', error)
+            // 检查后端服务是否正常运行
+            this.errorMsg = `获取授权码失败: ${error.message}。请确保后端服务(端口9000)已正常启动。`
+            return
+          }
         }
         
         // 3. 初始化AIPPT

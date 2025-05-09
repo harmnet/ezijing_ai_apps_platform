@@ -1,13 +1,14 @@
 <template>
-  <div class="ad-slogan-page">
+  <div class="ad-slogan-page text-creation-page">
     <div class="page-header">
       <div class="page-nav">
         <h2>广告语生成</h2>
       </div>
       <div class="page-actions">
-        <button class="action-btn" title="创作小贴士" @click="showTips">
-          <i class="ri-lightbulb-line"></i>
-        </button>
+        <div class="learn-button" @click="showTipsModal = true">
+          <i class="ri-lightbulb-flash-line"></i>
+          <span>知识学习</span>
+        </div>
       </div>
     </div>
     
@@ -151,10 +152,6 @@
                 <i class="ri-loader-4-line spinning" v-else></i>
                 {{ isLoading ? '生成中...' : '重新生成' }}
               </button>
-              <button @click="copyAllSlogans" class="secondary-button" :disabled="isLoading || slogans.length === 0">
-                <i class="ri-file-copy-line"></i>
-                复制全部
-              </button>
               <button @click="showPrompt" class="prompt-button" :disabled="!lastUsedPrompt">
                 <i class="ri-code-line"></i>
                 查看提示词
@@ -171,19 +168,22 @@
             
             <div v-if="slogans.length === 0 && !isLoading" class="empty-result">
               <div class="empty-content">
-                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgZmlsbC1vcGFjaXR5PSIuMDgiIGZpbGw9IiNEOEQ4RDgiIGN4PSI2NCIgY3k9IjY0IiByPSI2NCIvPjxwYXRoIGQ9Ik00MS41OTkgNDkuODhjMS4xIDAgMiAuOSAyIDJ2MzIuMjRjMCAxLjEtLjkgMi0yIDJoLTguOTdhLjk3Ljk3IDAgMDEtLjk1LS45NSAwIDAgMCAwLS4wNCAwIDAgMCAwLS4wM3YtMjkuNTFjMC0xLjk5IDEuNjItMy42MiAzLjYyLTMuNjJsMCAwUTQxLjU5OCA0OS44OTggNDEuNTk5IDQ5Ljg4ek04Ni4wNyA0OS44OGMxLjEgMCAyIC45IDIgMnYzMi4yNGMwIDEuMS0uOSAyLTIgMmgtOC45N3MtLjk2LS43OS0uOTYtLjk2VjUyLjgyYzAtMS42MiAxLjMyLTIuOTUgMi45NS0yLjk1bDAgMGg2Ljk4ek02NC4wNyA0Ni44M2MxLjMxIDAgMi4zNyAxLjA2IDIuMzcgMi4zN3YzNC44OGMwIDEuMzEtMS4wNiAyLjM3LTIuMzcgMi4zN2gtOS43YTIuMzcgMi4zNyAwIDAxLTIuMzctMi4zN1Y0OS4yYzAtMS4zMSAxLjA2LTIuMzcgMi4zNy0yLjM3bDAgMGg5LjciIGZpbGw9IiNFMUUxRTEiLz48cGF0aCBkPSJNMzIuNjMgNjkuNzVjMCAyLjYgMi4xMSA0LjcxIDQuNzEgNC43MXMyLjYtMi4xMSA0LjctNC43MS0yLjExLTQuNzEtNC43LTQuNzEtNC43MSAyLjExLTQuNzEgNC43MXpNODcuMDMgNjkuNzVjMCAyLjYtMi4xMSA0LjcxLTQuNzEgNC43MXMtNC43MS0yLjExLTQuNzEtNC43MSAyLjExLTQuNzEgNC43MS00LjcxIDQuNzEgMi4xMSA0LjcxIDQuNzF6TTY0LjQgNjcuMzhjMCAzLjczLTMuMDIgNi43NS02Ljc1IDYuNzVzLTYuNzYtMy4wMi02Ljc2LTYuNzUgMy4wMy02Ljc2IDYuNzYtNi43NiA2Ljc1IDMuMDMgNi43NSA2Ljc2eiIgZmlsbD0iI0JBMDA0MCIgZmlsbC1vcGFjaXR5PSIuNSIvPjwvZz48L3N2Zz4=" class="empty-image" alt="暂无数据" />
+                <img src="@/assets/images/no_data.png" class="empty-image" alt="暂无数据" />
                 <p class="empty-message">暂无广告语，请点击"生成广告语"按钮开始创作</p>
               </div>
             </div>
             
             <div v-else-if="slogans.length > 0" class="slogan-results" :class="{'blur-content': isLoading}">
               <!-- 添加离线模式提示条 -->
-              <div v-if="slogans.length > 0 && slogans[0].isOfflineGenerated" class="offline-mode-banner">
+              <div v-if="showOfflineBanner" class="offline-mode-banner">
                 <i class="ri-information-line"></i>
                 <span>您当前正在使用离线模式，生成的是基础模板广告语。要获得AI生成的更优质广告语，请联系管理员启动后端服务。</span>
               </div>
               
               <div v-for="(slogan, index) in slogans" :key="index" class="slogan-item">
+                <div class="slogan-number">
+                  <span>{{ index + 1 }}</span>
+                </div>
                 <div class="slogan-content">{{ slogan.text }}</div>
                 <div class="slogan-actions">
                   <button @click="copySlogan(slogan.text)" class="action-button">
@@ -198,29 +198,25 @@
       </div>
     </div>
     
-    <!-- 创作小贴士模态框 -->
-    <div class="modal" v-if="showTipsModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3><i class="ri-lightbulb-line"></i> 创作小贴士</h3>
-          <button class="close-btn" @click="showTipsModal = false">
-            <i class="ri-close-line"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <ul class="tips-list">
-            <li>提供详细的产品信息，有助于AI生成更有针对性的广告语</li>
-            <li>可以尝试不同的风格，看哪种更适合您的品牌调性</li>
-            <li>好的广告语通常简短有力，容易记忆</li>
-            <li>考虑目标受众的偏好和语言习惯</li>
-            <li>可以多次生成，从中选择最适合的内容</li>
-            <li>注意产品特点与广告语风格的匹配度</li>
-            <li>简短有力的广告语往往比长篇大论更有效</li>
-            <li>尝试使用押韵、对比或双关语等修辞手法增强记忆点</li>
-          </ul>
+    <!-- 创作小贴士侧边栏 -->
+    <el-drawer
+      v-model="showTipsModal"
+      title="广告语创作指南"
+      direction="rtl"
+      size="30%"
+      :destroy-on-close="false"
+      class="knowledge-drawer"
+    >
+      <div class="knowledge-content">
+        <div v-for="(item, index) in adSloganKnowledge" :key="index" class="knowledge-section">
+          <h3 class="knowledge-subtitle">
+            <i :class="item.icon" class="knowledge-icon"></i>
+            {{ item.subtitle }}
+          </h3>
+          <div class="knowledge-text" v-html="formatMarkdown(item.text)"></div>
         </div>
       </div>
-    </div>
+    </el-drawer>
     
     <!-- 提示词查看模态框 -->
     <div class="modal" v-if="showPromptModal">
@@ -248,10 +244,11 @@
 
 <script>
 import axios from 'axios'
+import '@/assets/css/text-creation-common.css'
 
 // 创建axios实例，配置baseURL
 const apiClient = axios.create({
-  baseURL: 'http://localhost:9000', // 后端服务地址
+  baseURL: window.APP_CONFIG.API_BASE_URL, // 后端服务地址
   timeout: 30000 // 请求超时时间
 });
 
@@ -275,6 +272,39 @@ export default {
       isLoading: false,
       loadingText: '',
       validationErrors: [],
+      // 添加广告语概念知识数据
+      adSloganKnowledge: [
+        {
+          subtitle: '广告语的定义与作用',
+          icon: 'ri-question-line',
+          text: '广告语（Slogan）是广告创意的核心表达，是品牌识别系统中的关键听觉元素。在市场营销学中，广告语作为品牌传播的重要载体，具有提高品牌识别度、传递品牌核心价值、增强用户记忆和促进购买决策的功能。现代广告语不仅是产品信息的传递者，更是品牌文化和情感连接的建立者。'
+        },
+        {
+          subtitle: '广告语的理论基础',
+          icon: 'ri-book-line',
+          text: '**AIDA模型**：优秀广告语遵循注意(Attention)、兴趣(Interest)、欲望(Desire)和行动(Action)的心理路径。\n\n**USP理论**：独特销售主张(Unique Selling Proposition)强调广告语应凸显产品独特优势。\n\n**品牌定位理论**：广告语是品牌定位的直接表达，应符合品牌在用户心智中的预期位置。\n\n**消费者行为学**：广告语设计应基于目标受众的认知特点、价值观和行为习惯。\n\n**修辞学原理**：运用比喻、拟人、对比等修辞手法增强表现力和记忆点。'
+        },
+        {
+          subtitle: '广告语的类型与结构',
+          icon: 'ri-folder-line',
+          text: '**从表达方式看**：\n- 陈述型：直接阐述产品特性，如"农夫山泉，有点甜"\n- 诉求型：明确表达品牌主张，如"Just Do It"\n- 情感型：唤起情感共鸣，如"家是温暖的港湾"\n- 问题型：引发思考，如"你的电脑需要Intel Inside吗?"\n\n**从结构形式看**：\n- 单句式：简短有力，如"I\'m lovin\' it"\n- 对偶式：平行结构，如"好吃不上火，健康中国人"\n- 递进式：层层深入，如"想GET，就Go"\n- 反问式：设问引思，如"我的未来不是梦?"\n\n**从沟通目标看**：\n- 功能型：强调产品功能，如"给我一面墙，还您万丈光"\n- 形象型：塑造品牌形象，如"永远的经典"\n- 行动型：促使立即行动，如"就是要你买"'
+        },
+        {
+          subtitle: '人工智能在广告语创作中的应用',
+          icon: 'ri-robot-line',
+          text: '**AI辅助创作原理**：现代大语言模型(如GPT、DeepSeek)通过分析海量文本数据，学习语言模式、修辞技巧和品牌表达，能够生成符合品牌调性的广告语候选。\n\n**AI创作优势**：\n- 创意多样性：短时间内生成多种表达方案\n- 语境适应性：根据不同产品特性快速调整创作方向\n- 数据驱动：基于历史成功案例的分析优化创作效果\n\n**人机协作最佳实践**：\n- 明确输入：提供详细的产品信息、目标受众和品牌调性\n- 创意筛选：AI生成多个方案后由人工进行筛选和优化\n- 迭代优化：根据反馈调整提示词(Prompt)获得更精准的结果\n\n**AI广告语评估标准**：\n- 相关性：与产品/服务的匹配程度\n- 独特性：区别于竞品的差异化表达\n- 记忆度：易于传播和记忆的程度\n- 情感共鸣：引发目标受众情感反应的能力'
+        },
+        {
+          subtitle: '广告语创作的专业流程',
+          icon: 'ri-flow-chart',
+          text: '**市场调研**：分析目标受众、竞品广告语和市场定位。\n\n**品牌分析**：明确品牌核心价值、个性特征和传播目标。\n\n**创意发散**：头脑风暴多种表达方式，结合AI辅助生成多样化选项。\n\n**评估筛选**：根据CRITIC标准(创造性、相关性、影响力、信任度、独特性、清晰度)评估。\n\n**测试验证**：通过小规模用户测试评估记忆度和接受度。\n\n**落地应用**：将广告语融入整体营销传播体系，保持一致性。\n\n**效果追踪**：监测广告语在品牌识别、销售转化等方面的实际效果。'
+        },
+        {
+          subtitle: '跨文化广告语创作与本地化',
+          icon: 'ri-global-line',
+          text: '**跨文化适应**：广告语在国际化过程中需要考虑语言、文化差异和地域禁忌。\n\n**本地化策略**：\n- 直译法：保持原意直接翻译，适用于简单明了的广告语\n- 意译法：保留核心概念，调整表达方式适应本地文化\n- 重创法：根据本地市场重新创作，保持品牌调性\n\n**经典案例**：\n- 可口可乐："Taste the Feeling"全球统一\n- 肯德基："Finger Lickin\' Good"在中国本地化为"吮指原味鸡"\n- 耐克："Just Do It"保持全球一致，强化品牌核心价值\n\n**AI辅助本地化**：利用多语言理解能力，AI可以协助评估广告语在不同文化背景下的含义和接受度，提供本地化建议。'
+        }
+      ],
       examples: [
         { title: 'Nike', desc: 'Just Do It', icon: 'ri-run-line', style: 'inspirational', productDesc: '专业运动鞋品牌，提供高品质运动装备，帮助运动员和健身爱好者追求卓越表现。', targetAudience: '运动爱好者、健身人士、专业运动员' },
         { title: 'Apple', desc: 'Think Different', icon: 'ri-apple-fill', style: 'professional', productDesc: '创新科技公司，提供易用、美观且功能强大的电子设备和服务，改变人们的生活方式。', targetAudience: '科技爱好者、创意工作者、商务人士' },
@@ -307,6 +337,29 @@ export default {
       
       const maxVisibleCards = Math.floor(carousel.clientWidth / 295);
       return this.currentExampleIndex >= this.examples.length - maxVisibleCards;
+    },
+    
+    // 获取当前选择的风格的中文名称
+    currentStyleName() {
+      const styleMap = {
+        'professional': '专业正式',
+        'friendly': '亲切友好',
+        'humorous': '幽默风趣',
+        'dramatic': '戏剧性强', 
+        'inspirational': '励志鼓舞'
+      };
+      
+      return styleMap[this.sloganStyle] || this.sloganStyle;
+    },
+    
+    // 判断表单是否有效
+    isFormValid() {
+      return this.productName.trim() !== '';
+    },
+    
+    // 判断是否显示离线模式提示
+    showOfflineBanner() {
+      return this.slogans.length > 0 && this.slogans[0].isOfflineGenerated;
     }
   },
 
@@ -373,18 +426,14 @@ export default {
     async generateSlogans() {
       if (this.isLoading) return;
       
+      // 使用计算属性验证表单
+      if (!this.isFormValid) {
+        this.$message ? this.$message.error('请输入产品名称') : 
+          alert('请输入产品名称');
+        return;
+      }
+      
       try {
-        this.validationErrors = [];
-        
-        // 验证必填字段
-        if (!this.productName.trim()) {
-          this.validationErrors.push('请输入产品名称');
-        }
-        
-        if (this.validationErrors.length > 0) {
-          return;
-        }
-        
         // 显示加载状态
         this.isLoading = true;
         this.loadingText = '正在生成广告语...';
@@ -400,19 +449,12 @@ export default {
         
         // 如果是离线模式，显示提示
         if (result.offlineMode) {
-          this.$notify && this.$notify({
-            title: '离线模式提示',
-            message: '后端服务不可用，当前显示的是离线生成的广告语。要获得AI生成的更优质广告语，请联系管理员启动后端服务。',
-            type: 'warning',
-            duration: 10000,
-            position: 'top-right'
-          });
+          this.showNotification('离线模式提示', '后端服务不可用，当前显示的是离线生成的广告语。要获得AI生成的更优质广告语，请联系管理员启动后端服务。', 'warning');
         }
       } catch (error) {
         console.error('生成广告语失败:', error);
         // 显示错误信息
-        this.$message ? this.$message.error(error.message || '生成广告语失败') : 
-          alert(error.message || '生成广告语失败');
+        this.showNotification('生成失败', error.message || '生成广告语失败', 'error');
       } finally {
         this.isLoading = false;
       }
@@ -444,7 +486,6 @@ export default {
         
         // 检查是否有可用模型
         if (!this.selectedModel) {
-          console.error('未选择模型');
           throw new Error('请选择AI模型');
         }
         
@@ -458,33 +499,20 @@ export default {
           max_tokens: 2000
         };
         
-        // 记录API请求详情，方便调试
-        console.log('API请求参数:', JSON.stringify(apiParams));
-        
         try {
           // 发送API请求
           const response = await axios.post('/api/v1/llm/chat', apiParams, { timeout: 15000 });
-          console.log('API响应:', response);
           
           if (response.data.status === 'success') {
             const content = response.data.data.choices[0].message.content;
-            console.log('成功获取到结果:', content);
-            
-            // 解析返回的内容
             return this.parseResponse(content);
           } else {
-            console.error('API返回错误:', response.data.message);
             throw new Error(`服务器返回错误: ${response.data.message || '未知错误'}`);
           }
         } catch (error) {
-          console.error('API调用异常:', error);
-          
           // 判断是否是网络错误或服务器不可用
-          if (error.code === 'ECONNABORTED' || !error.response || error.message.includes('Network Error')) {
-            console.warn('后端服务不可用，切换到离线模式');
-            // 离线模式
-            const offlineResult = this.generateOfflineSlogans();
-            return offlineResult;
+          if (this.isNetworkOrServerError(error)) {
+            return this.generateOfflineSlogans();
           }
           
           // 其他API错误
@@ -493,31 +521,44 @@ export default {
       } catch (error) {
         console.error('广告语生成失败:', error);
         
-        // 根据错误类型提供更具体的错误信息
-        let errorMessage = '生成广告语失败';
-        
-        if (error.response) {
-          // 服务器响应了，但状态码不在2xx范围
-          console.error('错误响应数据:', error.response.data);
-          errorMessage += `: 服务器错误 (${error.response.status})`;
-          if (error.response.data && error.response.data.message) {
-            errorMessage += ` - ${error.response.data.message}`;
-          }
-        } else if (error.request) {
-          // 请求已发送但没有收到响应
-          console.error('未收到响应');
-          errorMessage += ': 服务器无响应，切换到离线模式';
-          
-          // 后端不可用时直接返回离线模式结果
+        // 如果是服务器无响应，则使用离线模式
+        if (error.request && !error.response) {
           return this.generateOfflineSlogans();
-        } else {
-          // 请求设置时出错
-          errorMessage += `: ${error.message}`;
         }
         
+        // 构建错误信息
+        let errorMessage = this.formatErrorMessage(error);
         throw new Error(errorMessage);
       } finally {
         this.isLoading = false;
+      }
+    },
+    
+    // 检查是否是网络或服务器错误
+    isNetworkOrServerError(error) {
+      return (
+        error.code === 'ECONNABORTED' || 
+        !error.response || 
+        error.message.includes('Network Error') ||
+        (error.response && error.response.status >= 500)
+      );
+    },
+    
+    // 格式化错误信息
+    formatErrorMessage(error) {
+      if (error.response) {
+        // 服务器响应了，但状态码不在2xx范围
+        let message = `服务器错误 (${error.response.status})`;
+        if (error.response.data && error.response.data.message) {
+          message += ` - ${error.response.data.message}`;
+        }
+        return message;
+      } else if (error.request) {
+        // 请求已发送但没有收到响应
+        return '服务器无响应，切换到离线模式';
+      } else {
+        // 请求设置时出错
+        return error.message || '未知错误';
       }
     },
     
@@ -588,35 +629,44 @@ export default {
     
     // 解析API返回的内容
     parseResponse(content) {
+      if (!content || typeof content !== 'string') {
+        return { slogans: [] };
+      }
+      
       try {
-        console.log('正在解析API返回内容');
-        
-        // 尝试作为JSON解析
+        // 1. 尝试作为JSON解析
         try {
           const jsonData = JSON.parse(content);
+          // 处理数组格式
           if (Array.isArray(jsonData)) {
             return {
               slogans: jsonData.map(item => ({
-                text: typeof item === 'string' ? item : item.slogan || item.text,
+                text: typeof item === 'string' ? item : (item.slogan || item.text || ''),
                 isSelected: false
-              }))
+              })).filter(item => item.text.trim() !== '')
             };
-          } else if (jsonData.slogans && Array.isArray(jsonData.slogans)) {
+          } 
+          // 处理包含slogans字段的对象
+          else if (jsonData.slogans && Array.isArray(jsonData.slogans)) {
             return {
               slogans: jsonData.slogans.map(item => ({
-                text: typeof item === 'string' ? item : item.slogan || item.text,
+                text: typeof item === 'string' ? item : (item.slogan || item.text || ''),
                 isSelected: false
-              }))
+              })).filter(item => item.text.trim() !== '')
             };
           }
+          // 处理其他有效的JSON但不符合预期格式
+          else {
+            console.log('JSON格式不符合预期，尝试文本处理', jsonData);
+          }
         } catch (e) {
-          console.log('内容不是有效JSON，尝试文本处理');
+          // JSON解析失败，继续下一步
         }
         
-        // 如果不是JSON，尝试按行分割
+        // 2. 按行分割文本处理
         const lines = content.split('\n').filter(line => line.trim());
         const slogans = lines.map(line => {
-          // 尝试移除序号、破折号等前缀
+          // 移除常见的序号、破折号等前缀
           const cleanLine = line.replace(/^[\d\.\-\*\s]+/, '').trim();
           return {
             text: cleanLine,
@@ -627,32 +677,15 @@ export default {
         return { slogans };
       } catch (error) {
         console.error('解析响应内容失败:', error);
-        throw new Error('解析生成的广告语失败');
+        return { 
+          slogans: [],
+          error: '解析返回内容失败'
+        };
       }
     },
     
     copySlogan(text) {
-      navigator.clipboard.writeText(text)
-        .then(() => {
-          this.$message ? this.$message.success('广告语已复制到剪贴板') : 
-            alert('广告语已复制到剪贴板');
-        })
-        .catch(err => {
-          console.error('复制失败:', err);
-          this.$message ? this.$message.error('复制失败') : 
-            alert('复制失败');
-        });
-    },
-    
-    copyAllSlogans() {
-      const allSlogans = this.slogans.map(item => item.text).join('\n\n');
-      navigator.clipboard.writeText(allSlogans)
-        .then(() => {
-          this.$message ? this.$message.success('所有广告语已复制到剪贴板') : alert('所有广告语已复制到剪贴板');
-        })
-        .catch(err => {
-          console.error('复制失败：', err);
-        });
+      this.copyTextToClipboard(text, '广告语已复制到剪贴板');
     },
     
     resetForm() {
@@ -694,35 +727,57 @@ export default {
     // 复制提示词到剪贴板
     copyPrompt() {
       if (!this.lastUsedPrompt) return;
+      this.copyTextToClipboard(this.lastUsedPrompt, '提示词已复制到剪贴板');
+    },
+    
+    // 通用的通知方法
+    showNotification(title, message, type = 'info') {
+      if (this.$notify) {
+        this.$notify({
+          title: title,
+          message: message,
+          type: type,
+          duration: 5000,
+          position: 'top-right'
+        });
+      } else if (this.$message) {
+        this.$message[type] ? this.$message[type](message) : this.$message(message);
+      } else {
+        alert(message);
+      }
+    },
+    
+    // 通用的复制文本方法
+    copyTextToClipboard(text, successMessage = '复制成功') {
+      if (!text) return;
       
       try {
         // 检查是否支持clipboard API
         if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(this.lastUsedPrompt)
+          navigator.clipboard.writeText(text)
             .then(() => {
-              this.$message ? this.$message.success('提示词已复制到剪贴板') : 
-                alert('提示词已复制到剪贴板');
+              this.showNotification('成功', successMessage, 'success');
             })
             .catch(err => {
               console.error('复制失败:', err);
-              this.fallbackCopy();
+              this.fallbackCopy(text, successMessage);
             });
         } else {
           // 浏览器不支持clipboard API，使用备选方法
-          this.fallbackCopy();
+          this.fallbackCopy(text, successMessage);
         }
       } catch (error) {
         console.error('复制操作异常:', error);
-        this.fallbackCopy();
+        this.fallbackCopy(text, successMessage);
       }
     },
     
     // 备选的复制方法
-    fallbackCopy() {
+    fallbackCopy(text, successMessage) {
       try {
         // 创建临时textarea元素
         const textArea = document.createElement('textarea');
-        textArea.value = this.lastUsedPrompt;
+        textArea.value = text;
         
         // 设置样式使元素不可见
         textArea.style.position = 'fixed';
@@ -736,19 +791,16 @@ export default {
         
         const successful = document.execCommand('copy');
         if (successful) {
-          this.$message ? this.$message.success('提示词已复制到剪贴板') : 
-            alert('提示词已复制到剪贴板');
+          this.showNotification('成功', successMessage, 'success');
         } else {
-          this.$message ? this.$message.error('复制失败，请手动复制') : 
-            alert('复制失败，请手动复制');
+          this.showNotification('失败', '复制失败，请手动复制', 'error');
         }
         
         // 清理临时元素
         document.body.removeChild(textArea);
       } catch (err) {
         console.error('备选复制方法失败:', err);
-        this.$message ? this.$message.error('复制失败，请手动复制文本') : 
-          alert('复制失败，请手动复制文本');
+        this.showNotification('失败', '复制失败，请手动复制文本', 'error');
       }
     },
     
@@ -766,17 +818,8 @@ export default {
       }
       
       if (this.sloganStyle) {
-        // 转换风格枚举为中文名称
-        const styleMap = {
-          'professional': '专业正式',
-          'friendly': '亲切友好',
-          'humorous': '幽默风趣',
-          'dramatic': '戏剧性强', 
-          'inspirational': '励志鼓舞'
-        };
-        
-        let styleName = styleMap[this.sloganStyle] || this.sloganStyle;
-        prompt += `广告语风格：${styleName}\n`;
+        // 使用计算属性获取风格名称
+        prompt += `广告语风格：${this.currentStyleName}\n`;
       }
       
       prompt += `\n请按照以下要求：
@@ -816,180 +859,52 @@ export default {
         this.$refs.exampleCarousel.style.transition = 'transform 0.3s ease';
       }
     },
+    
+    // 格式化Markdown文本
+    formatMarkdown(text) {
+      if (!text) return '';
+      
+      // 处理加粗
+      let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      
+      // 处理斜体
+      formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      
+      // 处理换行
+      formatted = formatted.replace(/\n\n/g, '<br><br>');
+      
+      // 处理列表
+      formatted = formatted.replace(/- (.*?)(?:\n|$)/g, '<li>$1</li>');
+      formatted = formatted.replace(/<li>/g, '<ul><li>').replace(/<\/li>(?!<li>)/g, '</li></ul>');
+      formatted = formatted.replace(/<\/ul><ul>/g, '');
+      
+      // 处理数字列表
+      formatted = formatted.replace(/(\d+)\. (.*?)(?:\n|$)/g, '<li>$1. $2</li>');
+      
+      return formatted;
+    }
   }
 }
 </script>
 
 <style scoped>
+/* 使用通用CSS类，移除margin-top */
+/* 仅保留特定于广告语生成的样式 */
 .ad-slogan-page {
   padding: 0;
-  margin-top: -40px; /* 只保留这个负边距使整体上移，数值调大 */
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  padding: 0;
-}
-
-.page-nav h2 {
-  font-size: 24px;
-  color: #333;
-  margin: 0;
-}
-
-.page-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.action-btn {
-  background: none;
   border: none;
-  color: #666;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s;
+  border-top: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
 }
 
-.action-btn:hover {
-  background-color: #f5f5f5;
-  color: var(--primary-color, #ba003f);
-  transform: scale(1.1);
-  box-shadow: 0 2px 6px rgba(186, 0, 63, 0.2);
-}
-
-/* 主要内容区域 - 使用两列布局 */
-.main-container {
-  display: flex;
-  gap: 20px;
-}
-
-/* 左侧：输入参数 */
-.input-section {
-  width: 45%;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  padding: 15px;
-}
-
-.form-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.form-group {
-  flex: 1;
-  margin-bottom: 12px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #444;
-  font-size: 14px;
-}
-
-.required:after {
-  content: " *";
-  color: var(--primary-color, #ba003f);
-}
-
-.form-control {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: border-color 0.3s;
-}
-
-.form-control:focus {
-  border-color: var(--primary-color, #ba003f);
-  outline: none;
-}
-
-textarea.form-control {
-  min-height: 100px;
-  resize: vertical;
-}
-
-/* 操作按钮 */
-.action-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 15px;
-}
-
-.btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  height: 54px; /* 原来36px的1.5倍 */
-  padding: 0 16px;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
-}
-
-.btn i {
-  font-size: 16px;
-}
-
-.btn-primary {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  flex: 1;
-}
-
-.btn-primary:hover {
-  background-color: #980034;
-}
-
-.btn-primary:disabled {
-  background-color: #ddd;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background-color: #f5f5f5;
-  color: #333;
-  border: 1px solid #eee;
-}
-
-.btn-secondary:hover {
-  background-color: #e5e5e5;
-}
-
-/* 右侧：参考案例和结果 */
-.right-column {
-  width: 55%;
-  display: flex;
-  flex-direction: column;
-  gap: 15px; /* 添加参考案例和结果之间的间距 */
-}
-
-/* 参考案例部分 - 改为轮播形式 */
+/* 参考案例部分 - 轮播形式样式 */
 .examples-section {
   background-color: #f9f9f9;
   border-radius: 8px;
   padding: 12px 20px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  margin-bottom: 0; /* 移除底部边距 */
+  margin-bottom: 0;
 }
 
 .examples-header {
@@ -999,26 +914,11 @@ textarea.form-control {
   margin-bottom: 10px;
 }
 
-.section-title {
-  display: flex;
-  align-items: center;
-  color: #333;
-  font-size: 16px;
-  margin: 0 0 10px 0;
-  font-weight: 600;
-}
-
-.section-title i {
-  margin-right: 8px;
-  font-size: 20px;
-  color: var(--primary-color, #ba003f);
-}
-
 .example-carousel {
   position: relative;
   overflow: hidden;
   width: 100%;
-  padding-bottom: 5px; /* 添加底部间距避免阴影被裁剪 */
+  padding-bottom: 5px;
 }
 
 .example-cards {
@@ -1027,11 +927,11 @@ textarea.form-control {
   transition: transform 0.3s ease;
   will-change: transform;
   padding: 5px 0;
-  width: max-content; /* 确保足够宽以容纳所有内容 */
+  width: max-content;
 }
 
 .example-card {
-  flex: 0 0 200px; /* 减小固定宽度，显示更多案例 */
+  flex: 0 0 200px;
   display: flex;
   align-items: center;
   background-color: #fff;
@@ -1042,7 +942,7 @@ textarea.form-control {
   transition: all 0.3s;
   flex-direction: row;
   gap: 12px;
-  overflow: hidden; /* 防止内容溢出 */
+  overflow: hidden;
 }
 
 .example-card:hover {
@@ -1074,7 +974,7 @@ textarea.form-control {
   flex-direction: column;
   align-items: flex-start;
   font-size: 14px;
-  overflow: hidden; /* 防止溢出 */
+  overflow: hidden;
 }
 
 .example-brand {
@@ -1086,13 +986,13 @@ textarea.form-control {
 .example-slogan {
   font-size: 14px;
   color: #666;
-  display: none; /* 默认隐藏广告语 */
+  display: none;
   overflow: hidden;
-  text-overflow: ellipsis; /* 文本过长时显示省略号 */
+  text-overflow: ellipsis;
 }
 
 .example-card:hover .example-slogan {
-  display: block; /* 悬浮时显示广告语 */
+  display: block;
 }
 
 /* 轮播控制按钮样式 */
@@ -1124,67 +1024,68 @@ textarea.form-control {
   font-size: 18px;
 }
 
-/* 结果展示部分 */
-.result-section {
-  flex: 1;
+.carousel-control.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.carousel-control.disabled:hover {
   background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  padding: 0; /* 移除内边距 */
+  color: inherit;
+  border-color: #ddd;
 }
 
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 15px;
-  border-bottom: 1px solid #eee;
-  background-color: #fff;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-}
-
-.section-header h2 {
-  margin: 0;
-  font-size: 18px; /* 减小标题大小 */
-}
-
-.result-content-wrapper {
-  position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 300px; /* 确保有足够的高度显示加载动画 */
-}
-
+/* 广告语展示项特定样式 */
 .slogan-results {
   flex: 1;
-  padding: 15px;
+  padding: 20px;
   overflow-y: auto;
 }
 
 .slogan-item {
-  background-color: #f9f9f9;
+  background-color: #fff;
   border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  border-left: 3px solid var(--primary-color, #8B0A50);
+  border-top: none;
+  border-bottom: none;
+  border-right: none;
 }
 
 .slogan-item:hover {
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  background-color: #fcfcfc;
+}
+
+.slogan-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  margin-right: 12px;
+  border-radius: 50%;
+  background-color: var(--primary-color, #ba003f);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(186, 0, 63, 0.3);
 }
 
 .slogan-content {
   font-size: 16px;
   color: #333;
   flex: 1;
+  line-height: 1.5;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
 }
 
 .slogan-actions {
@@ -1192,232 +1093,7 @@ textarea.form-control {
   margin-left: 15px;
 }
 
-.action-button {
-  background: none;
-  border: none;
-  color: #666;
-  padding: 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 16px;
-}
-
-.action-button:hover {
-  color: var(--primary-color, #ba003f);
-  background-color: #f0f0f0;
-}
-
-/* 模态框样式 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: #fff;
-  border-radius: 8px;
-  width: 80%;
-  max-width: 800px;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
-  animation: modal-pop 0.3s ease-out;
-}
-
-@keyframes modal-pop {
-  0% { transform: scale(0.9); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.modal-header h3 i {
-  color: var(--primary-color, #ba003f);
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: #666;
-  font-size: 20px;
-  cursor: pointer;
-}
-
-.modal-body {
-  padding: 20px;
-  overflow-y: auto;
-  max-height: calc(80vh - 60px);
-}
-
-/* 历史记录样式 */
-.history-records {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-}
-
-.history-record {
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 15px;
-  border: 1px solid #eee;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.history-record:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-}
-
-.history-date {
-  font-size: 12px;
-  color: #888;
-  margin-bottom: 8px;
-}
-
-.history-product {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 10px;
-  color: var(--primary-color, #ba003f);
-}
-
-.history-slogans {
-  margin-top: 10px;
-}
-
-.history-slogan {
-  padding: 8px 10px;
-  background-color: white;
-  border-radius: 4px;
-  margin-bottom: 8px;
-  font-size: 14px;
-  border: 1px solid #eee;
-}
-
-.more-slogans {
-  text-align: center;
-  color: #888;
-  font-size: 13px;
-  margin-top: 5px;
-}
-
-.history-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 10px;
-}
-
-.history-btn {
-  padding: 6px 10px;
-  font-size: 12px;
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.history-btn:hover {
-  background-color: #980034;
-}
-
-.empty-history {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px 0;
-  color: #999;
-}
-
-.empty-history i {
-  font-size: 40px;
-  margin-bottom: 16px;
-}
-
-/* 小贴士样式 */
-.tips-list {
-  padding-left: 20px;
-  margin: 0;
-}
-
-.tips-list li {
-  margin-bottom: 12px;
-  color: #555;
-}
-
-/* 响应式布局 */
-@media (max-width: 992px) {
-  .main-container {
-    flex-direction: column;
-  }
-  
-  .input-section, .right-column {
-    width: 100%;
-  }
-  
-  .history-records {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .history-records {
-    grid-template-columns: 1fr;
-  }
-  
-  .example-cards {
-    justify-content: flex-start;
-  }
-  
-  .example-card {
-    flex: 0 0 130px;
-  }
-}
-
-/* 添加样式 */
-.model-loading {
-  display: flex;
-  align-items: center;
-  font-size: 13px;
-  color: #666;
-  margin-top: 5px;
-}
-
-.model-loading i {
-  font-size: 14px;
-  margin-right: 6px;
-  animation: spin 1.5s linear infinite;
-}
-
+/* 离线模式提示条样式 */
 .offline-mode-banner {
   display: flex;
   align-items: center;
@@ -1435,219 +1111,21 @@ textarea.form-control {
   font-size: 18px;
 }
 
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+.model-loading {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  background-color: rgba(255, 255, 255, 0.8);
-  z-index: 5;
-  border-radius: 0 0 8px 8px; /* 圆角与结果区域一致 */
-}
-
-.loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 5px solid rgba(186, 0, 63, 0.1);
-  border-radius: 50%;
-  border-top-color: var(--primary-color, #ba003f);
-  animation: spin 1s ease-in-out infinite;
-  margin: 0 auto 20px;
-}
-
-.loading-text {
-  font-size: 16px;
-  color: var(--primary-color, #ba003f);
-  font-weight: 500;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.empty-result {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  min-height: 350px;
-  background-color: #fff;
-  border-radius: 8px;
+  font-size: 13px;
   color: #666;
-  text-align: center;
+  margin-top: 5px;
 }
 
-.empty-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-}
-
-.empty-image {
-  width: 120px;
-  height: 120px;
-  margin-bottom: 20px;
-}
-
-.empty-message {
-  margin: 0 0 20px;
-  font-size: 16px;
-  color: #666;
-}
-
-.primary-button {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  border: none;
-  padding: 6px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.model-loading i {
   font-size: 14px;
-}
-
-.primary-button:hover {
-  background-color: #980034;
-}
-
-.secondary-button {
-  background-color: #f5f5f5;
-  color: #333;
-  border: 1px solid #eee;
-  padding: 6px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 14px;
-}
-
-.secondary-button:hover {
-  background-color: #e5e5e5;
-}
-
-.section-header {
-  position: sticky;
-  top: 0;
-  background-color: #fff;
-  z-index: 100;
-  padding: 15px 15px 20px; /* 增加底部内边距从10px到20px */
-  margin: -15px -15px 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-
-/* 结果展示部分标题也固定 */
-.result-section .section-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background-color: #fff;
-}
-
-@media (max-width: 1400px) {
-  .example-card {
-    flex: 0 0 180px; /* 在较窄的屏幕上减小卡片宽度 */
-  }
-}
-
-@media (max-width: 1200px) {
-  .example-card {
-    flex: 0 0 160px; /* 在更窄的屏幕上进一步减小卡片宽度 */
-  }
-}
-
-/* 禁用状态的轮播按钮 */
-.carousel-control.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.carousel-control.disabled:hover {
-  background-color: #fff;
-  color: inherit;
-  border-color: #ddd;
-}
-
-.blur-content {
-  filter: blur(1px);
-  opacity: 0.6;
-  pointer-events: none; /* 防止与模糊内容交互 */
-}
-
-/* 为按钮添加禁用状态样式 */
-.primary-button:disabled,
-.secondary-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #ccc;
-  color: #666;
-  border-color: #ccc;
-}
-
-.primary-button:disabled:hover {
-  background-color: #ccc;
-  transform: none;
-  box-shadow: none;
-}
-
-.secondary-button:disabled:hover {
-  background-color: #f5f5f5;
-  transform: none;
-}
-
-/* 添加旋转动画样式 */
-.spinning {
+  margin-right: 6px;
   animation: spin 1.5s linear infinite;
-  display: inline-block;
 }
 
-.result-section {
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  position: relative; /* 为了绝对定位loading overlay */
-  overflow: hidden; /* 保持内容在边界内 */
-}
-
-/* 提示词按钮样式 */
-.prompt-button {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  border: none;
-  padding: 6px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 14px;
-}
-
-.prompt-button:hover {
-  background-color: #980034;
-}
-
-.prompt-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #ccc;
-  color: #666;
-}
-
-/* 提示词模态框样式 */
+/* 提示词模态框特定样式 */
 .prompt-modal {
   width: 90%;
   max-width: 1000px;
@@ -1679,127 +1157,26 @@ textarea.form-control {
   margin-top: 15px;
 }
 
-/* 下拉菜单的自定义样式 */
-select.form-control {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
-  background-repeat: no-repeat;
-  background-position: calc(100% - 12px) center;
-  background-size: 12px;
-  padding-right: 32px;
-  cursor: pointer;
-  transition: all 0.3s;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+/* 响应式特定调整 */
+@media (max-width: 1400px) {
+  .example-card {
+    flex: 0 0 180px;
+  }
 }
 
-select.form-control:hover {
-  border-color: #bbb;
-  background-color: #f9f9f9;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+@media (max-width: 1200px) {
+  .example-card {
+    flex: 0 0 160px;
+  }
 }
 
-select.form-control:focus {
-  border-color: var(--primary-color, #ba003f);
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23ba003f' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
-}
-
-/* 模型选择下拉菜单特殊样式 */
-#model-select {
-  background-color: #f8f8f8;
-  border: 1px solid #ddd;
-  font-weight: 500;
-  position: relative;
-}
-
-#model-select:focus {
-  background-color: #fff;
-  border-color: var(--primary-color, #ba003f);
-}
-
-/* 下拉菜单选项样式 */
-select.form-control option {
-  font-weight: normal;
-  background-color: white;
-  color: #333;
-  padding: 8px;
-}
-
-/* 表单控件容器样式优化 */
-.form-group {
-  margin-bottom: 16px;
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.form-group:hover label {
-  color: var(--primary-color, #ba003f);
-}
-
-/* 标签动画效果 */
-.form-group label {
-  transition: color 0.3s ease;
-  font-weight: 500;
-  display: block;
-  margin-bottom: 6px;
-}
-
-/* 焦点状态下整个表单组的效果 */
-.form-group:focus-within {
-  transform: translateY(-2px);
-}
-
-/* 按钮动画效果 */
-.btn {
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.btn:active {
-  transform: scale(0.96);
-}
-
-.btn-primary:hover {
-  box-shadow: 0 4px 12px rgba(186, 0, 63, 0.2);
-  transform: translateY(-2px);
-}
-
-.btn-secondary:hover {
-  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.15);
-  transform: translateY(-2px);
-}
-
-/* 文本区域样式优化 */
-textarea.form-control {
-  min-height: 100px;
-  line-height: 1.5;
-  resize: vertical;
-  background-color: #fafafa;
-  transition: all 0.3s ease;
-}
-
-textarea.form-control:focus {
-  background-color: #fff;
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-.offline-mode-banner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background-color: #fff9e6;
-  border: 1px solid #ffeeba;
-  border-radius: 4px;
-  padding: 12px;
-  margin: 12px;
-  color: #856404;
-  font-size: 14px;
-}
-
-.offline-mode-banner i {
-  font-size: 18px;
+@media (max-width: 768px) {
+  .example-cards {
+    justify-content: flex-start;
+  }
+  
+  .example-card {
+    flex: 0 0 130px;
+  }
 }
 </style> 

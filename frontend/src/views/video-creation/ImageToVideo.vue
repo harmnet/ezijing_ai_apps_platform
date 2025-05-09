@@ -2,7 +2,7 @@
   <div class="longform-article-page">
     <div class="page-header">
       <div class="page-nav">
-        <h2 class="page-title test-style">AI图生视频 - 新版</h2>
+        <h2 class="page-title">AI图生视频 - 新版</h2>
       </div>
       <div class="page-actions">
         <button class="action-btn" title="历史记录" @click="showHistoryModal = true">
@@ -23,12 +23,6 @@
             <i class="ri-settings-3-line icon-red"></i>
             输入参数
           </h3>
-        </div>
-
-        <!-- 添加API版本提示 -->
-        <div class="api-version-banner">
-          <i class="ri-fire-line"></i>
-          <span>使用全新火山引擎API，视频质量更佳！</span>
         </div>
 
         <!-- 调整位置：先上传图片，再输入文本提示词 -->
@@ -184,7 +178,6 @@
             <li>生成的视频链接有效期为24小时，请及时下载保存</li>
             <li>视频生成通常需要1-3分钟，请耐心等待</li>
             <li>提示词越详细，生成的视频质量越高</li>
-            <li><strong>使用全新火山引擎API，视频质量更佳，生成速度更快</strong></li>
           </ul>
         </div>
 
@@ -758,7 +751,7 @@ export default {
             console.log('发送创建任务请求:', requestData);
             // 更改为新的图生视频API端点
             response = await axios.post('/api/v1/image-to-videos/create', requestData, {
-              timeout: 300000, // 5分钟超时
+              timeout: 120000, // 120秒超时
               headers: this.getRequestHeaders()
             });
             break; // 成功则跳出循环
@@ -914,7 +907,7 @@ export default {
             console.log(`查询任务ID ${this.taskId} 的状态`);
             // 更改为新的图生视频API端点
             response = await axios.get(`/api/v1/image-to-videos/query?task_id=${this.taskId}`, {
-              timeout: 300000, // 5分钟超时
+              timeout: 120000, // 120秒超时
               headers: this.getRequestHeaders()
             });
             break; // 成功则跳出循环
@@ -3891,5 +3884,18 @@ export default {
 .api-version-banner i {
   margin-right: 8px;
   font-size: 18px;
+}
+
+/* 标题样式优化 */
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  padding: 0;
+  letter-spacing: 0.5px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 </style> 

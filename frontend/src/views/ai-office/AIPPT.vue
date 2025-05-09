@@ -537,7 +537,7 @@ export default {
     // 初始化模板相关数据
     this.loadTemplateSuits();
   },
-  beforeDestroy() {
+  beforeUnmount() {
     // 移除事件监听器
     window.removeEventListener('beforeunload', this.handleBeforeUnload);
   },

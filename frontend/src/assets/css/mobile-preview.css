@@ -1,0 +1,404 @@
+/* 手机预览视图通用样式 */
+
+/* ========== 微信文章手机预览样式 ========== */
+.wechat-phone-mockup {
+  background-color: #fff;
+  border-radius: 36px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  width: 100%;
+  max-width: 375px;
+  height: 700px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border: 10px solid #333;
+}
+
+.wechat-status-bar {
+  background-color: #f2f2f2;
+  padding: 6px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.status-time {
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+}
+
+.status-icons {
+  display: flex;
+  gap: 6px;
+}
+
+.status-icons i {
+  font-size: 14px;
+  color: #333;
+}
+
+.wechat-app-header {
+  background-color: #f7f7f7;
+  padding: 12px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e6e6e6;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.wechat-back-button {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #07c160;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.wechat-title {
+  font-size: 17px;
+  color: #333;
+  font-weight: 500;
+}
+
+.wechat-more-button {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.wechat-article-container {
+  flex: 1;
+  overflow-y: auto;
+  background-color: #fff;
+  height: calc(100% - 90px);
+}
+
+.wechat-article-cover {
+  margin-bottom: 20px;
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f7f7f7;
+  position: relative;
+}
+
+.image-loading-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  z-index: 1;
+}
+
+.image-loading-indicator i {
+  font-size: 24px;
+  color: #999;
+}
+
+.image-loading-indicator span {
+  font-size: 14px;
+  color: #999;
+}
+
+.wechat-article-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.3s ease;
+  position: relative;
+  z-index: 2;
+  opacity: 0;
+}
+
+.wechat-article-cover img.loaded {
+  opacity: 1;
+}
+
+.wechat-article-content {
+  padding: 0 15px 20px;
+  font-size: 16px;
+  line-height: 1.8;
+  color: #333;
+}
+
+.wechat-article-content h1 {
+  font-size: 22px;
+  font-weight: bold;
+  margin: 0 0 15px 0;
+  line-height: 1.4;
+  color: #222;
+}
+
+.wechat-article-content h2 {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 20px 0 12px;
+  color: #333;
+}
+
+.wechat-article-content h3 {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 18px 0 10px;
+  color: #444;
+}
+
+.wechat-article-content p {
+  margin-bottom: 15px;
+  font-size: 15px;
+  line-height: 1.8;
+  letter-spacing: 0.03em;
+  color: #3f3f3f;
+}
+
+.wechat-article-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 25px;
+  padding: 15px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.wechat-article-author {
+  display: flex;
+  align-items: center;
+}
+
+.author-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #07c160;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.author-avatar i {
+  font-size: 18px;
+  color: white;
+}
+
+.author-name {
+  font-size: 14px;
+  color: #576b95;
+  font-weight: 500;
+}
+
+.wechat-article-date {
+  font-size: 13px;
+  color: #999;
+}
+
+.wechat-interaction-bar {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0;
+  background-color: #f7f7f7;
+  border-top: 1px solid #e6e6e6;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
+
+.interaction-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #576b95;
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.interaction-item:hover {
+  background-color: #e6e6e6;
+}
+
+.interaction-item i {
+  font-size: 18px;
+}
+
+.interaction-item span {
+  font-size: 13px;
+}
+
+/* 流式输出相关样式 */
+.wechat-streaming-indicator {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  padding: 8px 15px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.wechat-dot-typing {
+  position: relative;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #07c160;
+  margin-right: 10px;
+  animation: wechat-dot-typing 1.2s infinite linear;
+}
+
+.wechat-dot-typing::before,
+.wechat-dot-typing::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #07c160;
+  animation: wechat-dot-typing 1.2s infinite linear;
+}
+
+.wechat-dot-typing::before {
+  left: -10px;
+  animation-delay: 0s;
+}
+
+.wechat-dot-typing::after {
+  left: 10px;
+  animation-delay: 0.8s;
+}
+
+@keyframes wechat-dot-typing {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.6;
+  }
+}
+
+.wechat-typing-text {
+  font-size: 13px;
+  color: #333;
+}
+
+/* 流式输出时文本变化效果 */
+.wechat-article-content span.latest {
+  color: #07c160;
+  font-weight: bold;
+  animation: wechat-fade-to-normal 2s forwards;
+}
+
+@keyframes wechat-fade-to-normal {
+  from { color: #07c160; font-weight: bold; }
+  to { color: #333; font-weight: normal; }
+}
+
+/* ========== 微博文章手机预览样式 ========== */
+.weibo-phone-mockup {
+  background-color: #fff;
+  border-radius: 36px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  width: 100%;
+  max-width: 375px;
+  height: 700px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border: 10px solid #333;
+}
+
+.weibo-status-bar {
+  background-color: #f2f2f2;
+  padding: 6px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.weibo-app-header {
+  background-color: #ff8200;
+  padding: 12px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+}
+
+/* ========== 通用手机模拟样式 ========== */
+.toggle-display-button {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #eee;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.toggle-display-button:hover {
+  background-color: #e5e5e5;
+  color: var(--primary-color, #ba003f);
+}
+
+.toggle-display-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 手机旋转动画 */
+.phone-rotate-enter-active,
+.phone-rotate-leave-active {
+  transition: all 0.5s ease;
+}
+
+.phone-rotate-enter-from,
+.phone-rotate-leave-to {
+  transform: rotateY(90deg);
+  opacity: 0;
+}
+
+/* 响应式布局调整 */
+@media (max-width: 768px) {
+  .wechat-phone-mockup,
+  .weibo-phone-mockup {
+    max-width: 320px;
+    height: 600px;
+  }
+} 

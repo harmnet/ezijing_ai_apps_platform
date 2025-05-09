@@ -6,9 +6,33 @@ module.exports = {
       '/api': {
         target: 'http://127.0.0.1:9000',
         changeOrigin: true,
+        secure: false,
+        ws: false,
         pathRewrite: {
           '^/api': '/api' // 保持API路径不变
-        }
+        },
+        onProxyReq: function(proxyReq, req, res) {
+          console.log('[proxy]:' + req.method + ' ' + req.url);
+        },
+        onProxyRes: function(proxyRes, req, res) {
+          console.log('[proxy res]:' + proxyRes.statusCode + ' ' + req.url);
+          // 为SSE响应添加特殊处理
+          if ((req.url.includes('/deepseek_volcano/chat') || req.url.includes('/knowledge/chat')) && 
+              req.headers['accept'] && 
+              req.headers['accept'].includes('text/event-stream')) {
+            console.log('[流式响应]:开始处理SSE流 ' + req.url);
+            proxyRes.headers['Cache-Control'] = 'no-cache, no-transform';
+            proxyRes.headers['X-Accel-Buffering'] = 'no';
+            delete proxyRes.headers['Content-Length'];
+          }
+        },
+        onError: function(err, req, res) {
+          console.log('[proxy error]:' + err);
+        },
+        // 添加流式处理所需配置
+        proxyTimeout: 3600000, // 1小时超时（毫秒）
+        timeout: 3600000,      // 1小时超时（毫秒）
+        buffer: false          // 禁用缓冲
       },
       '/aippt-api': {
         target: 'https://co.aippt.cn',
@@ -63,8 +87,23 @@ module.exports = {
         proxyTimeout: 120000, // 120秒
         timeout: 120000 // 120秒
       }
+    },
+    // 添加静态资源目录配置
+    static: {
+      directory: __dirname + '/public',
+      publicPath: '/'
     }
   },
   transpileDependencies: true,
-  lintOnSave: false
+  lintOnSave: false,
+  // 添加Vue特性标志定义
+  configureWebpack: {
+    plugins: [
+      // 使用DefinePlugin定义特性标志
+      new (require('webpack').DefinePlugin)({
+        __VUE_PROD_DEVTOOLS__: false,
+        __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false
+      })
+    ]
+  }
 } 
