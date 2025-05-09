@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  frontend:
+    image: ghcr.io/harmnet/ezijing-frontend:latest
+    container_name: ezijing-frontend
+    restart: always
+    ports:
+      - "8018:80"
+    depends_on:
+      - backend
+      - nodejs
+    networks:
+      - ezijing-network
+
+  backend:
+    image: ghcr.io/harmnet/ezijing-backend:latest
+    container_name: ezijing-backend
+    restart: always
+    environment:
+      - FLASK_ENV=production
+    volumes:
+      - backend-uploads:/app/uploads
+    ports:
+      - "9000:9000"
+    networks:
+      - ezijing-network
+
+  nodejs:
+    image: ghcr.io/harmnet/ezijing-nodejs:latest
+    container_name: ezijing-nodejs
+    restart: always
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - nodejs-uploads:/app/uploads
+    ports:
+      - "3000:3000"
+    networks:
+      - ezijing-network
+
+networks:
+  ezijing-network:
+    driver: bridge
+
+volumes:
+  backend-uploads:
+  nodejs-uploads: 
