@@ -4,21 +4,31 @@ FROM node:16-alpine AS build-stage
 # 设置工作目录
 WORKDIR /app
 
-# 设置Node环境
+# 设置Node环境变量
 ENV NODE_ENV=production
+ENV PATH /app/node_modules/.bin:$PATH
 
-# 复制package.json
+# 先复制package.json和package-lock.json
 COPY package.json ./
 COPY package-lock.json ./
 
-# 安装依赖，包括全局安装vue-cli-service
-RUN npm install && npm install -g @vue/cli-service
+# 安装依赖
+RUN npm install
 
 # 复制所有源文件
 COPY . .
 
-# 使用vue-cli-service构建
-RUN vue-cli-service build
+# 列出文件确认
+RUN ls -la
+
+# 显示vue.config.js内容
+RUN cat vue.config.js
+
+# 使用npm run build构建
+RUN npm run build
+
+# 检查构建结果
+RUN ls -la dist || echo "dist目录不存在"
 
 # 生产阶段
 FROM nginx:1.23-alpine
