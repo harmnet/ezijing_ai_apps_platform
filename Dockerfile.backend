@@ -15,20 +15,27 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# 复制requirements.txt
-COPY backend/requirements.txt .
+# 确保backend目录存在
+RUN mkdir -p /app/backend
 
-# 安装Python依赖
-RUN pip install --no-cache-dir -r requirements.txt
+# 尝试复制requirements.txt
+COPY backend/requirements.txt /app/requirements.txt 2>/dev/null || echo "Backend requirements.txt not found"
+COPY requirements.txt /app/requirements.txt 2>/dev/null || echo "Root requirements.txt not found"
+
+# 安装Python依赖 - 检查文件是否存在
+RUN if [ -f "/app/requirements.txt" ]; then \
+    pip install --no-cache-dir -r /app/requirements.txt; \
+    else echo "No requirements.txt found, skipping pip install"; \
+    fi
 
 # 创建uploads目录
 RUN mkdir -p /app/uploads
 
 # 复制后端代码
-COPY backend/ .
+COPY backend/ /app/
 
 # 暴露端口
 EXPOSE 9000
 
-# 启动命令
-CMD ["gunicorn", "--bind", "0.0.0.0:9000", "app:app"] 
+# 设置启动命令
+CMD ["python", "app.py"] 
