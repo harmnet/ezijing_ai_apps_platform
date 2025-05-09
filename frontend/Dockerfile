@@ -6,7 +6,7 @@ WORKDIR /app
 
 # 设置Node环境变量
 ENV NODE_ENV=production
-ENV PATH /app/node_modules/.bin:$PATH
+ENV PATH=/app/node_modules/.bin:$PATH
 
 # 先复制package.json和package-lock.json
 COPY package.json ./
