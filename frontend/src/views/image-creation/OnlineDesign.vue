@@ -4,21 +4,34 @@
     <div v-if="isLoading" class="loading-overlay">
       <div class="loading-spinner"></div>
       <p>正在加载创可贴设计工具...</p>
+      <div v-if="debugInfo" class="debug-info">
+        <pre>{{ debugInfo }}</pre>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import CktDesign from '@chuangkit/chuangkit-design'
 import md5 from 'blueimp-md5'
 import { useStore } from 'vuex'
 import axios from 'axios'
 
-const props = defineProps({ kindId: { type: Number, default: 447 } })
-const model = defineModel()
-const emit = defineEmits(['close', 'save'])
+const props = defineProps({ kindId: { type: Number, default: 447 }, modelValue: { type: String, default: "" } })
+const modelValue = ref(props.modelValue)
+const emit = defineEmits(["close", "save", "update:modelValue"])
+// 监听props中的modelValue变化，更新本地的modelValue
+watch(() => props.modelValue, (newVal) => {
+  modelValue.value = newVal
+})
+
+// 监听本地的modelValue变化，通过emit更新父组件的值
+watch(modelValue, (newVal) => {
+  emit("update:modelValue", newVal)
+})
 const isLoading = ref(true)
+const debugInfo = ref('')
 
 const store = useStore()
 
@@ -51,7 +64,15 @@ const buildSign = (obj) => {
   }
 
   const signPlaintext = signParameterArray.sort().join('&')
-  return md5(signPlaintext).toUpperCase()
+  
+  // 记录签名前的原始字符串
+  console.log('签名前的字符串:', signPlaintext);
+  
+  // 进行MD5加密并转大写
+  const finalSign = md5(signPlaintext).toUpperCase();
+  console.log('最终生成的签名:', finalSign);
+  
+  return finalSign
 }
 
 /**
@@ -63,6 +84,14 @@ const buildSign = (obj) => {
  * @returns {string} 签名
  */
 const buildVersion2Sign = (appId, expireTime, userFlag, appSecret) => {
+  // 记录输入参数
+  console.log('签名输入参数:', {
+    appId,
+    expireTime,
+    userFlag,
+    appSecret
+  });
+  
   const signParameterObj = {
     app_id: appId,
     expire_time: expireTime,
@@ -81,9 +110,9 @@ window.chuangkitComplete = async (result) => {
   if (result.kind == 2) {
     for (const url of result['source-urls']) {
       const uploadedURL = await uploadFileByUrl(url)
-      model.value = uploadedURL
+      modelValue.value = uploadedURL
     }
-    emit('save', model.value)
+    emit('save', modelValue.value)
   }
   if ([1, 2, 3].includes(result.kind)) {
     emit('close')
@@ -93,12 +122,17 @@ window.chuangkitComplete = async (result) => {
 let cktInstance
 function openDesignPage() {
   isLoading.value = true
+  
+  console.log('=========== 开始生成签名 ===========');
   const appId = '54d9adec77d0402794018d166110f3dd'
   const appSecret = '08097010E0EF4B85EE2B8CE438328249'
   // 从当前store获取用户信息，如果没有则使用默认值
   const userFlag = store.state.user?.id || 'default_user'
   const expireTime = Date.now()
   const sign = buildVersion2Sign(appId, expireTime, userFlag, appSecret)
+  console.log('=========== 签名生成完成 ===========');
+  console.log('生成的签名结果:', sign);
+  
   const params = {
     app_id: appId,
     expire_time: expireTime,
@@ -112,15 +146,37 @@ function openDesignPage() {
     taxpayer_phone: '13820659475',
     taxpayer_number: '91120116636067462H',
   }
+  
+  // 输出完整参数到控制台和页面
+  console.log('完整初始化参数:', JSON.stringify(params, null, 2))
+  debugInfo.value = JSON.stringify(params, null, 2)
+  
+  // 检查容器元素是否存在
+  const container = document.getElementById('ckt-design-page')
+  console.log('容器元素:', {
+    exists: !!container,
+    id: container?.id,
+    dimensions: container ? `${container.offsetWidth}x${container.offsetHeight}` : 'unknown'
+  })
+    
+  // 检查CktDesign库是否正确加载
+  console.log('CktDesign库状态:', {
+    loaded: !!CktDesign,
+    methods: Object.keys(CktDesign)
+  })
 
   try {
+    console.log('创建CktDesign实例...')
     cktInstance = new CktDesign(params)
+    console.log('调用open方法打开编辑器...')
     cktInstance.open()
     console.log('创可贴实例创建成功:', cktInstance)
+    debugInfo.value += '\n\n创建成功'
     isLoading.value = false
   } catch (error) {
     console.error('创可贴初始化失败:', error)
-    isLoading.value = false
+    debugInfo.value += '\n\n创建失败: ' + error.message
+    // 保持加载状态以显示调试信息
   }
 }
 
@@ -135,9 +191,19 @@ function closeDesignPage() {
   }
 }
 
+// 检查 CktDesign 库是否存在
+console.log('组件初始化阶段 CktDesign:', {
+  exists: typeof CktDesign !== 'undefined',
+  methods: typeof CktDesign !== 'undefined' ? Object.keys(CktDesign) : []
+})
+
 onMounted(() => {
   console.log('组件已挂载，准备打开创可贴设计页面')
-  openDesignPage()
+  
+  // 确保DOM渲染完成后初始化编辑器
+  setTimeout(() => {
+    openDesignPage()
+  }, 300)
 })
 
 onUnmounted(() => {
@@ -181,6 +247,22 @@ onUnmounted(() => {
   border-top-color: #ba003f;
   animation: spin 1s ease-in-out infinite;
   margin-bottom: 20px;
+}
+
+.debug-info {
+  margin-top: 20px;
+  max-width: 80%;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 5px;
+  font-family: monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  text-align: left;
+  max-height: 50vh;
+  overflow-y: auto;
+  border: 1px solid #ddd;
 }
 
 @keyframes spin {

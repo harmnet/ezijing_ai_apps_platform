@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+from .logger import setup_logger, get_logger
 
-"""
-工具模块
-""" 
+__all__ = ['setup_logger', 'get_logger']

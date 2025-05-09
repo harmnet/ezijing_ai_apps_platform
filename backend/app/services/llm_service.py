@@ -23,6 +23,8 @@ import os
 import requests
 from flask import current_app
 import time
+import sys
+import logging
 
 try:
     from openai import OpenAI
@@ -53,7 +55,7 @@ MODEL_CONFIG = {
         "token_limit": 65536,
         "description": "DeepSeek R1-64K (火山引擎)",
         "api_type": "volcano",
-        "base_url": "https://ark.cn-beijing.volces.com/api/v3",
+        "base_url": "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
         "provider": "火山引擎",
         "model_id": "deepseek-r1-250120"
     },
@@ -61,7 +63,7 @@ MODEL_CONFIG = {
         "token_limit": 65536,
         "description": "DeepSeek V3-64K (火山引擎)",
         "api_type": "volcano",
-        "base_url": "https://ark.cn-beijing.volces.com/api/v3",
+        "base_url": "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
         "provider": "火山引擎",
         "model_id": "deepseek-v3-250324"
     },
@@ -128,6 +130,17 @@ def standardize_response(response, model):
         for i, choice in enumerate(response.get("choices", [])):
             if "message" not in choice:
                 choice["message"] = {"role": "assistant", "content": ""}
+            
+            # 处理思考型模型的思考内容
+            if "message" in choice and "reasoning_content" in choice["message"]:
+                # 可以选择在这里合并思考内容和最终内容
+                reasoning = choice["message"].get("reasoning_content", "")
+                content = choice["message"].get("content", "")
+                
+                # 注意：我们保留原始思考内容，但确保content字段一定存在有效内容
+                if not content.strip() and reasoning.strip():
+                    choice["message"]["content"] = "思考过程：\n" + reasoning
+            
             if "finish_reason" not in choice:
                 choice["finish_reason"] = "stop"
             if "index" not in choice:
@@ -181,9 +194,23 @@ class SiliconFlowAPI:
             "Content-Type": "application/json"
         }
     
+    def chat(self, model, messages, temperature=0.7, max_tokens=2000):
+        """兼容VolcanoAPI的chat方法，用于统一API接口"""
+        return self.chat_completion(
+            messages=messages,
+            model_id=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            top_p=1.0,
+            frequency_penalty=0.0,
+            presence_penalty=0.0,
+            stop=None,
+            stream=False
+        )
+    
     def chat_completion(self, messages, model_id, temperature=0.7, 
                       max_tokens=2000, top_p=1.0, frequency_penalty=0.0, 
-                      presence_penalty=0.0, stop=None):
+                      presence_penalty=0.0, stop=None, stream=False):
         """聊天接口 - 发送请求并获取模型回复"""
         
         url = f"{self.base_url}/chat/completions"
@@ -242,92 +269,326 @@ class SiliconFlowAPI:
             }
 
 class VolcanoAPI:
-    """火山引擎API调用类 - 使用OpenAI兼容接口"""
-    
-    def __init__(self, api_key, base_url="https://ark.cn-beijing.volces.com/api/v3"):
+    """火山引擎API客户端"""
+    def __init__(self, api_key, api_base="https://ark.cn-beijing.volces.com/api/v3/chat/completions"):
+        self.api_base = api_base
         self.api_key = api_key
-        self.base_url = base_url
-        print(f"初始化火山引擎API，baseURL: {base_url}, API密钥: {self.api_key[:8]}...")
-        
-        if not OPENAI_AVAILABLE:
-            print("警告：OpenAI库未安装，火山引擎API将直接使用备用HTTP请求方式")
-            # 设置备用方式的headers
-            self.headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
-            }
-            self.client = None
-            return
+        self.timeout = 120  # 设置较长的超时时间，单位秒
+        self.logger = logging.getLogger("volcano-api")
+        self.logger.setLevel(logging.DEBUG)
+    
+    def chat(self, model, messages, temperature=0.7, max_tokens=2000):
+        """发送聊天请求到火山引擎API"""
+        if "r1" in model:
+            self.logger.info(f"使用R1模型: {model}")
+            # R1模型使用更长超时
+            self.timeout = 180
             
-        # 直接使用备用HTTP请求方式而不尝试初始化OpenAI客户端
-        # 这样可以避免出现"初始化OpenAI客户端失败"的错误
-        self.client = None
-        self.headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
+        url = self.api_base
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}"
         }
-    
-    def chat_completion(self, messages, model_id, temperature=0.7, 
-                      max_tokens=2000, top_p=1.0, frequency_penalty=0.0, 
-                      presence_penalty=0.0, stop=None):
-        """聊天接口 - 使用HTTP请求方式发送请求并获取模型回复"""
         
-        # 直接使用备用方法发送请求，不再显示错误日志
-        return self.chat_completion_fallback(
-            messages, model_id, temperature, max_tokens, 
-            top_p, frequency_penalty, presence_penalty, stop
-        )
-    
-    def chat_completion_fallback(self, messages, model_id, temperature=0.7, 
-                      max_tokens=2000, top_p=1.0, frequency_penalty=0.0, 
-                      presence_penalty=0.0, stop=None):
-        """备用方法：使用requests库直接调用API"""
-        print("使用备用方法调用火山引擎API")
-        url = f"{self.base_url}/chat/completions"
-        
-        # 添加系统消息如果不存在
-        has_system = any(msg.get("role") == "system" for msg in messages)
-        if not has_system:
-            messages = [{"role": "system", "content": "你是人工智能助手"}] + messages
-        
-        # 构建请求参数
         payload = {
-            "model": model_id,
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "top_p": top_p,
-            "frequency_penalty": frequency_penalty,
-            "presence_penalty": presence_penalty
+            "model": model,
+            "input_type": "chat",
+            "parameters": {
+                "temperature": temperature,
+                "max_new_tokens": max_tokens
+            },
+            "messages": messages
         }
         
-        if stop:
-            payload["stop"] = stop
-            
         try:
-            headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
+            self.logger.debug(f"发送请求到火山引擎API: {url}, 模型: {model}")
+            start_time = time.time()
+            
+            response = requests.post(
+                url, 
+                headers=headers, 
+                json=payload,
+                timeout=self.timeout
+            )
+            
+            duration = time.time() - start_time
+            self.logger.debug(f"火山引擎API响应耗时: {duration:.2f}秒")
+            
+            # 检查HTTP响应状态
+            response.raise_for_status()
+            
+            # 解析响应
+            result = response.json()
+            
+            # R1模型特殊处理，记录是否包含思考过程
+            if "r1" in model and "output" in result:
+                if "choices" in result["output"] and len(result["output"]["choices"]) > 0:
+                    if "message" in result["output"]["choices"][0]:
+                        message = result["output"]["choices"][0]["message"]
+                        has_content = "content" in message and message["content"]
+                        has_reasoning = "reasoning_content" in message and message["reasoning_content"]
+                        self.logger.info(f"R1模型响应: 包含content: {has_content}, 包含reasoning_content: {has_reasoning}")
+            
+            # 统一转换为通用格式
+            return self._convert_response(result)
+            
+        except requests.exceptions.Timeout:
+            self.logger.error(f"请求超时: 模型={model}, 超时设置={self.timeout}秒")
+            raise Exception(f"火山引擎API请求超时 (>{self.timeout}秒)")
+            
+        except requests.exceptions.ConnectionError as e:
+            self.logger.error(f"连接错误: {str(e)}")
+            raise Exception(f"无法连接到火山引擎API: {str(e)}")
+            
+        except requests.exceptions.HTTPError as e:
+            self.logger.error(f"HTTP错误: {str(e)}, 状态码: {response.status_code}")
+            error_detail = f"状态码: {response.status_code}"
+            try:
+                error_json = response.json()
+                error_detail += f", 错误信息: {json.dumps(error_json, ensure_ascii=False)}"
+            except:
+                error_detail += f", 响应内容: {response.text[:200]}"
+                
+            raise Exception(f"火山引擎API请求失败: {error_detail}")
+            
+        except Exception as e:
+            self.logger.error(f"请求出错: {str(e)}")
+            raise Exception(f"火山引擎API请求异常: {str(e)}")
+    
+    def chat_stream(self, model, messages, temperature=0.7, max_tokens=2000, stream_options=None):
+        """流式请求火山引擎API"""
+        if "r1" in model:
+            self.logger.info(f"使用R1模型流式请求: {model}")
+            # R1模型使用更长超时
+            self.timeout = 180
+            
+        url = self.api_base
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+            "Accept": "text/event-stream"  # 明确要求SSE格式
+        }
+        
+        # 配置stream_options
+        if stream_options is None:
+            stream_options = {}
+        
+        include_usage = stream_options.get("include_usage", False)
+        self.logger.info(f"流式请求配置: include_usage={include_usage}")
+        
+        # 按照官方文档格式构建payload
+        payload = {
+            "model": model,
+            "messages": messages,
+            "stream": True
+        }
+        
+        # 添加可选参数
+        if temperature != 0.7:
+            payload["temperature"] = temperature
+        
+        if max_tokens != 2000:
+            payload["max_tokens"] = max_tokens
+        
+        # 如果需要包含token用量信息
+        if include_usage:
+            payload["stream_options"] = {"include_usage": True}
+        
+        # 为R1模型添加return_reasoning参数，启用思考过程返回
+        if "r1" in model.lower():
+            self.logger.info("启用R1模型思考过程返回")
+            payload["return_reasoning"] = True
+        
+        try:
+            self.logger.debug(f"发送流式请求到火山引擎API: {url}, 模型: {model}, 参数: {json.dumps(payload, ensure_ascii=False)[:200]}...")
+            start_time = time.time()
+            response_content = ""
+            
+            # 发送SSE请求
+            response = requests.post(
+                url, 
+                headers=headers, 
+                json=payload,
+                stream=True,
+                timeout=self.timeout
+            )
+            
+            self.logger.debug(f"收到流式响应，状态码: {response.status_code}, 内容类型: {response.headers.get('Content-Type', '')}")
+            response.raise_for_status()
+            
+            # 处理SSE响应流
+            for line in response.iter_lines():
+                if not line:
+                    continue
+                
+                line_text = line.decode('utf-8')
+                self.logger.debug(f"收到SSE行: {line_text[:100]}")
+                
+                # 处理[DONE]结束标记
+                if line_text.strip() == "data: [DONE]" or line_text.strip() == "[DONE]":
+                    self.logger.info("收到SSE流结束标记")
+                    break
+                
+                # 解析SSE行
+                if line_text.startswith("data: "):
+                    data_content = line_text[6:].strip()
+                    
+                    try:
+                        # 解析SSE数据
+                        json_data = json.loads(data_content)
+                        self.logger.debug(f"解析SSE数据: {json.dumps(json_data, ensure_ascii=False)[:100]}...")
+                        
+                        # 直接传递解析后的JSON数据
+                        yield json_data
+                        
+                        # 提取内容用于日志统计
+                        if "choices" in json_data and json_data["choices"]:
+                            choice = json_data["choices"][0]
+                            if "delta" in choice and "content" in choice["delta"]:
+                                content = choice["delta"]["content"]
+                                if content:
+                                    response_content += content
+                    
+                    except json.JSONDecodeError as e:
+                        self.logger.error(f"解析SSE数据JSON出错: {str(e)}, 数据: {data_content[:200]}")
+                    except Exception as e:
+                        self.logger.error(f"处理SSE数据出错: {str(e)}")
+                
+                # 尝试直接解析JSON行
+                elif line_text.startswith("{") and line_text.endswith("}"):
+                    try:
+                        json_data = json.loads(line_text)
+                        self.logger.debug(f"解析直接JSON数据: {json.dumps(json_data, ensure_ascii=False)[:100]}...")
+                        
+                        # 直接传递解析后的JSON数据
+                        yield json_data
+                        
+                        # 提取内容用于日志统计
+                        if "choices" in json_data and json_data["choices"]:
+                            choice = json_data["choices"][0]
+                            if "delta" in choice and "content" in choice["delta"]:
+                                content = choice["delta"]["content"]
+                                if content:
+                                    response_content += content
+                    except json.JSONDecodeError as e:
+                        self.logger.error(f"解析直接JSON数据出错: {str(e)}, 数据: {line_text[:200]}")
+                    except Exception as e:
+                        self.logger.error(f"处理直接JSON数据出错: {str(e)}")
+            
+            # 记录统计信息
+            duration = time.time() - start_time
+            self.logger.info(f"流式响应完成, 耗时: {duration:.2f}秒, 内容长度: {len(response_content)}字符")
+            
+        except requests.exceptions.Timeout:
+            self.logger.error(f"流式请求超时: 模型={model}, 超时设置={self.timeout}秒")
+            error_data = {
+                "error": {
+                    "message": f"火山引擎API流式请求超时 (>{self.timeout}秒)",
+                    "type": "timeout"
+                }
             }
-            response = requests.post(url, headers=headers, json=payload, timeout=60)
-            if response.status_code == 200:
-                return standardize_response(response.json(), model_id)
-            else:
+            yield error_data
+            
+        except requests.exceptions.ConnectionError as e:
+            self.logger.error(f"流式连接错误: {str(e)}")
+            error_data = {
+                "error": {
+                    "message": f"无法连接到火山引擎API: {str(e)}",
+                    "type": "connection_error"
+                }
+            }
+            yield error_data
+            
+        except requests.exceptions.HTTPError as e:
+            self.logger.error(f"流式HTTP错误: {str(e)}, 状态码: {response.status_code}")
+            error_detail = f"状态码: {response.status_code}"
+            try:
+                error_json = response.json()
+                error_detail += f", 错误信息: {json.dumps(error_json, ensure_ascii=False)}"
+            except:
+                error_detail += f", 响应内容: {response.text[:200]}"
+                
+            error_data = {
+                "error": {
+                    "message": f"火山引擎API流式请求失败: {error_detail}",
+                    "type": "http_error"
+                }
+            }
+            yield error_data
+            
+        except Exception as e:
+            self.logger.error(f"流式请求处理异常: {str(e)}")
+            error_data = {
+                "error": {
+                    "message": f"火山引擎API流式请求异常: {str(e)}",
+                    "type": "unknown_error"
+                }
+            }
+            yield error_data
+    
+    def _convert_response(self, response):
+        """将火山引擎API响应转换为统一格式"""
+        try:
+            if "output" in response:
+                output = response["output"]
+                # 火山引擎格式转换为OpenAI格式
                 return {
-                    "error": {
-                        "message": f"API调用失败: {response.text}",
-                        "type": "api_error",
-                        "code": response.status_code
+                    "id": output.get("id", ""),
+                    "object": "chat.completion",
+                    "created": int(time.time()),
+                    "model": response.get("model", ""),
+                    "choices": output.get("choices", [])
+                }
+            return response
+        except Exception as e:
+            self.logger.error(f"转换响应格式出错: {str(e)}")
+            return response
+            
+    def _convert_stream_response(self, response, is_r1_model=False):
+        """将火山引擎流式响应转换为统一格式"""
+        try:
+            if "output" in response:
+                output = response["output"]
+                
+                # 火山引擎流式格式转换
+                result = {
+                    "data": {
+                        "id": output.get("id", ""),
+                        "object": "chat.completion.chunk",
+                        "created": int(time.time()),
+                        "model": response.get("model", ""),
+                        "choices": []
                     }
                 }
+                
+                # 处理choices
+                if "choices" in output and len(output["choices"]) > 0:
+                    choice = output["choices"][0]
+                    
+                    # 提取delta部分
+                    if "delta" in choice:
+                        delta = choice["delta"]
+                        result_choice = {
+                            "index": choice.get("index", 0),
+                            "delta": {}
+                        }
+                        
+                        # 常规content字段
+                        if "content" in delta:
+                            result_choice["delta"]["content"] = delta["content"]
+                            
+                        # R1模型的思考过程
+                        if is_r1_model and "reasoning_content" in delta:
+                            result_choice["delta"]["reasoning_content"] = delta["reasoning_content"]
+                            
+                        result["data"]["choices"].append(result_choice)
+                
+                return result
+                
+            return {"data": response}
         except Exception as e:
-            return {
-                "error": {
-                    "message": f"API调用异常: {str(e)}",
-                    "type": "api_error",
-                    "code": "connection_error"
-                }
-            }
+            self.logger.error(f"转换流式响应格式出错: {str(e)}")
+            return {"data": response}
 
 class DashscopeAPI:
     """阿里云DashScope API调用类"""
@@ -342,7 +603,7 @@ class DashscopeAPI:
     
     def chat_completion(self, messages, model_id, temperature=0.7, 
                       max_tokens=2000, top_p=1.0, frequency_penalty=0.0, 
-                      presence_penalty=0.0, stop=None):
+                      presence_penalty=0.0, stop=None, stream=False):
         """聊天接口 - 发送请求并获取模型回复"""
         
         url = f"{self.base_url}/chat/completions"
@@ -451,22 +712,77 @@ def get_available_models():
     return models
 
 def chat_completion(model_name, messages, temperature=0.7, max_tokens=2000, 
-                   top_p=1.0, frequency_penalty=0.0, presence_penalty=0.0, stream=False):
+                   top_p=1.0, frequency_penalty=0.0, presence_penalty=0.0, 
+                   stream=False, stream_options=None):
     """统一的聊天接口"""
+    
+    # 添加日志记录
+    logger = logging.getLogger("chat_completion")
+    logger.setLevel(logging.DEBUG)
+    
+    logger.info(f"chat_completion调用: model_name={model_name}, temperature={temperature}, max_tokens={max_tokens}, stream={stream}(类型:{type(stream)})")
+    if stream:
+        logger.info(f"流式选项: {json.dumps(stream_options, ensure_ascii=False) if stream_options else 'None'}")
     
     # 获取API客户端
     client, model_info = get_api_client(model_name)
     if not client:
+        logger.error(f"获取API客户端失败: {model_info}")
         return model_info
     
+    logger.info(f"已获取API客户端: {type(client).__name__}, 模型信息: {json.dumps(model_info, ensure_ascii=False)}")
+    
     # 调用对应的模型API
-    return client.chat_completion(
-        messages=messages,
-        model_id=model_info["model_id"],
-        temperature=temperature,
-        max_tokens=max_tokens,
-        top_p=top_p,
-        frequency_penalty=frequency_penalty,
-        presence_penalty=presence_penalty,
-        stop=None
-    ) 
+    api_type = model_info.get("api_type")
+    logger.info(f"API类型: {api_type}")
+    
+    # 根据不同的API类型调用不同的方法
+    try:
+        if api_type == "volcano":
+            # 火山引擎API使用新的chat方法
+            if stream:
+                logger.info(f"调用火山引擎流式API: model={model_info['model_id']}")
+                result = client.chat_stream(
+                    model=model_info["model_id"],
+                    messages=messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    stream_options=stream_options
+                )
+                logger.info(f"火山引擎流式API返回结果类型: {type(result).__name__}")
+                return result
+            else:
+                logger.info(f"调用火山引擎普通API: model={model_info['model_id']}")
+                result = client.chat(
+                    model=model_info["model_id"],
+                    messages=messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens
+                )
+                logger.info(f"火山引擎普通API返回结果类型: {type(result).__name__}")
+                return result
+        else:
+            # 其他API类型仍然使用旧方法
+            logger.info(f"调用其他API类型: {api_type}, model_id={model_info['model_id']}")
+            result = client.chat_completion(
+                messages=messages,
+                model_id=model_info["model_id"],
+                temperature=temperature,
+                max_tokens=max_tokens,
+                top_p=top_p,
+                frequency_penalty=frequency_penalty,
+                presence_penalty=presence_penalty,
+                stop=None,
+                stream=stream
+            )
+            logger.info(f"其他API类型返回结果类型: {type(result).__name__}")
+            return result
+    except Exception as e:
+        logger.exception(f"调用API出错: {str(e)}")
+        return {
+            "error": {
+                "message": f"调用API出错: {str(e)}",
+                "type": "api_error",
+                "code": "call_error"
+            }
+        } 

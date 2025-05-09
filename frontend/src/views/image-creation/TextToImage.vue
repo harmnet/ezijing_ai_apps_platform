@@ -5,8 +5,9 @@
         <h2>AI文生图</h2>
       </div>
       <div class="page-actions">
-        <button class="action-btn" title="创作小贴士" @click="showTips">
+        <button class="learn-button" title="知识学习" @click="showTips">
           <i class="ri-lightbulb-line"></i>
+          知识学习
         </button>
       </div>
     </div>
@@ -21,7 +22,7 @@
           <button @click="testApiAvailability" class="retry-button">
             <i class="ri-refresh-line"></i> 重试连接
           </button>
-          <a href="http://localhost:9000/api/v1/text_to_image/volcano/info" target="_blank" class="test-link">
+          <a href="/api/v1/text_to_image/volcano/info" target="_blank" class="test-link">
             测试API链接
           </a>
         </div>
@@ -337,44 +338,39 @@
       </div>
     </div>
 
-    <!-- 创作小贴士对话框 -->
-    <div class="modal" v-if="showTipsDialog">
-      <div class="modal-content tips-modal">
-        <div class="modal-header">
-          <h3><i class="ri-lightbulb-line"></i> 创作小贴士</h3>
-          <button @click="showTipsDialog = false" class="close-button">
-            <i class="ri-close-line"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="tips-section">
-            <h4>提示词技巧</h4>
-            <ul>
-              <li>提供详细的场景描述，包括场景、主体、动作、表情等</li>
-              <li>指定艺术风格，如油画、水彩、素描、动漫等</li>
-              <li>描述光照条件，如"阳光明媚"、"黄昏时分"、"月光下"</li>
-              <li>提及视角和构图，如"俯视角"、"特写镜头"、"全景视图"</li>
-            </ul>
-          </div>
-          
-          <div class="tips-section">
-            <h4>最佳实践</h4>
-            <ul>
-              <li>尝试不同的长宽比以获得最适合场景的构图</li>
-              <li>生成多张图片以比较效果并选择最佳成果</li>
-              <li>对于概念清晰的场景，增加清晰度值</li>
-              <li>对于创意性的想法，提高创意程度值</li>
-            </ul>
-          </div>
+    <!-- 知识学习侧边栏 -->
+    <el-drawer
+      v-model="knowledgeDrawerVisible"
+      title="文生图知识学习"
+      direction="rtl"
+      size="35%"
+      :destroy-on-close="false"
+      class="knowledge-drawer"
+    >
+      <div class="knowledge-content">
+        <div v-for="(item, index) in knowledgeData" :key="index" class="knowledge-section">
+          <h3 class="knowledge-subtitle">
+            <span class="knowledge-icon"><i :class="item.icon"></i></span>
+            {{ item.subtitle }}
+          </h3>
+          <div class="knowledge-text" v-html="formatText(item.text)"></div>
         </div>
       </div>
-    </div>
+    </el-drawer>
   </div>
 </template>
 
 <script>
+// 引入统一CSS文件
+import '@/assets/css/text-creation-common.css';
+import { textToImageKnowledge } from '@/views/Knowledge_data.js';
+import { ElDrawer } from 'element-plus';
+
 export default {
   name: 'TextToImage',
+  components: {
+    ElDrawer
+  },
   
   data() {
     return {
@@ -392,11 +388,12 @@ export default {
       error: null,
       generatedImages: [],
       showPromptDialog: false,
-      showTipsDialog: false,
       showEnhancedPrompt: false,
       enhancedPrompt: '',
       apiStatus: 'unknown', // 'unknown', 'available', 'unavailable'
       apiCheckInterval: null, // 用于存储API检查的定时器ID
+      knowledgeDrawerVisible: false,
+      knowledgeData: textToImageKnowledge,
       referenceExamples: [
         {
           title: '梦幻森林',
@@ -521,11 +518,20 @@ export default {
 
   methods: {
     showTips() {
-      this.showTipsDialog = true
+      this.knowledgeDrawerVisible = true
     },
 
     showPrompt() {
       this.showPromptDialog = true
+    },
+
+    formatText(text) {
+      if (!text) return '';
+      // 将Markdown风格的加粗文本转换为HTML加粗标签
+      text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      // 将换行符转换为HTML段落
+      text = text.replace(/\n\n/g, '</p><p>');
+      return `<p>${text}</p>`;
     },
 
     toggleAdvancedOptions() {
@@ -599,7 +605,7 @@ export default {
     async callGenerateAPI(params) {
       // 调用我们新创建的火山引擎文生图接口
       try {
-        const response = await fetch('http://localhost:9000/api/v1/text_to_image/volcano', {
+        const response = await fetch(`${window.APP_CONFIG.API_BASE_URL}/api/v1/text_to_image/volcano`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -790,7 +796,7 @@ export default {
     async testApiAvailability() {
       try {
         console.log('正在检测后端API可用性...');
-        const response = await fetch('http://localhost:9000/api/v1/text_to_image/volcano/info');
+        const response = await fetch(`${window.APP_CONFIG.API_BASE_URL}/api/v1/text_to_image/volcano/info`);
         
         if (response.ok) {
           const data = await response.json();
@@ -808,7 +814,7 @@ export default {
       } catch (error) {
         console.error('API检测失败:', error);
         this.apiStatus = 'unavailable';
-        this.error = `无法连接到后端服务 (http://localhost:9000): ${error.message}`;
+        this.error = `无法连接到后端服务: ${error.message}`;
       }
     }
   }
@@ -833,20 +839,6 @@ export default {
   font-size: 24px;
   color: #212529;
   margin: 0;
-}
-
-.action-btn {
-  background: none;
-  border: none;
-  color: #ba003f;
-  cursor: pointer;
-  padding: 8px;
-  font-size: 20px;
-  transition: color 0.3s;
-}
-
-.action-btn:hover {
-  color: #d4004d;
 }
 
 .main-container {
@@ -1699,9 +1691,26 @@ textarea.form-control {
   background-color: #d39e00;
 }
 
-.test-link {
-  color: #856404;
-  text-decoration: underline;
+.knowledge-content {
+  padding: 16px;
+}
+
+.knowledge-section {
+  margin-bottom: 16px;
+}
+
+.knowledge-section h4 {
+  color: #ba003f;
+  margin: 0 0 8px 0;
+}
+
+.knowledge-section p {
+  margin: 0;
+  color: #212529;
   font-size: 14px;
+}
+
+.knowledge-drawer {
+  /* Add any specific styles for the drawer if needed */
 }
 </style>

@@ -5,8 +5,9 @@
         <h2>图片风格调整</h2>
       </div>
       <div class="page-actions">
-        <button class="action-btn" title="创作小贴士" @click="showTips">
-          <i class="ri-lightbulb-line"></i>
+        <button class="learn-button" title="知识学习" @click="showTips">
+          <i class="ri-book-read-line"></i>
+          知识学习
         </button>
       </div>
     </div>
@@ -43,13 +44,14 @@
         <div class="form-group">
           <label class="required">全局风格化</label>
           <div class="style-radio-group">
-            <div class="style-radio-item" v-for="(style, index) in styleOptions" :key="index">
+            <div class="style-radio-item" v-for="(style, index) in styleOptions" :key="index" :class="{'disabled': style.disabled}">
               <input
                 type="radio"
                 :id="`style-${index}`"
                 :value="style.value"
                 v-model="formData.styleType"
                 :name="'styleType'"
+                :disabled="style.disabled"
               >
               <label :for="`style-${index}`">{{ style.label }}</label>
             </div>
@@ -143,54 +145,39 @@
       </div>
     </div>
 
-    <!-- 创作小贴士模态框 -->
-    <div class="modal" v-if="showTipsModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3><i class="ri-lightbulb-line"></i> 图片风格调整小贴士</h3>
-          <button class="close-btn" @click="showTipsModal = false">
-            <i class="ri-close-line"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <h4>图片风格调整指南</h4>
-          
-          <div class="tips-section">
-            <h5>全局风格化</h5>
-            <p>将整个图像转换为特定艺术风格，如油画、水彩画、素描等。</p>
-            <p><strong>提示词示例：</strong></p>
-            <ul>
-              <li>转换成梵高的星空风格</li>
-              <li>转换为中国水墨画风格</li>
-              <li>转换成卡通动漫风格</li>
-              <li>转换成法国绘本风格</li>
-              <li>转换成赛博朋克风格</li>
-              <li>转换成水彩画风格</li>
-              <li>转换成莫奈印象派风格</li>
-              <li>转换成日式浮世绘风格</li>
-              <li>转换成古典油画风格</li>
-              <li>转换成素描铅笔画风格</li>
-            </ul>
-          </div>
-          
-          <div class="tips-section">
-            <h5>最佳实践</h5>
-            <ul>
-              <li>上传清晰的原始图片，推荐尺寸不小于512x512</li>
-              <li>提示词尽量简洁明了，清晰表达风格需求</li>
-              <li>图片生成可能需要10-30秒，请耐心等待</li>
-              <li>选择合适的预设风格可以获得更好的效果</li>
-            </ul>
-          </div>
+    <!-- 知识学习侧边栏 -->
+    <el-drawer
+      v-model="knowledgeDrawerVisible"
+      title="AI图片风格调整知识学习"
+      direction="rtl"
+      size="35%"
+      :destroy-on-close="false"
+      class="knowledge-drawer"
+    >
+      <div class="knowledge-content">
+        <div v-for="(item, index) in knowledgeData" :key="index" class="knowledge-section">
+          <h3 class="knowledge-subtitle">
+            <span class="knowledge-icon"><i :class="item.icon"></i></span>
+            {{ item.subtitle }}
+          </h3>
+          <div class="knowledge-text" v-html="formatText(item.text)"></div>
         </div>
       </div>
-    </div>
+    </el-drawer>
   </div>
 </template>
 
 <script>
+// 引入统一CSS文件
+import '@/assets/css/text-creation-common.css';
+import { imageToImageKnowledge } from '@/views/Knowledge_data.js';
+import { ElDrawer } from 'element-plus';
+
 export default {
   name: 'ImagetoImage',
+  components: {
+    ElDrawer
+  },
   
   data() {
     return {
@@ -206,6 +193,8 @@ export default {
       taskId: null,
       taskStatus: '',
       showTipsModal: false,
+      knowledgeDrawerVisible: false,
+      knowledgeData: imageToImageKnowledge,
       // 全局风格化选项
       styleOptions: [
         { value: 'none', label: '无风格' },
@@ -213,12 +202,12 @@ export default {
         { value: 'watercolor', label: '水彩画风格' },
         { value: 'sketch', label: '素描风格' },
         { value: 'comic', label: '卡通漫画风格' },
-        { value: 'chinese', label: '中国水墨风格' },
-        { value: 'japan', label: '日式浮世绘风格' },
-        { value: 'impressionism', label: '印象派风格' },
-        { value: 'cyberpunk', label: '赛博朋克风格' },
-        { value: 'vintage', label: '复古风格' },
-        { value: 'fantasy', label: '梦幻风格' }
+        { value: 'chinese', label: '中国水墨风格', disabled: true },
+        { value: 'japan', label: '日式浮世绘风格', disabled: true },
+        { value: 'impressionism', label: '印象派风格', disabled: true },
+        { value: 'cyberpunk', label: '赛博朋克风格', disabled: true },
+        { value: 'vintage', label: '复古风格', disabled: true },
+        { value: 'fantasy', label: '梦幻风格', disabled: true }
       ],
       pollingInterval: null
     }
@@ -233,6 +222,15 @@ export default {
   watch: {
     // 监听styleType变化，自动生成提示词
     'formData.styleType': function(newStyleType) {
+      // 检查选中的风格是否为禁用状态
+      const selectedStyle = this.styleOptions.find(s => s.value === newStyleType);
+      
+      if (selectedStyle && selectedStyle.disabled) {
+        // 如果选中了禁用的风格，重置为无风格
+        this.formData.styleType = 'none';
+        return;
+      }
+      
       if (newStyleType !== 'none') {
         const style = this.styleOptions.find(s => s.value === newStyleType);
         if (style) {
@@ -248,7 +246,16 @@ export default {
 
   methods: {
     showTips() {
-      this.showTipsModal = true;
+      this.knowledgeDrawerVisible = true;
+    },
+    
+    formatText(text) {
+      if (!text) return '';
+      // 将Markdown风格的加粗文本转换为HTML加粗标签
+      text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      // 将换行符转换为HTML段落
+      text = text.replace(/\n\n/g, '</p><p>');
+      return `<p>${text}</p>`;
     },
 
     triggerFileInput() {
@@ -321,7 +328,7 @@ export default {
         while (retryCount <= maxRetries) {
           try {
             response = await Promise.race([
-              fetch('http://localhost:3000/api/images/upload', {
+              fetch(`${window.APP_CONFIG.API_BASE_URL}/api/images/upload`, {
                 method: 'POST',
                 body: formData
               }),
@@ -439,7 +446,7 @@ export default {
           const imageUrl = this.formData.imageUrl;
           
           createResponse = await Promise.race([
-            fetch('http://localhost:9000/api/v1/image_style/create', {
+            fetch(`${window.APP_CONFIG.API_BASE_URL}/api/v1/image_style/create`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
@@ -521,7 +528,7 @@ export default {
           try {
             // 使用阿里云图片风格调整API查询任务
             statusResponse = await Promise.race([
-              fetch(`http://localhost:9000/api/v1/image_style/query/${this.taskId}`, {
+              fetch(`${window.APP_CONFIG.API_BASE_URL}/api/v1/image_style/query/${this.taskId}`, {
                 headers: {
                   'Content-Type': 'application/json'
                 }
@@ -640,7 +647,7 @@ export default {
     }
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     // 清除轮询定时器
     if (this.pollingInterval) {
       clearInterval(this.pollingInterval);
@@ -649,11 +656,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style>
 .content {
-  padding: 24px;
-  min-height: 100vh;
-  background-color: #f8f9fa;
+  padding: 20px;
 }
 
 .page-header {
@@ -667,20 +672,6 @@ export default {
   font-size: 24px;
   color: #212529;
   margin: 0;
-}
-
-.action-btn {
-  background: none;
-  border: none;
-  color: #ba003f;
-  cursor: pointer;
-  padding: 8px;
-  font-size: 20px;
-  transition: color 0.3s;
-}
-
-.action-btn:hover {
-  color: #d4004d;
 }
 
 .function-container {
@@ -1030,86 +1021,6 @@ textarea.form-control {
   gap: 8px;
 }
 
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-.modal-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #e9ecef;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-header h3 {
-  margin: 0;
-  color: #212529;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.modal-header h3 i {
-  color: #ba003f;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: #6c757d;
-  transition: color 0.3s;
-}
-
-.close-btn:hover {
-  color: #212529;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.modal-body h4 {
-  margin-top: 0;
-  color: #212529;
-}
-
-.tips-section {
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.tips-section:last-child {
-  border-bottom: none;
-}
-
-.tips-section h5 {
-  color: #ba003f;
-  margin-bottom: 8px;
-}
-
 .spinning {
   animation: spin 1s linear infinite;
 }
@@ -1177,5 +1088,21 @@ textarea.form-control {
 .style-radio-item input[type="radio"]:checked + label:hover {
   background-color: #d4004d;
   border-color: #d4004d;
+}
+
+.style-radio-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.style-radio-item.disabled label {
+  cursor: not-allowed;
+  color: #6c757d;
+  background-color: #e9ecef;
+}
+
+.style-radio-item.disabled label:hover {
+  background-color: #e9ecef;
+  border-color: #e9ecef;
 }
 </style> 

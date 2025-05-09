@@ -2,6 +2,14 @@ from flask import Blueprint
 
 api_blueprint = Blueprint('api', __name__, url_prefix='/api/v1')
 
+# 添加CORS响应处理装饰器
+@api_blueprint.after_request
+def add_cors_headers(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
+
 # 导入LLM蓝图
 from app.api.llm import llm_blueprint
 
@@ -44,13 +52,14 @@ from app.api.academic_paper import academic_paper_bp
 # 导入音频转文本蓝图
 from app.api.audio_to_text import audio_to_text_bp
 
-# 导入文件对话蓝图
-try:
-    from app.api.file_chat import file_chat_bp
-except ImportError as e:
-    import logging
-    logging.error(f"导入file_chat模块失败: {e}")
-    file_chat_bp = None
+# 导入v1版本API蓝图
+from app.api.v1 import api_v1_blueprint
+
+# 导入创客贴API蓝图
+from app.api.chuangkit import chuangkit_bp
+
+# 注册v1版本API蓝图
+api_blueprint.register_blueprint(api_v1_blueprint)
 
 # 注册LLM蓝图
 api_blueprint.register_blueprint(llm_blueprint, url_prefix='/llm')
@@ -86,7 +95,7 @@ api_blueprint.register_blueprint(aibeings_ppt_info_bp, url_prefix='/aibeings')
 api_blueprint.register_blueprint(aibeings_task_status_bp, url_prefix='/aibeings')
 
 # 注册文件上传蓝图
-api_blueprint.register_blueprint(upload_blueprint)
+api_blueprint.register_blueprint(upload_blueprint, url_prefix='/upload')
 
 # 注册论文大纲编写蓝图
 api_blueprint.register_blueprint(academic_paper_bp, url_prefix='/academic')
@@ -94,12 +103,8 @@ api_blueprint.register_blueprint(academic_paper_bp, url_prefix='/academic')
 # 注册音频转文本蓝图
 api_blueprint.register_blueprint(audio_to_text_bp)
 
-# 注册文件对话蓝图
-if file_chat_bp:
-    api_blueprint.register_blueprint(file_chat_bp, url_prefix='/file_chat')
-    print("成功注册文件对话蓝图，路径: /api/v1/file_chat")
-else:
-    print("警告: 未能注册文件对话蓝图，模块导入失败")
+# 注册创客贴API蓝图
+api_blueprint.register_blueprint(chuangkit_bp, url_prefix='/chuangkit')
 
 # 推迟导入视图，避免循环引用
 from app.api import apps, users 

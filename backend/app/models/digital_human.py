@@ -9,6 +9,7 @@ class PPTVideoTask(db.Model):
     __tablename__ = 'ppt_video_tasks'
     
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, comment='用户ID')
     ppt_url = db.Column(db.String(500), nullable=False, comment='PPT文件URL')
     text_script = db.Column(db.Text, nullable=True, comment='讲解文本')
     title = db.Column(db.String(255), nullable=False, comment='视频标题')
@@ -33,6 +34,7 @@ class PPTVideoTask(db.Model):
         """
         return {
             'id': self.id,
+            'user_id': self.user_id,
             'ppt_url': self.ppt_url,
             'text_script': self.text_script,
             'title': self.title,

@@ -1,4 +1,4 @@
-from app import db
+from app.extensions import db
 from app.models.aibeing import AIBeing
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Dict, Any, Optional, Tuple

@@ -1,12 +1,13 @@
 <template>
-  <div class="longform-article-page">
+  <div class="longform-article-page text-creation-page">
     <div class="page-header">
       <div class="page-nav">
         <h2>诗歌创作</h2>
       </div>
       <div class="page-actions">
-        <button class="action-btn" title="创作小贴士" @click="showTips">
-          <i class="ri-lightbulb-line"></i>
+        <button class="learn-button" title="知识学习" @click="showKnowledge">
+          <i class="ri-book-open-line"></i>
+          知识学习
         </button>
       </div>
     </div>
@@ -92,12 +93,12 @@
         
         <!-- 生成按钮 -->
         <div class="action-buttons">
-          <button @click="generateLongform" class="btn btn-primary" :disabled="isGenerating">
+          <button @click="generateLongform" class="primary-button" :disabled="isGenerating">
             <i class="ri-magic-line" v-if="!isGenerating"></i>
             <i class="ri-loader-4-line spinning" v-else></i>
             {{ isGenerating ? '生成中...' : '创作诗歌' }}
           </button>
-          <button @click="resetForm" class="btn btn-secondary">
+          <button @click="resetForm" class="secondary-button">
             <i class="ri-refresh-line"></i>
             重置
           </button>
@@ -108,7 +109,7 @@
       <div class="right-column">
         <!-- 参考案例部分 -->
         <div class="examples-section">
-          <div class="examples-header">
+          <div class="section-header">
             <h3 class="section-title">
               <i class="ri-lightbulb-flash-line"></i>
               参考案例
@@ -127,67 +128,69 @@
           <div class="example-carousel">
             <div class="example-cards" ref="exampleCarousel" :style="{transform: `translateX(${exampleTranslateX}px)`}">
               <div class="example-card" v-for="(example, index) in examples" :key="index" @click="loadExample(example.id)">
-                <div class="example-icon">
-                  <!-- 使用固定的紫荆红色SVG图标，确保一定能显示 -->
-                  <svg v-if="example.id === 'modern1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 现代诗图标 -->
-                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'classical1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 古典诗图标 -->
-                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'free1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 自由诗图标 -->
-                    <path d="M10.5 21.5V.5"></path>
-                    <path d="M5.5 13.5c7-2 10-6 10-13"></path>
-                    <path d="M5.5 18.5c6.3-1.7 9-5.5 9.5-9.5"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'song1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 宋词图标 -->
-                    <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'tang1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 唐诗图标 -->
-                    <path d="M12 8L7 13M12 8L17 13M12 8V20M4 19V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14"></path>
-                    <path d="M3 19h18"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'haiku1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 俳句图标 -->
-                    <path d="M6 20h0a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h0"></path>
-                    <path d="M8 2v4"></path>
-                    <path d="M16 2v4"></path>
-                    <path d="M8 10h8"></path>
-                    <path d="M8 14h4"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'landscape1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 山水图标 -->
-                    <path d="m8 3 4 8 5-5 5 15H2L8 3z"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'love1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 爱情图标 -->
-                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
-                  </svg>
-                  <svg v-else-if="example.id === 'philosophical1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 哲理图标 -->
-                    <path d="M2 12h5M9 12h5M16 12h5"></path>
-                    <path d="M12 2v20"></path>
-                    <path d="M8 17a5 5 0 1 0 8 0"></path>
-                  </svg>
-                  <svg v-else xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- 默认诗歌图标 -->
-                    <path d="M12 2L22 8.5V15.5L12 22L2 15.5V8.5L12 2Z"></path>
-                    <path d="M12 22V15.5"></path>
-                    <path d="M22 8.5L12 15.5L2 8.5"></path>
-                    <path d="M12 2V8.5"></path>
-                    <path d="M12 15.5L17 18.5"></path>
-                    <path d="M7 11.5L12 8.5"></path>
-                  </svg>
-                </div>
-                <div class="example-info">
-                  <span class="example-title">{{example.title}}</span>
-                  <span class="example-desc">{{example.type}}</span>
+                <div class="example-card-header">
+                  <div class="example-icon">
+                    <!-- 使用固定的紫荆红色SVG图标，确保一定能显示 -->
+                    <svg v-if="example.id === 'modern1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 现代诗图标 -->
+                      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                    </svg>
+                    <svg v-else-if="example.id === 'classical1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 古典诗图标 -->
+                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+                    </svg>
+                    <svg v-else-if="example.id === 'free1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 自由诗图标 -->
+                      <path d="M10.5 21.5V.5"></path>
+                      <path d="M5.5 13.5c7-2 10-6 10-13"></path>
+                      <path d="M5.5 18.5c6.3-1.7 9-5.5 9.5-9.5"></path>
+                    </svg>
+                    <svg v-else-if="example.id === 'song1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 宋词图标 -->
+                      <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"></path>
+                    </svg>
+                    <svg v-else-if="example.id === 'tang1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 唐诗图标 -->
+                      <path d="M12 8L7 13M12 8L17 13M12 8V20M4 19V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14"></path>
+                      <path d="M3 19h18"></path>
+                    </svg>
+                    <svg v-else-if="example.id === 'haiku1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 俳句图标 -->
+                      <path d="M6 20h0a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h0"></path>
+                      <path d="M8 2v4"></path>
+                      <path d="M16 2v4"></path>
+                      <path d="M8 10h8"></path>
+                      <path d="M8 14h4"></path>
+                    </svg>
+                    <svg v-else-if="example.id === 'landscape1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 山水图标 -->
+                      <path d="m8 3 4 8 5-5 5 15H2L8 3z"></path>
+                    </svg>
+                    <svg v-else-if="example.id === 'love1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 爱情图标 -->
+                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+                    </svg>
+                    <svg v-else-if="example.id === 'philosophical1'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 哲理图标 -->
+                      <path d="M2 12h5M9 12h5M16 12h5"></path>
+                      <path d="M12 2v20"></path>
+                      <path d="M8 17a5 5 0 1 0 8 0"></path>
+                    </svg>
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#BA003F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- 默认诗歌图标 -->
+                      <path d="M12 2L22 8.5V15.5L12 22L2 15.5V8.5L12 2Z"></path>
+                      <path d="M12 22V15.5"></path>
+                      <path d="M22 8.5L12 15.5L2 8.5"></path>
+                      <path d="M12 2V8.5"></path>
+                      <path d="M12 15.5L17 18.5"></path>
+                      <path d="M7 11.5L12 8.5"></path>
+                    </svg>
+                  </div>
+                  <div class="example-info">
+                    <span class="example-title">{{example.title}}</span>
+                    <span class="example-desc">{{example.type}}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -218,51 +221,50 @@
             </div>
           </div>
           
-          <div class="result-content-wrapper">
-            <!-- 加载动画 -->
-            <div v-if="isGenerating" class="loading-overlay">
-              <div class="loading-spinner"></div>
-              <div class="loading-text">{{ loadingText }}</div>
+          <!-- 加载动画 -->
+          <div v-if="isGenerating" class="loading-overlay">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">{{ loadingText }}</div>
+          </div>
+          
+          <!-- 无内容状态 -->
+          <div v-if="!generatedNote && !isGenerating" class="empty-result">
+            <div class="empty-content">
+              <img src="@/assets/images/no_data.png" class="empty-image" alt="暂无数据" />
+              <p class="empty-message">暂无诗歌内容，请点击"创作诗歌"按钮开始创作</p>
             </div>
-            
-            <div v-if="!generatedNote && !isGenerating" class="empty-result">
-              <div class="empty-content">
-                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgZmlsbC1vcGFjaXR5PSIuMDgiIGZpbGw9IiNEOEQ4RDgiIGN4PSI2NCIgY3k9IjY0IiByPSI2NCIvPjxwYXRoIGQ9Ik00MS41OTkgNDkuODhjMS4xIDAgMiAuOSAyIDJ2MzIuMjRjMCAxLjEtLjkgMi0yIDJoLTguOTdhLjk3Ljk3IDAgMDEtLjk1LS45NSAwIDAgMCAwLS4wNCAwIDAgMCAwLS4wM3YtMjkuNTFjMC0xLjk5IDEuNjItMy42MiAzLjYyLTMuNjJsMCAwUTQxLjU5OCA0OS44OTggNDEuNTk5IDQ5Ljg4ek04Ni4wNyA0OS44OGMxLjEgMCAyIC45IDIgMnYzMi4yNGMwIDEuMS0uOSAyLTIgMmgtOC45N3MtLjk2LS43OS0uOTYtLjk2VjUyLjgyYzAtMS42MiAxLjMyLTIuOTUgMi45NS0yLjk1bDAgMGg2Ljk4ek02NC4wNyA0Ni44M2MxLjMxIDAgMi4zNyAxLjA2IDIuMzcgMi4zN3YzNC44OGMwIDEuMzEtMS4wNiAyLjM3LTIuMzcgMi4zN2gtOS43YTIuMzcgMi4zNyAwIDAxLTIuMzctMi4zN1Y0OS4yYzAtMS4zMSAxLjA2LTIuMzcgMi4zNy0yLjM3bDAgMGg5LjciIGZpbGw9IiNFMUUxRTEiLz48cGF0aCBkPSJNMzIuNjMgNjkuNzVjMCAyLjYgMi4xMSA0LjcxIDQuNzEgNC43MXMyLjYtMi4xMSA0LjctNC43MS0yLjExLTQuNzEtNC43LTQuNzEtNC43MSAyLjExLTQuNzEgNC43MXpNODcuMDMgNjkuNzVjMCAyLjYtMi4xMSA0LjcxLTQuNzEgNC43MXMtNC43MS0yLjExLTQuNzEtNC43MSAyLjExLTQuNzEgNC43MS00LjcxIDQuNzEgMi4xMSA0LjcxIDQuNzF6TTY0LjQgNjcuMzhjMCAzLjczLTMuMDIgNi43NS02Ljc1IDYuNzVzLTYuNzYtMy4wMi02Ljc2LTYuNzUgMy4wMy02Ljc2IDYuNzYtNi43NiA2Ljc1IDMuMDMgNi43NSA2Ljc2eiIgZmlsbD0iI0JBMDA0MCIgZmlsbC1vcGFjaXR5PSIuNSIvPjwvZz48L3N2Zz4=" class="empty-image" alt="暂无数据" />
-                <p class="empty-message">暂无诗歌内容，请点击"创作诗歌"按钮开始创作</p>
-              </div>
-            </div>
-            
-            <div v-else-if="generatedNote" class="note-result" :class="{'blur-content': isGenerating}">
-              <textarea v-model="generatedNote" class="result-textarea" readonly></textarea>
+          </div>
+          
+          <!-- 有内容状态 - 直接显示诗歌，移除多余嵌套 -->
+          <div v-else-if="generatedNote" :class="{'blur-content': isGenerating}" class="poem-container">
+            <div class="poem-wrapper" :class="noteType">
+              <div class="poem-title">{{ extractPoemTitle() }}</div>
+              <div class="poem-content" v-html="formattedPoemContent()"></div>
             </div>
           </div>
         </div>
       </div>
     </div>
     
-    <!-- 创作小贴士模态框 -->
-    <div class="modal" v-if="showTipsModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3><i class="ri-lightbulb-line"></i> 创作小贴士</h3>
-          <button class="close-btn" @click="showTipsModal = false">
-            <i class="ri-close-line"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <ul class="tips-list">
-            <li>📝 明确主题 - 为诗歌选择一个具体、富有感染力的主题</li>
-            <li>🌈 运用意象 - 使用生动的意象来表达情感和思想</li>
-            <li>🎵 注重韵律 - 在朗读时注意诗歌的节奏感和音乐性</li>
-            <li>💫 精炼语言 - 用最少的词语表达最丰富的内涵</li>
-            <li>🧠 避免陈词滥调 - 寻找新颖独特的表达方式</li>
-            <li>🌟 运用修辞 - 适当使用比喻、拟人等修辞手法增强表现力</li>
-            <li>🌊 情感真实 - 保持情感的真实性和深度</li>
-            <li>🔄 修改完善 - 不断修改和打磨，让每个字词都有存在的必要</li>
-          </ul>
+    <!-- 知识学习侧边栏 -->
+    <el-drawer
+      v-model="showKnowledgeModal"
+      title="诗词创作知识"
+      direction="rtl"
+      size="30%"
+      :destroy-on-close="false"
+      class="knowledge-drawer"
+    >
+      <div class="knowledge-content">
+        <div v-for="(item, index) in poetryKnowledge" :key="index" class="knowledge-section">
+          <h3 class="knowledge-subtitle">
+            <i :class="item.icon" class="knowledge-icon"></i>
+            {{ item.subtitle }}
+          </h3>
+          <div class="knowledge-text" v-html="formatMarkdown(item.text)"></div>
         </div>
       </div>
-    </div>
+    </el-drawer>
 
     <!-- 提示词模态框 -->
     <div class="modal" v-if="showPromptModal">
@@ -296,9 +298,14 @@
 
 <script>
 import axios from 'axios';
+import { poetryKnowledge } from '@/views/Knowledge_data.js';  // 导入诗词创作知识数据
+import { ElDrawer } from 'element-plus';  // 导入Element Plus的Drawer组件
 
 export default {
   name: 'Poetry',
+  components: {
+    ElDrawer  // 注册组件
+  },
   data() {
     return {
       // 表单数据
@@ -315,7 +322,7 @@ export default {
       lastUsedPrompt: null,
       
       // 模态框控制
-      showTipsModal: false,
+      showKnowledgeModal: false,
       showPromptModal: false,
       
       // 模型选择 - 默认使用火山引擎V3
@@ -340,6 +347,9 @@ export default {
         { id: 'philosophical1', title: '生死沉思', type: '哲理诗', icon: 'ri-mind-map-line' },
         { id: 'seasonal1', title: '春天的脚步', type: '季节诗', icon: 'ri-seedling-line' }
       ],
+      
+      // 诗词创作知识内容
+      poetryKnowledge: poetryKnowledge,
       
       // 示例数据模板
       exampleData: {
@@ -394,7 +404,7 @@ export default {
         },
         'love1': {
           noteType: 'modern-poem',
-          noteTitle: '思念情人',
+          noteTitle: '思念爱人',
           targetAudience: 'romantic',
           description: '描述对远方恋人的思念之情，以及相思带来的甜蜜与痛苦',
           keywords: '思念,距离,情书,等待,相思'
@@ -445,22 +455,26 @@ export default {
         console.log('获取模型列表响应:', response.data);
         
         if (response.data && response.data.status === 'success') {
-          // 不做过滤，获取所有可用模型
-          this.modelList = response.data.data || [];
-          console.log('可用模型列表:', this.modelList);
+          // 获取所有模型但进行过滤，只保留火山引擎R1和V3模型
+          const allModels = response.data.data || [];
+          // 过滤模型，只保留火山引擎R1和V3模型
+          this.modelList = allModels.filter(model => {
+            return model.id === 'deepseek-v3-vol' || 
+                   model.id === 'deepseek-r1-vol';
+          });
           
-          // 如果没有模型，添加默认模型
+          console.log('过滤后的可用模型列表:', this.modelList);
+          
+          // 如果过滤后没有模型，添加默认模型
           if (this.modelList.length === 0) {
             console.log('未找到可用模型，使用默认模型');
-            this.modelList.push({ id: 'deepseek-v3-vol', name: '火山引擎 DeepSeek V3' });
+            this.setupDefaultModels();
           }
           
-          // 默认选择火山引擎V3或第一个可用模型
-          if (!this.selectedModel) {
-            const volcanoModel = this.modelList.find(model => model.id === 'deepseek-v3-vol');
-            this.selectedModel = volcanoModel ? volcanoModel.id : (this.modelList[0] ? this.modelList[0].id : 'deepseek-v3-vol');
-            console.log('已选择模型:', this.selectedModel);
-          }
+          // 默认选择火山引擎V3
+          const volcanoModel = this.modelList.find(model => model.id === 'deepseek-v3-vol');
+          this.selectedModel = volcanoModel ? volcanoModel.id : (this.modelList[0] ? this.modelList[0].id : 'deepseek-v3-vol');
+          console.log('已选择模型:', this.selectedModel);
         } else {
           console.error('获取模型列表失败:', response.data?.message);
           this.setupDefaultModels();
@@ -480,12 +494,25 @@ export default {
       console.log('使用默认模型列表');
       this.modelList = [
         { id: 'deepseek-v3-vol', name: '火山引擎 DeepSeek V3' },
-        { id: 'deepseek-r1-vol', name: 'DeepSeek-R1（火山引擎）' },
-        { id: 'deepseek-r1-sf', name: 'DeepSeek-R1（硅基流动）' },
-        { id: 'deepseek-v3-sf', name: 'DeepSeek-V3（硅基流动）' },
-        { id: 'qwq-32b', name: '通义千问-32B（硅基流动）' }
+        { id: 'deepseek-r1-vol', name: 'DeepSeek-R1（火山引擎）' }
       ];
-      this.selectedModel = 'deepseek-v3-vol';
+    },
+    
+    // 格式化Markdown文本
+    formatMarkdown(text) {
+      if (!text) return '';
+      
+      // 处理加粗文本 **text**
+      let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      
+      // 处理换行符
+      formattedText = formattedText.replace(/\n\n/g, '<br><br>');
+      formattedText = formattedText.replace(/\n/g, '<br>');
+      
+      // 处理无序列表
+      formattedText = formattedText.replace(/- (.*?)(<br>|$)/g, '<li>$1</li>');
+      
+      return formattedText;
     },
     
     // 生成诗歌的方法
@@ -517,92 +544,112 @@ export default {
         this.loadingText = '正在创作诗歌，请耐心等待...';
         
         // 确保选择了模型
-        if (!this.selectedModel) {
-          this.selectedModel = 'deepseek-v3-vol';
+        let modelId = this.selectedModel;
+        if (!modelId) {
+          modelId = 'deepseek-v3';
           console.log('未选择模型，已自动选择默认模型');
         }
         
-        // 调用API (增加timeout和重试逻辑)
-        console.log('开始调用API，模型:', this.selectedModel);
-        
-        let maxRetries = 2;
-        let retryCount = 0;
-        let response;
-        
-        while (retryCount <= maxRetries) {
-          try {
-            if (retryCount > 0) {
-              this.loadingText = `正在重试生成 (${retryCount}/${maxRetries})...`;
-              console.log(`尝试第${retryCount}次重试...`);
-            }
-            
-            response = await axios.post('/api/v1/llm/chat', {
-              model: this.selectedModel,
-              messages: apiMessages,
-              temperature: 0.8,
-              top_p: 0.95,
-              max_tokens: 2000
-            }, { 
-              timeout: 60000 // 设置60秒超时
-            });
-            
-            // 如果成功获取响应，跳出重试循环
-            break;
-          } catch (error) {
-            console.error(`API调用失败 (尝试 ${retryCount+1}/${maxRetries+1}):`, error.message);
-            
-            if (retryCount === maxRetries) {
-              // 所有重试都失败了，抛出最后一个错误
-              throw error;
-            }
-            
-            // 增加重试次数并继续
-            retryCount++;
-            // 等待一段时间再重试 (1秒)
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
+        // 将 deepseek-v3-vol 更改为 deepseek-v3
+        if (modelId === 'deepseek-v3-vol') {
+          modelId = 'deepseek-v3';
         }
         
-        // 日志记录API响应状态
-        console.log('API响应状态:', response.status);
-        console.log('API响应数据:', response.data);
+        console.log('开始调用流式API，模型:', modelId);
         
-        if (response.data && response.data.status === 'success') {
-          // 从响应中提取生成的内容
-          let content = '';
+        // 构建请求参数
+        const requestData = {
+          model: modelId,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.8,
+          top_p: 0.95,
+          stream: true,
+          max_tokens: 2000
+        };
+        
+        // 使用fetch API进行流式请求
+        const response = await fetch('/api/v1/v1/deepseek_volcano/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream'
+          },
+          body: JSON.stringify(requestData)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`服务器返回错误: ${response.status}`);
+        }
+        
+        // 获取响应的reader用于流式处理
+        const reader = response.body.getReader();
+        
+        // 清空之前的生成内容
+        this.generatedNote = '';
+        
+        // 处理流式数据
+        const processStream = async () => {
+          let decoder = new TextDecoder('utf-8');
           
-          if (response.data.data && response.data.data.choices && response.data.data.choices.length > 0) {
-            // 火山引擎格式
-            const message = response.data.data.choices[0].message;
-            content = message.content || '';
-            console.log('使用火山引擎响应格式');
-          } else if (response.data.data && response.data.data.response) {
-            // 硅基流动格式
-            content = response.data.data.response || '';
-            console.log('使用硅基流动响应格式');
-          } else if (response.data.data && typeof response.data.data === 'string') {
-            // 直接返回字符串
-            content = response.data.data;
-            console.log('使用字符串响应格式');
-          } else if (response.data.content) {
-            // 直接包含在内容字段
-            content = response.data.content;
-            console.log('使用content字段响应格式');
+          while (true) {
+            const { done, value } = await reader.read();
+            
+            if (done) {
+              console.log('流式响应完成');
+              break;
+            }
+            
+            // 解码接收到的数据
+            const chunk = decoder.decode(value, { stream: true });
+            console.log('收到流式数据块:', chunk);
+            
+            // 处理接收到的数据，通常格式为 "data: {...}\n\n"
+            const lines = chunk.split('\n');
+            
+            for (const line of lines) {
+              if (line.startsWith('data: ') && line.length > 6) {
+                try {
+                  const dataStr = line.substring(6); // 去掉 "data: " 前缀
+                  
+                  // 处理特殊的 [DONE] 结束标记
+                  if (dataStr.trim() === '[DONE]') {
+                    console.log('收到结束标记 [DONE]');
+                    continue;
+                  }
+                  
+                  const data = JSON.parse(dataStr);
+                  
+                  // 从响应中提取内容
+                  let content = '';
+                  
+                  if (data.choices && data.choices.length > 0 && data.choices[0].delta) {
+                    content = data.choices[0].delta.content || '';
+                  } else if (data.content) {
+                    content = data.content;
+                  }
+                  
+                  if (content) {
+                    // 累加内容到结果中
+                    this.generatedNote += content;
+                  }
+                } catch (e) {
+                  console.error('解析流式数据出错:', e, line);
+                }
+              }
+            }
           }
-          
-          if (content) {
-            this.generatedNote = content;
-            console.log('成功获取诗歌内容');
-            // 添加成功提示
-            this.$message ? this.$message.success('诗歌创作成功！') : alert('诗歌创作成功！');
-          } else {
-            console.error('API返回成功，但无法提取内容:', response.data);
-            throw new Error('无法从API响应中提取内容');
-          }
+        };
+        
+        // 开始处理流
+        await processStream();
+        
+        if (this.generatedNote) {
+          console.log('成功获取诗歌内容');
+          // 添加成功提示
+          this.$message ? this.$message.success('诗歌创作成功！') : alert('诗歌创作成功！');
         } else {
-          // 处理API响应不成功的情况
-          console.error('API返回不成功状态:', response.data);
-          throw new Error(response.data?.message || '服务器返回错误');
+          console.error('API返回成功，但无内容');
+          throw new Error('无法从API响应中获取内容');
         }
       } catch (error) {
         console.error('生成诗歌出错，详细错误:', error);
@@ -721,8 +768,8 @@ export default {
     },
     
     // 显示创作小贴士
-    showTips() {
-      this.showTipsModal = true;
+    showKnowledge() {
+      this.showKnowledgeModal = true;
     },
     
     // 复制生成的文本
@@ -731,7 +778,7 @@ export default {
       
       try {
         navigator.clipboard.writeText(this.generatedNote).then(() => {
-          this.$message ? this.$message.success('内容已复制到剪贴板') : alert('内容已复制到剪贴板');
+          this.$message ? this.$message.success('诗歌已复制到剪贴板') : alert('诗歌已复制到剪贴板');
         });
       } catch (error) {
         console.error('复制失败:', error);
@@ -825,892 +872,525 @@ export default {
         this.description = example.description;
         this.keywords = example.keywords || '';
       }
+    },
+    
+    // 提取诗歌标题
+    extractPoemTitle() {
+      if (!this.generatedNote) return this.noteTitle || '无题';
+      
+      // 检查是否有《》包围的标题
+      const titleMatch = this.generatedNote.match(/《([^》]+)》/);
+      if (titleMatch && titleMatch[1]) {
+        return titleMatch[1];
+      }
+      
+      // 检查是否有"标题："格式
+      const titlePrefixMatch = this.generatedNote.match(/标题[:：]\s*(.+)[\n\r]/);
+      if (titlePrefixMatch && titlePrefixMatch[1]) {
+        return titlePrefixMatch[1];
+      }
+      
+      // 使用用户输入的主题作为标题
+      return this.noteTitle || '无题';
+    },
+    
+    // 格式化诗歌内容
+    formattedPoemContent() {
+      if (!this.generatedNote) return '';
+      
+      let content = this.generatedNote;
+      
+      // 移除可能的标题行
+      content = content.replace(/《([^》]+)》\s*[\n\r]?/, '');
+      content = content.replace(/标题[:：]\s*.+[\n\r]/, '');
+      
+      // 根据诗歌类型应用不同的格式
+      if (this.noteType === 'haiku') {
+        // 俳句格式：将每行加上特殊的样式
+        content = content.split('\n').map(line => {
+          if (line.trim()) {
+            return `<div class="haiku-line">${line}</div>`;
+          }
+          return '<div class="poem-separator"></div>';
+        }).join('');
+      } else if (this.noteType === 'classical-poem' || this.noteType === 'tang-poem') {
+        // 古典诗词格式：注意平仄和对仗
+        content = content.split('\n').map(line => {
+          if (line.trim()) {
+            return `<div class="classical-line">${line}</div>`;
+          }
+          return '<div class="poem-separator"></div>';
+        }).join('');
+      } else if (this.noteType === 'song-ci') {
+        // 宋词格式：段落之间的区分更明显
+        content = content.split('\n').map(line => {
+          if (line.trim()) {
+            return `<div class="classical-line">${line}</div>`;
+          }
+          return '<div class="poem-separator"></div>';
+        }).join('');
+      } else if (this.noteType === 'free-verse') {
+        // 自由诗：行与行之间的位置可以更自由
+        content = content.split('\n').map((line, index) => {
+          if (line.trim()) {
+            // 让每行的缩进不同，营造参差错落的效果
+            const indent = index % 3 === 0 ? 'style="margin-left: 10px;"' : 
+                           index % 3 === 1 ? 'style="margin-left: 30px;"' : 
+                           'style="margin-left: 50px;"';
+            return `<div class="poem-line" ${indent}>${line}</div>`;
+          }
+          return '<div class="poem-separator"></div>';
+        }).join('');
+      } else {
+        // 现代诗格式
+        content = content.split('\n').map(line => {
+          if (line.trim()) {
+            return `<div class="poem-line">${line}</div>`;
+          }
+          return '<div class="poem-separator"></div>';
+        }).join('');
+      }
+      
+      return content;
     }
   },
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('resize', this.updateCarouselPosition);
   }
 };
 </script>
 
 <style scoped>
+@import "../../../assets/css/text-creation-common.css";
+
+/* 重置所有可能的滚动设置 - 确保只有最外层有滚动条 */
+.note-result, 
+.poem-wrapper, 
+.result-content-wrapper,
+.empty-result,
+.loading-overlay {
+  overflow: visible !important;
+  max-height: none !important;
+  height: auto !important;
+}
+
+/* 页面布局和大小调整 */
 .longform-article-page {
-  padding: 0;
-  margin-top: -40px;
+  padding: 20px;
+  height: calc(100vh - 60px);
+  overflow-y: auto; /* 只在顶层保留滚动 */
+  background-color: #f5f7fa;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding: 0;
-}
-
-.page-nav h2 {
-  font-size: 24px;
-  color: #333;
-  margin: 0;
-}
-
-.page-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.action-btn {
-  background: none;
-  border: none;
-  color: #666;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s;
-}
-
-.action-btn:hover {
-  background-color: #f5f5f5;
-  color: var(--primary-color, #ba003f);
-  transform: scale(1.1);
-  box-shadow: 0 2px 6px rgba(186, 0, 63, 0.2);
-}
-
-/* 主要内容区域 - 使用两列布局 */
 .main-container {
   display: flex;
   gap: 20px;
-  min-height: calc(100vh - 120px);
+  position: relative;
+  padding-bottom: 30px; /* 增加底部内边距确保内容完全包含 */
 }
 
-/* 左侧：输入参数 */
+/* 左侧输入区域 */
 .input-section {
-  width: 45%;
-  background-color: #fff;
+  flex: 0 0 300px;
+  background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  padding: 15px;
+  padding: 20px;
+  padding-bottom: 50px; /* 增加底部内边距确保内容都被包含 */
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  height: fit-content;
+  position: sticky;
+  top: 20px;
   display: flex;
   flex-direction: column;
+  margin-bottom: 30px; /* 增加底部外边距 */
 }
 
-.section-header {
+/* 确保表单组和按钮区域正确显示 */
+.form-group {
+  margin-bottom: 18px;
+  width: 100%;
+}
+
+.form-group:last-of-type {
+  margin-bottom: 25px; /* 最后一个表单元素与按钮区域的间距 */
+}
+
+/* 左侧输入区域的按钮样式 */
+.input-section .action-buttons {
+  margin-top: 25px;
+  width: 100%;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.section-title {
-  font-size: 18px;
-  color: #333;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.section-title i {
-  color: var(--primary-color, #ba003f);
-}
-
-.form-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.form-group {
-  flex: 1;
-  margin-bottom: 16px;
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.form-group:hover label {
-  color: var(--primary-color, #ba003f);
-}
-
-/* 标签动画效果 */
-.form-group label {
-  transition: color 0.3s ease;
-  font-weight: 500;
-  display: block;
-  margin-bottom: 6px;
-}
-
-/* 焦点状态下整个表单组的效果 */
-.form-group:focus-within {
-  transform: translateY(-2px);
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #444;
-  font-size: 14px;
-}
-
-.required:after {
-  content: " *";
-  color: var(--primary-color, #ba003f);
-}
-
-.form-control {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.form-control:focus {
-  border-color: var(--primary-color, #ba003f);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-/* 下拉菜单的自定义样式 */
-select.form-control {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
-  background-repeat: no-repeat;
-  background-position: calc(100% - 12px) center;
-  background-size: 12px;
-  padding-right: 32px;
-  cursor: pointer;
-  transition: all 0.3s;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-select.form-control:hover {
-  border-color: #bbb;
-  background-color: #f9f9f9;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-}
-
-select.form-control:focus {
-  border-color: var(--primary-color, #ba003f);
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23ba003f' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
-}
-
-/* 优化下拉选项样式 */
-select.form-control option {
-  padding: 10px;
-  font-size: 14px;
-}
-
-/* 禁用状态样式 */
-select.form-control:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #f5f5f5;
-}
-
-/* 文本区域样式优化 */
-textarea.form-control {
-  min-height: 100px;
-  line-height: 1.5;
-  resize: vertical;
-  background-color: #fafafa;
-  transition: all 0.3s ease;
-}
-
-textarea.form-control:focus {
-  background-color: #fff;
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-/* 复选框样式 */
-.checkbox-group {
-  display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 10px;
+  margin-bottom: 15px;
 }
 
-.checkbox-container {
-  display: flex;
-  align-items: center;
-  background-color: #f9f9f9;
-  padding: 8px 14px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid transparent;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
-  position: relative;
-}
-
-.checkbox-container:hover {
-  background-color: #f0f0f0;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
-}
-
-.checkbox-container input {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-  height: 0;
-  width: 0;
-}
-
-.checkbox-container span {
-  padding-left: 24px;
-  position: relative;
-  font-weight: 500;
-  color: #555;
-}
-
-.checkbox-container span:before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  background-color: #fff;
-  transition: all 0.2s ease;
-}
-
-.checkbox-container input:checked + span:before {
-  background-color: var(--primary-color, #ba003f);
-  border-color: var(--primary-color, #ba003f);
-}
-
-.checkbox-container input:checked + span:after {
-  content: '';
-  position: absolute;
-  left: 6px;
-  top: 3px;
-  width: 6px;
-  height: 10px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-.checkbox-container input:focus + span:before {
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-.checkbox-container:active {
-  transform: scale(0.98);
-}
-
-/* 操作按钮 */
-.action-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 15px;
-}
-
-.btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  height: 44px;
-  padding: 0 16px;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  border: none;
-}
-
-.btn:active {
-  transform: scale(0.96);
-}
-
-.btn i {
-  font-size: 16px;
-}
-
-.btn-primary {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  flex: 1;
-}
-
-.btn-primary:hover {
-  background-color: #d4004c;
-  box-shadow: 0 4px 12px rgba(186, 0, 63, 0.3);
-  transform: translateY(-2px);
-}
-
-.btn-primary:disabled {
-  background-color: #e0e0e0;
-  color: #999;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.btn-secondary {
-  background-color: #f5f5f5;
-  color: #666;
-}
-
-.btn-secondary:hover {
-  background-color: #eaeaea;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-/* 右侧：输出内容 */
+/* 右侧内容区域 */
 .right-column {
-  width: 55%;
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0; /* 防止内容溢出 */
 }
 
-/* 示例区域 */
+/* 示例部分 */
 .examples-section {
-  background-color: #f9f9f9;
+  background: white;
   border-radius: 8px;
-  padding: 12px 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  margin-bottom: 0;
-  transition: all 0.3s;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
-.examples-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.carousel-controls {
-  display: flex;
-  gap: 10px;
-}
-
-.carousel-control {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid #ddd;
-  background-color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: #666;
-}
-
-.carousel-control:hover:not(.disabled):not(:disabled) {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  border-color: var(--primary-color, #ba003f);
-  transform: scale(1.05);
-}
-
-.carousel-control.disabled,
-.carousel-control:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.carousel-control i {
-  font-size: 18px;
-}
-
-.example-carousel {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  padding-bottom: 5px;
-}
-
-.example-cards {
-  display: flex;
-  transition: transform 0.3s ease;
-  padding: 8px 0;
-  gap: 0;
-}
-
-.example-card {
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 12px;
-  margin-right: 15px;
-  width: 200px;
-  min-width: 200px;
-  max-width: 200px;
-  height: 150px;
-  min-height: 150px;
-  max-height: 150px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.3s;
-  background-color: #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  overflow: hidden;
-  box-sizing: border-box;
-}
-
-.example-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(186, 0, 63, 0.15);
-  border-color: var(--primary-color, #ba003f);
-}
-
-.example-icon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background-color: rgba(186, 0, 63, 0.1);
-  margin-bottom: 12px;
-}
-
-.example-icon svg {
-  width: 32px;
-  height: 32px;
-  color: #BA003F;
-}
-
-.example-info {
-  display: flex;
-  flex-direction: column;
-  text-align: center;
-  overflow: hidden;
-  width: 100%;
-}
-
-.example-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 5px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.example-desc {
-  font-size: 12px;
-  color: #888;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-/* 结果区域 */
+/* 结果部分 */
 .result-section {
-  flex: 1;
-  background-color: #fff;
+  background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  overflow-y: auto;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  height: auto; /* 自动适应内容高度 */
+  min-height: 650px; /* 设置更大的最小高度，确保容器足够大 */
   display: flex;
   flex-direction: column;
-  padding: 0;
 }
 
+/* 确保空间充足 */
 .section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 15px;
-  border-bottom: 1px solid #eee;
-  background-color: #fff;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.section-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-}
-
-.section-title {
-  display: flex;
-  align-items: center;
-  color: #333;
-  font-size: 16px;
-  margin: 0;
-  font-weight: 600;
-}
-
-.section-title i {
-  margin-right: 8px;
-  font-size: 20px;
-  color: var(--primary-color, #ba003f);
+  margin-bottom: 15px; /* 增加头部与内容区的间距 */
 }
 
 .result-content-wrapper {
   position: relative;
-  flex: 1;
+  min-height: 300px;
   display: flex;
   flex-direction: column;
-  min-height: 300px;
+  flex: 1;
 }
 
+/* 按钮样式确保不超出容器 */
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.action-buttons button {
+  padding: 0 15px;
+  height: 36px;
+  white-space: nowrap;
+}
+
+/* 诗歌容器样式 */
+.poem-container {
+  overflow-y: auto !important;
+  max-height: 600px !important; /* 使用最大高度而非固定高度 */
+  padding: 15px;
+  flex: 1; /* 让容器自适应填充剩余空间 */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 居中显示诗歌 */
+  background-color: #f9f9f9; /* 使用微妙的背景色增加视觉区分 */
+  border-radius: 0 0 8px 8px; /* 底部边角圆角 */
+  margin-bottom: 10px; /* 底部增加间距 */
+}
+
+/* 诗歌内容展示的特殊样式 */
+.poem-wrapper {
+  max-width: 600px;
+  width: 100%; /* 确保宽度撑开 */
+  margin: 0 auto;
+  padding: 30px;
+  background-color: #fffbf0;
+  border-radius: 10px;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+  min-height: 300px;
+  height: auto; /* 自动适应内容高度 */
+  overflow: visible !important;
+}
+
+.poem-wrapper.classical-poem,
+.poem-wrapper.tang-poem,
+.poem-wrapper.song-ci {
+  font-family: "KaiTi", "STKaiti", "FangSong", "SimSun", serif;
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+.poem-wrapper.modern-poem,
+.poem-wrapper.free-verse {
+  font-family: "PingFang SC", "Helvetica Neue", Helvetica, "Microsoft YaHei", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.poem-wrapper.haiku {
+  font-family: "PingFang SC", "Helvetica Neue", Helvetica, "Microsoft YaHei", Arial, sans-serif;
+  font-size: 18px;
+  line-height: 2;
+}
+
+.poem-title {
+  font-size: 24px;
+  text-align: center;
+  margin-bottom: 25px;
+  color: #5d4037;
+  font-weight: bold;
+}
+
+.poem-content {
+  padding: 0 20px;
+  white-space: pre-wrap;
+}
+
+.poem-wrapper.classical-poem .poem-content,
+.poem-wrapper.tang-poem .poem-content,
+.poem-wrapper.song-ci .poem-content {
+  text-align: center;
+}
+
+/* 结果内容区样式 */
+.note-result {
+  padding: 15px;
+}
+
+/* 空白状态 */
+.empty-result {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  flex: 1; /* 让空白状态容器也填充剩余空间 */
+}
+
+.empty-content {
+  text-align: center;
+  padding: 20px;
+}
+
+.empty-image {
+  width: 120px;
+  margin-bottom: 20px;
+  opacity: 0.7;
+}
+
+.empty-message {
+  color: #999;
+  font-size: 15px;
+}
+
+/* 加载状态 */
 .loading-overlay {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.9);
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  background: rgba(255, 255, 255, 0.8);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 10;
+  border-radius: 8px; /* 圆角与父容器匹配 */
 }
 
 .loading-spinner {
   width: 50px;
   height: 50px;
-  border: 3px solid rgba(186, 0, 63, 0.1);
+  border: 3px solid var(--primary-color, #ba003f);
   border-radius: 50%;
-  border-top-color: var(--primary-color, #ba003f);
+  border-top-color: transparent;
   animation: spin 1s linear infinite;
-  margin-bottom: 15px;
-}
-
-.loading-text {
-  font-size: 14px;
-  color: #666;
-}
-
-.empty-result {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-  text-align: center;
-}
-
-.empty-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.empty-image {
-  width: 120px;
-  height: 120px;
-  margin-bottom: 20px;
-}
-
-.empty-message {
-  margin: 0 0 20px;
-  font-size: 16px;
-  color: #666;
-}
-
-.note-result {
-  flex: 1;
-  padding: 15px;
-  overflow: hidden;
-  display: flex;
-  height: 100%;
-}
-
-.result-textarea {
-  width: 100%;
-  height: 100%;
-  min-height: 300px;
-  padding: 15px;
-  border: 1px solid #eee;
-  border-radius: 6px;
-  font-size: 15px;
-  line-height: 1.6;
-  color: #333;
-  resize: none;
-  background-color: #f9f9f9;
-  outline: none;
-  overflow-y: auto;
-  transition: border-color 0.3s;
-}
-
-.result-textarea:focus {
-  border-color: var(--primary-color, #ba003f);
-}
-
-.blur-content {
-  filter: blur(1px);
-  opacity: 0.6;
-  pointer-events: none;
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-/* 模态框 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
-  border-radius: 10px;
-  max-width: 600px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: #666;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.tips-list {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
-.tips-list li {
-  margin-bottom: 12px;
-  padding-left: 20px;
-  position: relative;
-  line-height: 1.5;
-}
-
-.tips-list li:before {
-  content: "•";
-  position: absolute;
-  left: 0;
+.loading-text {
+  margin-top: 15px;
   color: var(--primary-color, #ba003f);
-  font-weight: bold;
+  font-weight: 500;
 }
 
-/* 响应式调整 */
+/* 全面禁用所有内部滚动条样式（保留功能但美化外观） */
+.poem-container::-webkit-scrollbar {
+  width: 8px !important;
+  height: 8px !important;
+  display: block !important;
+}
+
+.poem-container::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.poem-container::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 4px;
+}
+
+.poem-container::-webkit-scrollbar-thumb:hover {
+  background: #ccc;
+}
+
+/* 其他元素仍然禁用滚动条 */
+.note-result::-webkit-scrollbar,
+.poem-wrapper::-webkit-scrollbar,
+.result-content-wrapper::-webkit-scrollbar,
+.empty-result::-webkit-scrollbar,
+.loading-overlay::-webkit-scrollbar,
+.prompt-content::-webkit-scrollbar,
+.prompt-modal::-webkit-scrollbar {
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+}
+
+/* 响应式样式 */
 @media (max-width: 1200px) {
   .main-container {
     flex-direction: column;
   }
   
-  .input-section, .right-column {
+  .input-section {
+    flex: none;
     width: 100%;
+    position: static;
+  }
+  
+  .right-column {
+    width: 100%;
+  }
+  
+  .poem-wrapper {
+    max-width: 100%;
+    overflow: visible !important; /* 强制避免移动端上的滚动 */
   }
 }
 
-/* 新增公众号风格按钮样式 */
-.primary-button {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  border: none;
-  padding: 0 16px;
-  height: 36px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: all 0.2s ease;
-}
-
-.primary-button:hover {
-  background-color: #d4004c;
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(186, 0, 63, 0.2);
-}
-
-.primary-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #ccc;
-  color: #666;
-  transform: none;
-  box-shadow: none;
-}
-
-.secondary-button {
-  background-color: #f5f5f5;
-  color: #666;
-  border: 1px solid #e0e0e0;
-  padding: 0 16px;
-  height: 36px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: all 0.2s ease;
-}
-
-.secondary-button:hover {
-  background-color: #eaeaea;
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-}
-
-.secondary-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #f5f5f5;
-  color: #aaa;
-  transform: none;
-  box-shadow: none;
-}
-
-.prompt-button {
-  background-color: white;
-  color: var(--primary-color, #ba003f);
-  border: 1px solid var(--primary-color, #ba003f);
-  padding: 0 16px;
-  height: 36px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: all 0.2s ease;
-}
-
-.prompt-button:hover {
-  background-color: rgba(186, 0, 63, 0.05);
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(186, 0, 63, 0.1);
-}
-
-.prompt-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  color: #aaa;
-  border-color: #e0e0e0;
-  transform: none;
-  box-shadow: none;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 0;
+@media (max-width: 768px) {
+  /* 移动端也确保没有内部滚动 */
+  .note-result, 
+  .poem-wrapper, 
+  .result-content-wrapper,
+  .empty-result,
+  .loading-overlay {
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+  
+  .poem-wrapper {
+    padding: 15px;
+    min-height: 300px;
+  }
+  
+  .empty-result, .loading-overlay {
+    min-height: 300px; /* 与poem-wrapper保持一致 */
+  }
+  
+  .poem-title {
+    font-size: 20px;
+    margin-bottom: 15px;
+  }
+  
+  .poem-content {
+    padding: 0 10px;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .section-header .action-buttons {
+    margin-top: 10px;
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .input-section {
+    padding-bottom: 30px;
+  }
+  
+  .note-result {
+    overflow: visible !important; /* 强制避免移动端上的滚动 */
+  }
+  
+  .result-content-wrapper {
+    overflow: visible !important; /* 强制避免移动端上的滚动 */
+  }
+  
+  .poem-container {
+    max-height: 500px !important; /* 移动端稍微减小高度 */
+  }
+  
+  /* 确保移动端下内容也能完整显示 */
+  .result-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 500px; /* 移动端也保持较大高度 */
+  }
 }
 
 /* 提示词模态框样式 */
 .prompt-modal {
   width: 90%;
-  max-width: 900px;
+  max-width: 800px;
 }
 
 .prompt-content {
-  background-color: #f9f9f9;
+  background-color: #fafafa;
+  padding: 15px;
   border-radius: 6px;
-  padding: 20px;
-  overflow-x: auto;
-  font-size: 15px;
-  line-height: 1.6;
-  color: #333;
-  white-space: normal;
-  max-height: 60vh;
-  overflow-y: auto;
+  max-height: none; /* 移除高度限制 */
+  overflow-y: visible; /* 不再使用auto */
 }
 
 .prompt-message {
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #eee;
-}
-
-.prompt-message:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
+  margin-bottom: 15px;
+  border-left: 3px solid var(--primary-color, #ba003f);
+  padding-left: 12px;
 }
 
 .prompt-role {
-  font-weight: 600;
-  margin-bottom: 8px;
+  font-weight: bold;
+  margin-bottom: 5px;
   color: var(--primary-color, #ba003f);
-  font-size: 16px;
 }
 
 .prompt-text {
   white-space: pre-wrap;
-  word-break: break-word;
+  line-height: 1.5;
+  font-family: monospace;
+  font-size: 14px;
 }
 
 .prompt-actions {
+  margin-top: 15px;
   display: flex;
   justify-content: flex-end;
+}
+
+/* 加载动画样式 - 特定于此页面的额外样式 */
+.loading-text {
   margin-top: 15px;
+  color: var(--primary-color, #ba003f);
+}
+
+/* 结果内容区样式 */
+.note-result {
+  padding: 15px;
+}
+
+/* 修复内容被截断的问题 */
+.blur-content {
+  filter: blur(3px);
+  pointer-events: none;
+  opacity: 0.7;
 }
 </style> 

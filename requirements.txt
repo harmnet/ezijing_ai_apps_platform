@@ -1,5 +1,47 @@
-requests>=2.25.1
+# 基础框架依赖
+flask>=2.0.0
+Flask-Cors>=3.0.10
+flask-jwt-extended==4.4.4
+flask-sqlalchemy==3.0.3
+flask-migrate==4.0.4
+werkzeug>=2.0.0
 python-dotenv>=0.19.0
-boto3>=1.18.0
-botocore>=1.21.0
-oss2>=2.15.0 
+gunicorn==20.1.0
+
+# 数据库相关
+SQLAlchemy==2.0.7
+pymysql==1.0.3
+marshmallow==3.19.0
+
+# HTTP及通信
+requests>=2.25.1
+
+# 图像及文件处理
+Pillow>=8.3.1
+python-magic>=0.4.24
+numpy>=1.21.2
+PyPDF2>=3.0.1
+
+# 数据验证
+pydantic==1.10.7
+
+# AI大模型
+openai==1.18.0
+tiktoken==0.9.0
+dashscope==1.14.0
+
+# 云存储服务
+oss2==2.19.1
+boto3>=1.26.0
+botocore>=1.29.0
+baidubce>=0.9.0
+
+# 火山引擎API
+volcengine-python-sdk>=1.1.0
+volcengine-python-sdk[ark]
+volcenginesdkarkruntime
+
+# 测试及开发工具
+pytest==7.3.1
+black==23.3.0
+flake8==6.0.0

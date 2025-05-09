@@ -5,8 +5,9 @@
         <h2>AI局部重绘</h2>
       </div>
       <div class="page-actions">
-        <button class="action-btn" title="创作小贴士" @click="showTips">
-          <i class="ri-lightbulb-line"></i>
+        <button class="learn-button" title="知识学习" @click="showTips">
+          <i class="ri-book-read-line"></i>
+          知识学习
         </button>
       </div>
     </div>
@@ -77,7 +78,7 @@
                 id="brushSize" 
                 v-model="brushSize" 
                 min="5" 
-                max="50" 
+                max="100" 
                 class="size-slider"
               >
               <span>{{ brushSize }}px</span>
@@ -201,71 +202,40 @@
       </div>
     </div>
 
-    <!-- 创作小贴士模态框 -->
-    <div class="modal" v-if="showTipsModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3><i class="ri-lightbulb-line"></i> 局部重绘小贴士</h3>
-          <button class="close-btn" @click="showTipsModal = false">
-            <i class="ri-close-line"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <h4>AI局部重绘使用指南</h4>
-          
-          <div class="tips-section">
-            <h5>使用场景</h5>
-            <ul>
-              <li><strong>换装</strong>：修改衣服颜色、款式等</li>
-              <li><strong>替换局部物件</strong>：如将桌上的茶杯替换为花瓶</li>
-              <li><strong>删除干扰物</strong>：去除旅游照片中的遮挡物或路人</li>
-            </ul>
-          </div>
-          
-          <div class="tips-section">
-            <h5>提示词技巧</h5>
-            <p><strong>增加或修改操作</strong>的提示词有两种方式：</p>
-            <ol>
-              <li>描述具体动作，例如"给小狗添加一顶帽子"</li>
-              <li>客观描述期望生成的内容，例如"一只戴着帽子的小狗"</li>
-            </ol>
-            <p><strong>删除操作</strong>的提示词策略：</p>
-            <ul>
-              <li>删除占据空间较少的元素时，可以留空提示词 (prompt="")</li>
-              <li>删除占据空间较大的元素时，需要详细描述擦除后的内容，例如"一个透明玻璃花瓶放在桌子上"，而非简单描述为"删除xxx"</li>
-            </ul>
-          </div>
-          
-          <div class="tips-section">
-            <h5>蒙版绘制指南</h5>
-            <p>上传图片后，您可以直接在图片上涂抹指定需要重绘的区域：</p>
-            <ul>
-              <li>使用<strong>画笔工具</strong>涂抹您想要AI重新生成的区域（白色）</li>
-              <li>使用<strong>橡皮擦</strong>清除不需要修改的部分（恢复为黑色）</li>
-              <li>调整<strong>笔刷大小</strong>以便于精确绘制</li>
-              <li>点击<strong>清除全部</strong>可以重新开始</li>
-              <li>白色区域表示需要重绘的部分，黑色区域表示保留的部分</li>
-            </ul>
-          </div>
-          
-          <div class="tips-section">
-            <h5>最佳实践</h5>
-            <ul>
-              <li>蒙版区域不宜过大，建议控制在图像的30%以内</li>
-              <li>提供足够详细的提示词，描述期望的重绘结果</li>
-              <li>图片处理可能需要30-60秒，请耐心等待</li>
-              <li>尝试使用不同的提示词以获得最佳效果</li>
-            </ul>
-          </div>
+    <!-- 知识学习侧边栏 -->
+    <el-drawer
+      v-model="showTipsModal"
+      title="AI局部重绘知识学习"
+      direction="rtl"
+      size="35%"
+      :destroy-on-close="false"
+      class="knowledge-drawer"
+    >
+      <div class="knowledge-content">
+        <div v-for="(item, index) in knowledgeData" :key="index" class="knowledge-section">
+          <h3 class="knowledge-subtitle">
+            <span class="knowledge-icon"><i :class="item.icon"></i></span>
+            {{ item.subtitle }}
+          </h3>
+          <div class="knowledge-text" v-html="formatText(item.text)"></div>
         </div>
       </div>
-    </div>
+    </el-drawer>
   </div>
 </template>
 
 <script>
+// 引入统一CSS文件
+import '@/assets/css/text-creation-common.css';
+import { ElDrawer } from 'element-plus';
+import { imageRedrawKnowledge } from '@/views/Knowledge_data.js';
+
 export default {
   name: 'ImageRedraw',
+  
+  components: {
+    ElDrawer
+  },
   
   data() {
     return {
@@ -282,6 +252,7 @@ export default {
       taskStatus: '',
       showTipsModal: false,
       pollingInterval: null,
+      knowledgeData: imageRedrawKnowledge,
       
       // 画布相关数据
       currentTool: 'brush', // 'brush' 或 'eraser'
@@ -298,6 +269,10 @@ export default {
   methods: {
     showTips() {
       this.showTipsModal = true;
+    },
+
+    formatText(text) {
+      return text.replace(/\n/g, '<br>');
     },
 
     triggerFileInput() {
@@ -371,7 +346,7 @@ export default {
         while (retryCount <= maxRetries) {
           try {
             response = await Promise.race([
-              fetch('http://localhost:3000/api/images/upload', {
+              fetch(`${window.APP_CONFIG.API_BASE_URL}/api/images/upload`, {
                 method: 'POST',
                 body: formData
               }),
@@ -489,10 +464,24 @@ export default {
           body: JSON.stringify(this.formData)
         });
         
+        console.log('创建任务API响应状态码:', createResponse.status);
+        const responseContentType = createResponse.headers.get('Content-Type');
+        console.log('响应Content-Type:', responseContentType);
+        
         const createResult = await createResponse.json();
+        console.log('创建任务API完整响应:', createResult);
         
         if (!createResult.success) {
-          throw new Error(createResult.error || '创建任务失败');
+          let errorMessage = '创建任务失败';
+          if (createResult.error) {
+            if (typeof createResult.error === 'object' && createResult.error.message) {
+              errorMessage = createResult.error.message;
+            } else {
+              errorMessage = createResult.error;
+            }
+          }
+          console.error('API错误响应:', createResult);
+          throw new Error(errorMessage);
         }
         
         this.taskId = createResult.data.task_id;
@@ -535,7 +524,7 @@ export default {
           try {
             // 使用阿里云图片局部重绘API查询任务
             statusResponse = await Promise.race([
-              fetch(`http://localhost:9000/api/v1/image_redraw/query/${this.taskId}`, {
+              fetch(`/api/v1/image_redraw/query/${this.taskId}`, {
                 headers: {
                   'Content-Type': 'application/json'
                 }
@@ -544,6 +533,10 @@ export default {
                 setTimeout(() => reject(new Error('请求超时')), 5000)
               )
             ]);
+            
+            console.log('查询任务API响应状态码:', statusResponse.status);
+            const queryResponseContentType = statusResponse.headers.get('Content-Type');
+            console.log('查询响应Content-Type:', queryResponseContentType);
           } catch (fetchError) {
             failedAttempts++;
             console.error(`轮询失败 (${failedAttempts}/${maxFailedAttempts}):`, fetchError);
@@ -561,7 +554,7 @@ export default {
           failedAttempts = 0;
           
           const statusResult = await statusResponse.json();
-          console.log('任务状态查询结果:', statusResult);
+          console.log('查询任务API完整响应:', statusResult);
           
           if (!statusResult.success) {
             throw new Error(statusResult.error || '查询任务状态失败');
@@ -569,6 +562,7 @@ export default {
           
           // 从阿里云API响应中获取状态信息
           const taskData = statusResult.data;
+          console.log('任务数据:', taskData);
           const status = taskData.task_status;
           
           // 更新任务状态
@@ -577,7 +571,17 @@ export default {
             clearInterval(this.pollingInterval);
             this.isLoading = false;
             this.taskStatus = '处理完成';
+            
+            // 调试日志：输出图片URL和数组长度
+            console.log('图片URL数组:', taskData.image_urls);
+            console.log('图片数量:', taskData.image_urls.length);
+            console.log('第一张图片URL:', taskData.image_urls[0]);
+            
+            // 确保图片URL正确赋值
             this.resultImage = taskData.image_urls[0];
+            
+            // 验证赋值结果
+            console.log('赋值后的resultImage:', this.resultImage);
             
             // 如果有完成时间，显示
             if (taskData.submit_time && taskData.end_time) {
@@ -761,7 +765,7 @@ export default {
     }
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     // 清除轮询定时器
     if (this.pollingInterval) {
       clearInterval(this.pollingInterval);
@@ -770,95 +774,25 @@ export default {
 }
 </script>
 
-<style scoped>
+<style>
+@import url('../../assets/css/text-creation-common.css');
+
 .content {
   padding: 24px;
-  min-height: 100vh;
-  background-color: #f8f9fa;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.page-nav h2 {
-  font-size: 24px;
-  color: #212529;
-  margin: 0;
-}
-
-.action-btn {
-  background: none;
-  border: none;
-  color: #ba003f;
-  cursor: pointer;
-  padding: 8px;
-  font-size: 20px;
-  transition: color 0.3s;
-}
-
-.action-btn:hover {
-  color: #d4004d;
 }
 
 .function-container {
   display: flex;
   gap: 24px;
+  margin-top: 16px;
 }
 
 .form-container {
-  width: 320px;
+  width: 45%;
   background: white;
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.right-column {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.section-title {
-  font-size: 18px;
-  color: #212529;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.section-title i {
-  color: #ba003f;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #212529;
-}
-
-.form-group label.required::after {
-  content: '*';
-  color: #ba003f;
-  margin-left: 4px;
 }
 
 .upload-area {
@@ -868,8 +802,9 @@ export default {
   text-align: center;
   cursor: pointer;
   transition: all 0.3s;
-  background-color: #f8f9fa;
-  min-height: 200px;
+  background: #fafafa;
+  position: relative;
+  min-height: 180px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -877,46 +812,36 @@ export default {
 
 .upload-area:hover {
   border-color: #ba003f;
+  background: #fcf9fa;
 }
 
 .upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   color: #6c757d;
 }
 
 .upload-placeholder i {
   font-size: 48px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  color: #adb5bd;
+}
+
+.upload-placeholder p {
+  margin: 0 0 8px 0;
+  font-weight: 500;
 }
 
 .preview-image {
   max-width: 100%;
-  max-height: 200px;
+  max-height: 300px;
   border-radius: 4px;
 }
 
-.form-control {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #e9ecef;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: border-color 0.3s;
-}
-
-.form-control:focus {
-  border-color: #ba003f;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(186, 0, 63, 0.1);
-}
-
-textarea.form-control {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.form-group small {
+.helper-text {
   display: block;
-  margin-top: 4px;
+  margin-top: 8px;
   color: #6c757d;
   font-size: 12px;
 }
@@ -927,44 +852,7 @@ textarea.form-control {
   margin-top: 24px;
 }
 
-.btn {
-  padding: 10px 20px;
-  border-radius: 4px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.3s;
-}
-
-.btn-primary {
-  background: #ba003f;
-  color: white;
-  border: none;
-  flex: 2;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #d4004d;
-}
-
-.btn-secondary {
-  background: white;
-  color: #212529;
-  border: 1px solid #e9ecef;
-  flex: 1;
-}
-
-.btn-secondary:hover {
-  background: #e9ecef;
-}
-
-.btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
+/* 按钮样式使用统一CSS文件中的样式 */
 
 .reference-section, .result-section {
   background: white;
@@ -983,6 +871,10 @@ textarea.form-control {
   color: #ba003f;
   margin-top: 0;
   margin-bottom: 10px;
+}
+
+.function-info h5 {
+  margin-top: 15px;
 }
 
 .function-tips {
@@ -1151,86 +1043,6 @@ textarea.form-control {
   gap: 8px;
 }
 
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-.modal-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #e9ecef;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-header h3 {
-  margin: 0;
-  color: #212529;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.modal-header h3 i {
-  color: #ba003f;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: #6c757d;
-  transition: color 0.3s;
-}
-
-.close-btn:hover {
-  color: #212529;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.modal-body h4 {
-  margin-top: 0;
-  color: #212529;
-}
-
-.tips-section {
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.tips-section:last-child {
-  border-bottom: none;
-}
-
-.tips-section h5 {
-  color: #ba003f;
-  margin-bottom: 8px;
-}
-
 .spinning {
   animation: spin 1s linear infinite;
 }
@@ -1319,4 +1131,6 @@ textarea.form-control {
     margin: 20px 0;
   }
 }
+
+/* 知识学习侧边栏样式由统一CSS文件text-creation-common.css提供 */
 </style> 

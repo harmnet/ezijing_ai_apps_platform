@@ -49,8 +49,37 @@ tmp/
 *.swo
 
 # 环境变量
+.env
 .env.local
 .env.*.local
+.env.dev
+backend/.env
+*.env
+
+# 数据库文件
+*.db
+instance/*.db
+backend/instance/*.db
 
 # 生成的token文件
-token.json 
+token.json
+
+# 测试文件
+test_*.js
+test_*.py
+test_*.txt
+test_*.md
+test.txt
+test.xls
+
+# Cursor相关文件
+.cursor/
+.cursor-plugin-rules.json
+.cursor-prompts/
+.cursor.json
+
+# 备份文件
+*.bak
+*.backup
+*.vue.bak*
+*副本.vue 

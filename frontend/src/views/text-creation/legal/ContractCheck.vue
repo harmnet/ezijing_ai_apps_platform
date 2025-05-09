@@ -1,12 +1,13 @@
 <template>
-  <div class="contract-check-page">
+  <div class="contract-check-page text-creation-page">
     <div class="page-header">
       <div class="page-nav">
         <h2>合同检查</h2>
       </div>
       <div class="page-actions">
-        <button class="action-btn" title="使用说明" @click="showTips">
-          <i class="ri-lightbulb-line"></i>
+        <button class="learn-button" title="知识学习" @click="showTips">
+          <i class="ri-book-open-line"></i>
+          知识学习
         </button>
       </div>
     </div>
@@ -152,32 +153,26 @@
       </div>
     </div>
     
-    <!-- 使用说明模态框 -->
-    <div class="modal" v-if="showTipsModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3><i class="ri-lightbulb-line"></i> 合同检查使用说明</h3>
-          <button class="close-btn" @click="showTipsModal = false">
-            <i class="ri-close-line"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <ul class="tips-list">
-            <li>📄 <b>文件支持</b> - 支持上传txt、doc、docx、pdf格式的合同文件</li>
-            <li>🔍 <b>选择重点</b> - 勾选需要重点检查的合同内容方面</li>
-            <li>⚖️ <b>权利义务</b> - 分析合同中双方权利义务是否对等</li>
-            <li>⚠️ <b>风险条款</b> - 识别可能存在风险的条款并提出建议</li>
-            <li>📋 <b>关键条款</b> - 突出显示合同中的关键条款</li>
-            <li>💰 <b>违约责任</b> - 检查违约责任条款是否明确且合理</li>
-            <li>🔒 <b>合规性</b> - 基于常见法律法规检查合同合规性</li>
-            <li>🔤 <b>语言表述</b> - 提供语言表述方面的改进建议</li>
-          </ul>
-          <div class="tips-note">
-            <p><b>注意：</b>本工具仅提供参考建议，不构成法律意见。重要合同仍建议咨询专业律师。</p>
-          </div>
+    <!-- 知识学习侧边抽屉 -->
+    <el-drawer
+      v-model="showTipsModal"
+      title="文章总结知识学习"
+      direction="rtl"
+      size="30%"
+      class="knowledge-drawer"
+      :with-header="true"
+      :destroy-on-close="false"
+    >
+      <div class="knowledge-content">
+        <div v-for="(item, index) in summaryKnowledge" :key="index" class="knowledge-section">
+          <h3 class="knowledge-subtitle">
+            <i :class="item.icon"></i>
+            {{ item.subtitle }}
+          </h3>
+          <div class="knowledge-text" v-html="formatKnowledgeText(item.text)"></div>
         </div>
       </div>
-    </div>
+    </el-drawer>
   </div>
 </template>
 
@@ -187,6 +182,7 @@ import axios from 'axios'
 import { ElMessage, ElLoading } from 'element-plus'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import { summaryKnowledge } from '../../Knowledge_data.js'
 
 export default {
   name: 'ContractCheck',
@@ -450,6 +446,11 @@ export default {
       showTipsModal.value = true
     }
 
+    // 格式化知识文本（将Markdown转换为HTML）
+    const formatKnowledgeText = (text) => {
+      return marked(text)
+    }
+
     // 组件挂载
     onMounted(() => {
       // 初始化
@@ -465,6 +466,8 @@ export default {
       checkOptions,
       loadingText,
       formattedResult,
+      summaryKnowledge,
+      formatKnowledgeText,
       triggerFileUpload,
       handleFileUpload,
       checkContract,
@@ -478,6 +481,8 @@ export default {
 </script>
 
 <style scoped>
+@import "@/assets/css/text-creation-common.css";
+
 .contract-check-page {
   height: 100%;
   display: flex;
@@ -485,114 +490,7 @@ export default {
   background-color: #f7f7f7;
 }
 
-.page-header {
-  height: 60px;
-  background-color: #fff;
-  border-bottom: 1px solid #eaeaea;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 20px;
-}
-
-.page-nav h2 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.page-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.action-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: #555;
-  font-size: 18px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.action-btn:hover {
-  background-color: #f0f0f0;
-  color: #BA0040;
-}
-
-.main-container {
-  flex: 1;
-  padding: 16px;
-  display: flex;
-  gap: 16px;
-  overflow: hidden;
-}
-
-/* 左侧输入部分 */
-.input-section {
-  width: 320px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.section-title i {
-  color: #BA0040;
-}
-
-.form-group {
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #333;
-  font-size: 14px;
-}
-
-.form-control {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.form-control:focus {
-  border-color: #BA0040;
-}
-
+/* 文件上传相关样式 */
 .file-upload-container {
   display: flex;
   flex-direction: column;
@@ -615,8 +513,8 @@ export default {
 
 .file-upload-btn:hover {
   background-color: #e8e8e8;
-  border-color: #BA0040;
-  color: #BA0040;
+  border-color: var(--primary-color, #ba003f);
+  color: var(--primary-color, #ba003f);
 }
 
 .file-name {
@@ -634,12 +532,7 @@ export default {
   margin-top: 4px;
 }
 
-.checkbox-group {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
+/* 复选框容器样式 */
 .checkbox-container {
   display: flex;
   align-items: center;
@@ -649,215 +542,12 @@ export default {
   cursor: pointer;
 }
 
-.action-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: auto;
-  margin-bottom: 8px;
-}
-
-.btn {
-  padding: 10px 16px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background-color: #BA0040;
-  color: #fff;
-  flex: 1;
-}
-
-.btn-primary:hover {
-  background-color: #A10038;
-}
-
-.btn-primary:disabled {
-  background-color: #E6A0B8;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background-color: #f0f0f0;
-  color: #555;
-}
-
-.btn-secondary:hover {
-  background-color: #e0e0e0;
-}
-
-/* 右侧结果区域 */
-.right-column {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  overflow: hidden;
-}
-
-.result-section {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.result-content-wrapper {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
-
-.result-content {
-  padding: 16px 24px;
-  height: 100%;
-  overflow-y: auto;
-}
-
-.empty-result {
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.empty-content {
-  text-align: center;
-  padding: 24px;
-}
-
-.empty-image {
-  width: 128px;
-  height: 128px;
-  margin-bottom: 16px;
-}
-
-.empty-message {
-  color: #999;
-  font-size: 14px;
-}
-
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.8);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 10;
-}
-
-.loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 3px solid rgba(186, 0, 64, 0.2);
-  border-top-color: #BA0040;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-.loading-text {
-  margin-top: 16px;
-  font-size: 14px;
-  color: #BA0040;
-}
-
 /* 结果内容 */
 .contract-result {
   height: 100%;
 }
 
-.blur-content {
-  filter: blur(4px);
-  pointer-events: none;
-}
-
-/* 模态框 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: #fff;
-  border-radius: 8px;
-  width: 600px;
-  max-width: 90vw;
-  max-height: 80vh;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-header {
-  padding: 16px;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.modal-header h3 i {
-  color: #BA0040;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: #999;
-  font-size: 20px;
-  cursor: pointer;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.close-btn:hover {
-  background-color: #f0f0f0;
-  color: #333;
-}
-
-.modal-body {
-  padding: 16px;
-  overflow-y: auto;
-}
-
+/* 小贴士列表样式 */
 .tips-list {
   list-style-type: none;
   padding: 0;
@@ -881,58 +571,16 @@ export default {
   margin: 0;
 }
 
-/* 动画 */
-.spinning {
-  animation: spin 1s linear infinite;
+/* 知识学习相关样式 */
+:deep(.el-drawer__header) {
+  margin-bottom: 0;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.primary-button {
-  padding: 6px 12px;
-  border-radius: 4px;
-  background-color: #BA0040;
-  color: white;
-  border: none;
-  font-size: 13px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.primary-button:hover {
-  background-color: #A10038;
-}
-
-.primary-button:disabled {
-  background-color: #E6A0B8;
-  cursor: not-allowed;
-}
-
-.secondary-button {
-  padding: 6px 12px;
-  border-radius: 4px;
-  background-color: #f0f0f0;
-  color: #555;
-  border: none;
-  font-size: 13px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.secondary-button:hover {
-  background-color: #e0e0e0;
-}
-
-.secondary-button:disabled {
-  background-color: #f0f0f0;
-  color: #bbb;
-  cursor: not-allowed;
+:deep(.el-drawer__title) {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--primary-color, #ba003f);
 }
 </style> 

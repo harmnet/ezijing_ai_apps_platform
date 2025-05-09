@@ -1,0 +1,58 @@
+# Git相关
+.git
+.gitignore
+
+# Node.js相关
+node_modules
+*/node_modules
+frontend/node_modules
+npm-debug.log
+
+# Python相关
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv
+env
+ENV
+.env
+
+# 构建输出
+dist
+build
+*.egg-info
+
+# 日志和临时文件
+logs/*.log
+*.log
+npm-debug.log*
+*.swp
+*.swo
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# IDE相关
+.idea
+.vscode
+*.sublime-project
+*.sublime-workspace
+.cursor
+.cursor-*
+
+# Docker相关
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# 其他不需要的文件
+*/test
+*/tests
+*.md
+LICENSE
+*.sh
+!docker-entrypoint.sh
+*.bak 

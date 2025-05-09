@@ -12,10 +12,18 @@ XIAOBING_PPT_SUBMIT_REQUEST_URL = XIAOBING_REGION + "/openapi/video/task/v2/ppt/
 # 查询任务结果 请求路径
 XIAOBING_TASK_DETAIL_REQUEST_URL = XIAOBING_REGION + "/openapi/video/task/v2/detail"
 XIAOBING_DIGITAL_HUMAN_SUB_KEY = "282cd94b697e48e6aca6d20bbdaf0d0f"
-XIAOBING_REQUEST_HEADERS = {"subscription-key": XIAOBING_DIGITAL_HUMAN_SUB_KEY}
+XIAOBING_REQUEST_HEADERS = {
+    "subscription-key": XIAOBING_DIGITAL_HUMAN_SUB_KEY,
+    "Content-Type": "application/json",
+    "Accept": "application/json"
+}
 
 from dataclasses import dataclass, field
 from typing import List, Optional
+import logging
+import json
+import os
+from urllib.parse import urlparse
 
 
 @dataclass
@@ -258,114 +266,198 @@ FONT_DICT = {
     "UKIJEsT": 112,
 }
 
+# 默认TTS语音配置
+DEFAULT_TTS = {
+    "voiceId": "VH_XIAOBING_zh-CN_zhcnv2_F53947-zovQmXN79vG00q6b",
+    "rate": 1,
+    "pitch": 1,
+    "volume": 100
+}
 
-def generate_request_body(
-    outputVideoName: str,  # 输出视频名称
-    creationDetail: OpenApiVideoCreationDetail,  # 视频详情
-    pptInfo: OpenApiPPTInfo,  # PPT信息
-    width: int = 1920,  # 视频的宽，默认 1920
-    height: int = 1080,  # 视频的高，默认 1080
-) -> dict:
+# 默认字幕配置
+DEFAULT_CAPTION = {
+    "topCenter": True,
+    "zIndex": 60,
+    "attributes": {
+        "visible": True,
+        "fontColor": "#FFFFFF",
+        "spacing": 1,
+        "italic": False,
+        "underline": False,
+        "bold": True,
+        "y": 1000,
+        "fontSize": 36,
+        "font": FONT_DICT["Microsoft YaHei"]
+    }
+}
+
+# 默认背景音乐
+DEFAULT_BACKGROUND_MUSIC = {
+    "mediaUrl": "https://virtualman.oss-cn-beijing.aliyuncs.com/media_upload/1a1789ea-25bf-437b-acd2-fdc08a265087.MP3",
+    "volume": 0.3,
+    "speed": 1,
+    "loop": True
+}
+
+# 支持的视频分辨率
+SUPPORTED_RESOLUTIONS = {
+    "720p": {"width": 1280, "height": 720},
+    "1080p": {"width": 1920, "height": 1080},
+    "480p": {"width": 854, "height": 480}
+}
+
+# 数字人ID和姿势ID映射表
+DEFAULT_VIRTUAL_HUMANS = {
+    "default": {
+        "virtualHumanId": "VHP3S1EF7",
+        "name": "默认数字人",
+        "postures": {
+            "right": "aMiAX96rMqNS",  # 右侧站立姿势
+            "left": "d5nJE6EI0txK"    # 左侧站立姿势
+        }
+    },
+    "business_man": {
+        "virtualHumanId": "VHFXQGGVG",
+        "name": "商务男士",
+        "postures": {
+            "center": "bKnPeXPndZCR"  # 中间站立姿势
+        }
+    },
+    "business_woman": {
+        "virtualHumanId": "VHT1NU4H7",
+        "name": "商务女士",
+        "postures": {
+            "center": "kOBCsOYhcdIi"  # 中间站立姿势
+        }
+    }
+}
+
+def generate_request_body(ppt_url, title, virtual_human_id=None, virtual_human_posture_id=None,
+                      text_script=None, background_music_url=None, background_image_url=None,
+                      show_caption=True, resolution="720p", convert_type="VIDEO", tts_params=None):
     """
     生成请求体
-    
-    Args:
-        outputVideoName: 输出视频名称
-        creationDetail: 视频详情
-        pptInfo: PPT信息
-        width: 视频宽度
-        height: 视频高度
-        
-    Returns:
-        dict: 请求体字典
+    :param ppt_url: PPT文件URL
+    :param title: 视频标题
+    :param virtual_human_id: 虚拟人ID
+    :param virtual_human_posture_id: 虚拟人姿势ID
+    :param text_script: 讲解文本
+    :param background_music_url: 背景音乐URL
+    :param background_image_url: 背景图片URL
+    :param show_caption: 是否显示字幕
+    :param resolution: 视频分辨率
+    :param convert_type: 转换类型，VIDEO或IMG
+    :param tts_params: TTS参数
+    :return: 请求体
     """
-    # 递归将对象转换为字典的辅助函数
-    def to_dict(obj):
-        if obj is None:
-            return None
-        elif isinstance(obj, (str, int, float, bool)):
-            return obj
-        elif isinstance(obj, list):
-            return [to_dict(item) for item in obj]
-        elif hasattr(obj, "__dict__"):
-            # 处理对象实例
-            result = {}
-            for key, value in vars(obj).items():
-                if value is not None:
-                    result[key] = to_dict(value)
-            return result
-        else:
-            # 其他类型尝试直接返回，如果不可序列化会在JSON转换时报错
-            return obj
+    logger = logging.getLogger(__name__)
     
-    # 构建场景列表
-    scenes_list = []
-    for scene in creationDetail.scenes:
-        scene_dict = {}
+    try:
+        # 检查PPT URL是否为本地URL
+        parsed_url = urlparse(ppt_url)
+        is_local_url = parsed_url.netloc in ['localhost', '127.0.0.1'] or parsed_url.netloc.startswith('localhost:') or parsed_url.netloc.startswith('127.0.0.1:')
         
-        # 处理虚拟人
-        if scene.virtualHuman:
-            virtual_human_dict = {
-                "virtualHumanId": scene.virtualHuman.virtualHumanId,
-                "virtualHumanPostureId": scene.virtualHuman.virtualHumanPostureId,
-                "zIndex": scene.virtualHuman.zIndex
+        if is_local_url:
+            # 如果是本地URL，需要上传到OSS
+            logger.info(f"检测到本地PPT URL，准备上传到OSS: {ppt_url}")
+            try:
+                # 从URL中提取文件路径
+                file_path = parsed_url.path
+                if file_path.startswith('/'):
+                    file_path = file_path[1:]
+                file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), file_path)
+                
+                # 上传到OSS
+                oss_url = upload_to_oss(file_path)
+                if oss_url:
+                    logger.info(f"PPT文件已上传到OSS: {oss_url}")
+                    ppt_url = oss_url
+                else:
+                    logger.error("PPT文件上传到OSS失败")
+            except Exception as e:
+                logger.error(f"上传PPT到OSS时发生错误: {str(e)}")
+        
+        # 获取分辨率配置
+        resolution_config = SUPPORTED_RESOLUTIONS.get(resolution, SUPPORTED_RESOLUTIONS["720p"])
+        width = resolution_config["width"]
+        height = resolution_config["height"]
+
+        # 构建场景数据
+        scene = {
+            "virtualHuman": {
+                "virtualHumanId": virtual_human_id or DEFAULT_VIRTUAL_HUMANS["default"]["virtualHumanId"],
+                "virtualHumanPostureId": virtual_human_posture_id or DEFAULT_VIRTUAL_HUMANS["default"]["postures"]["right"],
+                "attributes": {
+                    "width": int(height * 0.32),  # 根据高度等比例设置宽度
+                    "height": height,
+                    "x": int(width * 0.79),  # 放置在右侧
+                    "y": int(height * 0.29),  # 垂直位置偏移
+                    "forceMattingType": 0
+                },
+                "zIndex": 20
+            },
+            "tts": tts_params or DEFAULT_TTS,
+            "voiceText": text_script,
+        }
+
+        # 添加字幕配置
+        if show_caption:
+            scene["caption"] = {
+                "topCenter": True,
+                "topLeft": False,
+                "topRight": False,
+                "zIndex": 60,
+                "attributes": {
+                    "visible": True,
+                    "fontColor": "#FFFFFF",
+                    "spacing": 1,
+                    "italic": False,
+                    "underline": False,
+                    "bold": True,
+                    "y": int(height * 0.93),  # 放置在底部
+                    "fontSize": int(height * 0.033)  # 根据高度等比例设置字号
+                }
             }
-            if scene.virtualHuman.attributes:
-                attributes = {}
-                for key, value in vars(scene.virtualHuman.attributes).items():
-                    if value is not None:
-                        attributes[key] = value
-                virtual_human_dict["attributes"] = attributes
-            scene_dict["virtualHuman"] = virtual_human_dict
-        
-        # 处理TTS
-        if scene.tts:
-            scene_dict["tts"] = {k: v for k, v in vars(scene.tts).items() if v is not None}
-        
-        # 处理背景图片（如果有）
-        if scene.backgroundImage:
-            scene_dict["backgroundImage"] = {k: v for k, v in vars(scene.backgroundImage).items() if v is not None}
-        
-        # 处理字幕（如果有）
-        if scene.caption:
-            caption_dict = {
-                "topLeft": scene.caption.topLeft,
-                "topRight": scene.caption.topRight,
-                "topCenter": scene.caption.topCenter,
-                "zIndex": scene.caption.zIndex
+
+        # 添加背景图片配置
+        if background_image_url:
+            scene["backgroundImage"] = {
+                "mediaUrl": background_image_url
             }
-            if scene.caption.attributes:
-                attributes = {}
-                for key, value in vars(scene.caption.attributes).items():
-                    if value is not None:
-                        attributes[key] = value
-                caption_dict["attributes"] = attributes
-            scene_dict["caption"] = caption_dict
-        
-        # 处理语音文本（如果有）
-        if scene.voiceText:
-            scene_dict["voiceText"] = scene.voiceText
-        
-        scenes_list.append(scene_dict)
-    
-    # 处理背景音乐
-    background_music_dict = None
-    if creationDetail.backgroundMusic:
-        background_music_dict = {k: v for k, v in vars(creationDetail.backgroundMusic).items() if v is not None}
-    
-    # 处理PPT信息
-    ppt_info_dict = {k: v for k, v in vars(pptInfo).items() if v is not None}
-    if pptInfo.attributes:
-        ppt_info_dict["attributes"] = {k: v for k, v in vars(pptInfo.attributes).items() if v is not None}
-    
-    # 构建最终请求体
-    return {
-        "outputVideoName": outputVideoName,
-        "width": width,
-        "height": height,
-        "creationDetail": {
-            "backgroundMusic": background_music_dict,
-            "scenes": scenes_list
-        },
-        "pptInfo": ppt_info_dict
-    }
+
+        # 构建完整请求体
+        request_body = {
+            "outputVideoName": title,
+            "width": width,
+            "height": height,
+            "creationDetail": {
+                "scenes": [scene],
+                "backgroundMusic": {
+                    "mediaUrl": background_music_url or DEFAULT_BACKGROUND_MUSIC["mediaUrl"],
+                    "volume": DEFAULT_BACKGROUND_MUSIC["volume"],
+                    "speed": DEFAULT_BACKGROUND_MUSIC["speed"],
+                    "loop": DEFAULT_BACKGROUND_MUSIC["loop"]
+                }
+            },
+            "pptInfo": {
+                "pptUrl": ppt_url,
+                "convertType": convert_type,  # 使用传入的转换类型
+                "getText": True,
+                "singlePageSecond": 5,  # 与测试代码一致，设为5秒
+                "attributes": {
+                    "width": width,
+                    "height": height,
+                    "x": 0,
+                    "y": 0
+                }
+            }
+        }
+
+        # 记录完整的请求体
+        logger.info("生成的请求体详情：")
+        logger.info(json.dumps(request_body, ensure_ascii=False, indent=2))
+
+        return request_body
+    except Exception as e:
+        logger.error(f"生成请求体时发生错误: {str(e)}")
+        raise

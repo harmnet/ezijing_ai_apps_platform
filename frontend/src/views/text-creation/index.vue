@@ -1,416 +1,386 @@
 <template>
-  <div class="text-creation-page">
-    <div class="page-header">
-      <div class="page-nav">
-        <h2></h2>
-      </div>
-    </div>
-    
-    <!-- 如果当前是文本创作首页，显示分类和工具卡片 -->
-    <div v-if="isHomePage" class="category-container">
-      <!-- 营销创作 -->
-      <div class="category-section">
-        <div class="category-title-wrapper">
-          <h3 class="category-title">
-            <i class="ri-advertisement-line"></i>
-            营销创作
-          </h3>
-        </div>
-        <div class="tool-cards">
-          <div class="tool-card">
-            <router-link to="/text-creation/marketing/ad-slogan">
-              <div class="tool-icon">
-                <i class="ri-chat-quote-line"></i>
-              </div>
-              <div class="tool-info">
-                <h4>广告语生成</h4>
-                <p>快速生成吸引眼球的产品广告语</p>
-              </div>
-            </router-link>
+  <div class="content">
+    <router-view v-if="$route.path !== '/text-creation'"></router-view>
+    <div v-else>
+      <div class="category-container">
+        <!-- 第一行：文本创作基础工具 -->
+        <!-- 广告语创作 -->
+        <div class="category-section">
+          <div class="category-header">
+            <i class="ri-chat-quote-line"></i>
+            <h3 class="category-title">AI广告语创作</h3>
           </div>
-          <div class="tool-card">
-            <router-link to="/text-creation/marketing/copywriting-generator">
-              <div class="tool-icon">
-                <i class="ri-file-paper-2-line"></i>
-              </div>
-              <div class="tool-info">
-                <h4>营销文案生成</h4>
-                <p>创建有效的产品营销文案和推广内容</p>
-              </div>
-            </router-link>
+          <p class="category-desc">快速生成吸引眼球的产品广告语，提升营销效果，轻松获得创意文案，增强品牌影响力。</p>
+          <div class="category-button">
+            <a :href="window.location.origin + '/text-creation/marketing/ad-slogan'" target="_blank">开始创作 <i class="ri-arrow-right-line"></i></a>
           </div>
         </div>
-      </div>
-      
-      <!-- 新媒体内容创作 -->
-      <div class="category-section">
-        <div class="category-title-wrapper">
-          <h3 class="category-title">
-            <i class="ri-smartphone-line"></i>
-            新媒体内容创作
-          </h3>
-        </div>
-        <div class="tool-cards">
-          <div class="tool-card">
-            <router-link to="/text-creation/new-media/wechat">
-              <div class="tool-icon">
-                <i class="ri-wechat-line"></i>
-              </div>
-              <div class="tool-info">
-                <h4>公众号文章</h4>
-                <p>创作符合公众号平台特点的高质量文章</p>
-              </div>
-            </router-link>
+        
+        <!-- 公众号创作 -->
+        <div class="category-section">
+          <div class="category-header">
+            <i class="ri-wechat-line"></i>
+            <h3 class="category-title">AI公众号创作</h3>
           </div>
-          <div class="tool-card">
-            <router-link to="/text-creation/new-media/weibo">
-              <div class="tool-icon">
-                <i class="ri-weibo-line"></i>
-              </div>
-              <div class="tool-info">
-                <h4>微博文章</h4>
-                <p>创作适合微博平台的热门内容</p>
-              </div>
-            </router-link>
-          </div>
-          <div class="tool-card">
-            <router-link to="/text-creation/new-media/xiaohongshu">
-              <div class="tool-icon">
-                <i class="ri-book-open-line"></i>
-              </div>
-              <div class="tool-info">
-                <h4>小红书文章</h4>
-                <p>创作符合小红书平台特点的种草笔记</p>
-              </div>
-            </router-link>
-          </div>
-          <div class="tool-card">
-            <router-link to="/text-creation/new-media/short-video">
-              <div class="tool-icon">
-                <i class="ri-video-line"></i>
-              </div>
-              <div class="tool-info">
-                <h4>短视频脚本</h4>
-                <p>创作吸引人的短视频内容脚本</p>
-              </div>
-            </router-link>
-          </div>
-          <div class="tool-card">
-            <router-link to="/text-creation/new-media/livestream">
-              <div class="tool-icon">
-                <i class="ri-live-line"></i>
-              </div>
-              <div class="tool-info">
-                <h4>直播脚本</h4>
-                <p>策划有趣的直播内容和互动话术</p>
-              </div>
-            </router-link>
+          <p class="category-desc">创作符合公众号平台特点的高质量文章，吸引读者，提高转化和互动，增加粉丝留存率。</p>
+          <div class="category-button">
+            <a :href="window.location.origin + '/text-creation/new-media/wechat'" target="_blank">开始创作 <i class="ri-arrow-right-line"></i></a>
           </div>
         </div>
-      </div>
-      
-      <!-- 文案创作 -->
-      <div class="category-section">
-        <div class="category-title-wrapper">
-          <h3 class="category-title">
-            <i class="ri-draft-line"></i>
-            文案创作
-          </h3>
-        </div>
-        <div class="tool-cards">
-          <div class="tool-card">
-            <router-link to="/text-creation/copywriting/document-structure">
-              <div class="tool-icon">
-                <i class="ri-file-list-3-line"></i>
-              </div>
-              <div class="tool-info">
-                <h4>文档结构撰写</h4>
-                <p>生成专业文档的结构和框架</p>
-              </div>
-            </router-link>
+        
+        <!-- 微博文章创作 -->
+        <div class="category-section">
+          <div class="category-header">
+            <i class="ri-weibo-line"></i>
+            <h3 class="category-title">AI微博文章创作</h3>
           </div>
-          <div class="tool-card">
-            <router-link to="/text-creation/copywriting/longform">
-              <div class="tool-icon">
-                <i class="ri-article-line"></i>
-              </div>
-              <div class="tool-info">
-                <h4>长文创作</h4>
-                <p>撰写内容丰富、逻辑清晰的长篇文章</p>
-              </div>
-            </router-link>
-          </div>
-          <div class="tool-card">
-            <router-link to="/text-creation/copywriting/poetry">
-              <div class="tool-icon">
-                <i class="ri-quill-pen-line"></i>
-              </div>
-              <div class="tool-info">
-                <h4>诗歌创作</h4>
-                <p>创作富有情感和韵律的诗歌作品</p>
-              </div>
-            </router-link>
+          <p class="category-desc">创作适合微博平台的热门内容，获得更多关注和互动，提升账号影响力，增加话题讨论度。</p>
+          <div class="category-button">
+            <a :href="window.location.origin + '/text-creation/new-media/weibo'" target="_blank">开始创作 <i class="ri-arrow-right-line"></i></a>
           </div>
         </div>
-      </div>
-      
-      <!-- 文本修订 -->
-      <div class="category-section">
-        <div class="category-title-wrapper">
-          <h3 class="category-title">
+        
+        <!-- 小红书笔记创作 -->
+        <div class="category-section">
+          <div class="category-header">
+            <i class="ri-book-open-line"></i>
+            <h3 class="category-title">AI小红书笔记创作</h3>
+          </div>
+          <p class="category-desc">创作符合小红书平台特点的种草笔记，吸引目标用户，提高转化和收藏，增强内容曝光度。</p>
+          <div class="category-button">
+            <a :href="window.location.origin + '/text-creation/new-media/xiaohongshu'" target="_blank">开始创作 <i class="ri-arrow-right-line"></i></a>
+          </div>
+        </div>
+        
+        <!-- 短视频脚本创作 -->
+        <div class="category-section">
+          <div class="category-header">
+            <i class="ri-video-line"></i>
+            <h3 class="category-title">AI短视频脚本创作</h3>
+          </div>
+          <p class="category-desc">创作吸引人的短视频内容脚本，提升内容质量，让视频创作更加高效，增强观众留存率。</p>
+          <div class="category-button">
+            <a :href="window.location.origin + '/text-creation/new-media/short-video'" target="_blank">开始创作 <i class="ri-arrow-right-line"></i></a>
+          </div>
+        </div>
+
+        <!-- 第二行：专业文本工具 -->
+        <!-- 直播脚本创作 -->
+        <div class="category-section">
+          <div class="category-header">
+            <i class="ri-live-line"></i>
+            <h3 class="category-title">AI直播脚本创作</h3>
+          </div>
+          <p class="category-desc">策划有趣的直播内容和互动话术，提高直播质量和观众留存，增加销售转化，打造专业直播体验。</p>
+          <div class="category-button">
+            <a :href="window.location.origin + '/text-creation/new-media/livestream'" target="_blank">开始创作 <i class="ri-arrow-right-line"></i></a>
+          </div>
+        </div>
+        
+        <!-- 诗歌创作 -->
+        <div class="category-section">
+          <div class="category-header">
+            <i class="ri-quill-pen-line"></i>
+            <h3 class="category-title">AI诗歌创作</h3>
+          </div>
+          <p class="category-desc">创作富有情感和韵律的诗歌作品，抒发情感，展现文学素养和艺术美感，传递深层次的思想内涵。</p>
+          <div class="category-button">
+            <a :href="window.location.origin + '/text-creation/copywriting/poetry'" target="_blank">开始创作 <i class="ri-arrow-right-line"></i></a>
+          </div>
+        </div>
+        
+        <!-- 文本修订 -->
+        <div class="category-section">
+          <div class="category-header">
             <i class="ri-edit-line"></i>
-            文本修订
-          </h3>
+            <h3 class="category-title">AI文本修订优化</h3>
+          </div>
+          <p class="category-desc">检查并修正文章中的错误，优化语言表达，提高文本质量和可读性，使内容更加专业流畅。</p>
+          <div class="category-button">
+            <a class="coming-soon">即将推出 <i class="ri-time-line"></i></a>
+          </div>
         </div>
-        <div class="tool-cards">
-          <div class="tool-card">
-            <router-link to="/text-creation/revision/proofreading">
-              <div class="tool-icon">
-                <i class="ri-error-warning-line"></i>
-              </div>
-              <div class="tool-info">
-                <h4>文章校对</h4>
-                <p>检查并修正文章中的错误</p>
-              </div>
-            </router-link>
+        
+        <!-- 长文档写作 -->
+        <div class="category-section">
+          <div class="category-header">
+            <i class="ri-file-text-line"></i>
+            <h3 class="category-title">AI长文档写作</h3>
           </div>
-          <div class="tool-card">
-            <router-link to="/text-creation/revision/refinement">
-              <div class="tool-icon">
-                <i class="ri-markup-line"></i>
-              </div>
-              <div class="tool-info">
-                <h4>文章润色</h4>
-                <p>提升文章的表达质量和语言流畅度</p>
-              </div>
-            </router-link>
+          <p class="category-desc">辅助创作长篇文档、论文和报告，提供结构化写作建议，生成专业内容，节省大量写作时间。</p>
+          <div class="category-button">
+            <a class="coming-soon">即将推出 <i class="ri-time-line"></i></a>
           </div>
-          <div class="tool-card">
-            <router-link to="/text-creation/revision/summary">
-              <div class="tool-icon">
-                <i class="ri-file-search-line"></i>
-              </div>
-              <div class="tool-info">
-                <h4>文档总结</h4>
-                <p>提炼长篇文档的关键内容和要点</p>
-              </div>
-            </router-link>
-          </div>
-          
-          <!-- 添加合同检查卡片 -->
-          <router-link to="/text-creation/legal/contract-check" class="tool-card">
-            <div class="card-icon">
-              <i class="ri-file-search-line"></i>
-            </div>
-            <div class="card-content">
-              <h4>合同检查</h4>
-              <p>上传合同文件，AI智能审查合同条款问题并给出专业修改建议</p>
-            </div>
-          </router-link>
         </div>
-      </div>
-      
-      <!-- 学术文案 -->
-      <div class="category-section">
-        <div class="category-title-wrapper">
-          <h3 class="category-title">
-            <i class="ri-book-2-line"></i>
-            学术文案
-          </h3>
-        </div>
-        <div class="tool-cards">
-          <div class="tool-card">
-            <router-link to="/text-creation/academic/paper-abstract">
-              <div class="tool-icon">
-                <i class="ri-draft-2-line"></i>
-              </div>
-              <div class="tool-info">
-                <h4>论文大纲编写</h4>
-                <p>规划完整的论文结构和研究框架</p>
-              </div>
-            </router-link>
+        
+        <!-- 多语言翻译 -->
+        <div class="category-section">
+          <div class="category-header">
+            <i class="ri-translate-2"></i>
+            <h3 class="category-title">AI多语言翻译</h3>
           </div>
-          <div class="tool-card">
-            <router-link to="/text-creation/academic/report-summary">
-              <div class="tool-icon">
-                <i class="ri-file-paper-line"></i>
-              </div>
-              <div class="tool-info">
-                <h4>报告摘要</h4>
-                <p>总结研究报告的主要内容和结论</p>
-              </div>
-            </router-link>
-          </div>
-          <div class="tool-card">
-            <router-link to="/text-creation/academic/search">
-              <div class="tool-icon">
-                <i class="ri-search-line"></i>
-              </div>
-              <div class="tool-info">
-                <h4>学术搜索</h4>
-                <p>智能搜索学术论文、研究报告等学术资源</p>
-              </div>
-            </router-link>
-          </div>
-          <div class="tool-card">
-            <router-link to="/text-creation/academic/plagiarism">
-              <div class="tool-icon">
-                <i class="ri-file-shield-2-line"></i>
-              </div>
-              <div class="tool-info">
-                <h4>文本查重</h4>
-                <p>智能检测文本相似度，确保文本原创性</p>
-              </div>
-            </router-link>
-          </div>
-          <div class="tool-card">
-            <router-link to="/text-creation/academic/translation">
-              <div class="tool-icon">
-                <i class="ri-translate-2"></i>
-              </div>
-              <div class="tool-info">
-                <h4>翻译</h4>
-                <p>准确翻译学术文本和专业术语</p>
-              </div>
-            </router-link>
+          <p class="category-desc">智能翻译多种语言内容，保持原文意图和风格，适用于商务文档、网站内容和日常沟通等场景。</p>
+          <div class="category-button">
+            <a class="coming-soon">即将推出 <i class="ri-time-line"></i></a>
           </div>
         </div>
       </div>
     </div>
-    
-    <!-- 如果是子页面，显示子路由内容 -->
-    <router-view v-else></router-view>
   </div>
 </template>
 
 <script>
 export default {
   name: 'TextCreation',
-  computed: {
-    // 判断是否在文本创作首页
-    isHomePage() {
-      return this.$route.path === '/text-creation';
+  data() {
+    return {
+      window: window
     }
+  },
+  mounted() {
+    // 确保页面加载时滚动到顶部
+    window.scrollTo(0, 0);
   }
 }
 </script>
 
 <style scoped>
-.text-creation-page {
-  padding: 20px;
+:root {
+  --zijing-red: #ba003f;
+  --zijing-red-light: rgba(186, 0, 63, 0.1);
+  --zijing-red-hover: #d4185b;
 }
 
-.page-header {
-  margin-bottom: 20px;
-}
-
-.page-nav h2 {
-  font-size: 24px;
+.content {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
   color: #333;
-  margin: 0;
 }
 
-/* 文本创作中心特有样式 */
 .category-container {
-  padding: 20px 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+  padding: 20px;
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .category-section {
-  margin-bottom: 40px;
-  border-radius: 12px;
   background: #fff;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-  padding: 25px;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 24px rgba(186, 0, 63, 0.08);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  border-top: 4px solid #ba003f;
+  min-height: 320px;
+  position: relative;
   overflow: hidden;
-  border-top: 4px solid var(--primary-color, #ba003f);
-}
-
-.category-title-wrapper {
-  margin-bottom: 20px;
-}
-
-.category-title {
-  font-size: 22px;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  color: #333;
-}
-
-.category-title i {
-  margin-right: 12px;
-  font-size: 24px;
-  color: var(--primary-color, #ba003f);
-}
-
-.tool-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.tool-card {
-  flex: 0 0 calc(33.33% - 14px);
-  border-radius: 10px;
-  background: #f9f9f9;
-  padding: 15px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border: 1px solid #eee;
-}
-
-.tool-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-  border-color: #ddd;
-}
-
-/* 添加链接样式，使其填充整个卡片 */
-.tool-card a {
-  text-decoration: none;
-  color: inherit;
-  display: flex;
-  width: 100%;
   height: 100%;
+  justify-content: space-between;
 }
 
-.tool-icon {
-  width: 50px;
-  height: 50px;
+.category-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(180deg, rgba(186, 0, 63, 0.03) 0%, rgba(186, 0, 63, 0) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.category-section:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 36px rgba(186, 0, 63, 0.12);
+}
+
+.category-section:hover::before {
+  opacity: 1;
+}
+
+.category-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.category-header i {
+  font-size: 32px;
+  margin-bottom: 12px;
+  color: #ba003f;
+  background: rgba(186, 0, 63, 0.08);
+  padding: 12px;
+  border-radius: 50%;
+  height: 64px;
+  width: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(186, 0, 63, 0.08);
-  border-radius: 10px;
-  margin-right: 15px;
-  font-size: 22px;
-  color: var(--primary-color, #ba003f);
+  transition: all 0.3s ease;
 }
 
-.tool-info {
-  flex: 1;
+.category-section:hover .category-header i {
+  background: rgba(186, 0, 63, 0.12);
+  transform: scale(1.05);
 }
 
-.tool-info h4 {
-  margin: 0 0 5px;
-  font-size: 16px;
-}
-
-.tool-info p {
+.category-title {
+  font-size: 18px;
   margin: 0;
-  font-size: 13px;
-  color: #666;
-  line-height: 1.3;
+  color: #333;
+  font-weight: 600;
+  position: relative;
+  padding-bottom: 10px;
 }
 
-@media (max-width: 1024px) {
-  .tool-card {
-    flex: 0 0 calc(50% - 10px);
+.category-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 3px;
+  background: #ba003f;
+  border-radius: 2px;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.category-section:hover .category-title::after {
+  opacity: 1;
+  width: 60px;
+}
+
+.category-desc {
+  color: #666;
+  margin: 16px 0;
+  line-height: 1.5;
+  font-size: 14px;
+  text-align: center;
+  flex-grow: 1;
+}
+
+.category-button {
+  margin-top: 16px;
+  text-align: center;
+  padding-top: 0;
+}
+
+.category-button a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ba003f;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  width: 90%;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.category-button a i {
+  transition: transform 0.3s ease;
+}
+
+.category-button a:hover {
+  background: #d4185b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(186, 0, 63, 0.2);
+}
+
+.category-button a:hover i {
+  transform: translateX(4px);
+}
+
+.category-button a.coming-soon {
+  background: #6c757d;
+  cursor: default;
+}
+
+.category-button a.coming-soon:hover {
+  background: #6c757d;
+  transform: none;
+  box-shadow: none;
+}
+
+.category-button a.coming-soon:hover i {
+  transform: none;
+}
+
+@media (max-width: 1440px) {
+  .category-container {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .category-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+}
+
+@media (max-width: 992px) {
+  .category-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding: 20px;
+    margin: 12px;
   }
 }
 
 @media (max-width: 768px) {
-  .tool-card {
-    flex: 0 0 100%;
+  .category-container {
+    grid-template-columns: 1fr;
+    padding: 16px;
+    margin: 8px;
+    gap: 16px;
+  }
+  
+  .category-section {
+    min-height: 280px;
+  }
+}
+
+@media (max-width: 480px) {
+  .category-container {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 12px;
+    margin: 0;
+  }
+  
+  .category-section {
+    min-height: 250px;
+    padding: 18px;
+  }
+  
+  .category-title {
+    font-size: 16px;
+  }
+  
+  .category-desc {
+    margin: 12px 0;
+    font-size: 13px;
   }
 }
 </style> 

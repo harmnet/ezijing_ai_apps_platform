@@ -347,7 +347,10 @@ def convert_audio_to_text():
         
         try:
             # 设置API KEY
-            os.environ['DASHSCOPE_API_KEY'] = 'sk-1f4bdb8a73ee47809ee148a977c39737'
+            api_key = os.environ.get('DASHSCOPE_API_KEY')
+            if not api_key:
+                logger.error("DASHSCOPE_API_KEY环境变量未设置")
+                return jsonify({'code': 500, 'message': 'API密钥未配置，请设置DASHSCOPE_API_KEY环境变量'}), 500
             
             # 准备请求
             audio_file_path = f"file://{temp_path}"

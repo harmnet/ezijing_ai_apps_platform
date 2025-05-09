@@ -1,0 +1,7633 @@
+<template>
+  <div class="text-creation-page">
+    <!-- 分步骤视频合成流程 -->
+    <div class="main-container">
+      <!-- 左侧步骤条 -->
+      <div class="steps-container slim-steps">
+        <!-- 步骤指示器 -->
+        <div class="creation-steps">
+          <!-- 步骤1 -->
+          <div class="creation-step" :class="{'step-completed': currentStep > 1, 'step-current': currentStep === 1}">
+            <div class="step-indicator">
+              <i v-if="currentStep > 1" class="ri-check-line"></i>
+              <i v-else-if="currentStep === 1" class="ri-edit-line"></i>
+              <span v-else>1</span>
+            </div>
+            <div class="step-content">
+              <div class="step-name">输入文本</div>
+              <div class="step-description">添加内容</div>
+            </div>
+          </div>
+          <!-- 步骤2 -->
+          <div class="creation-step" :class="{'step-completed': currentStep > 2, 'step-current': currentStep === 2}">
+            <div class="step-indicator">
+              <i v-if="currentStep > 2" class="ri-check-line"></i>
+              <i v-else-if="currentStep === 2" class="ri-user-voice-line"></i>
+              <span v-else>2</span>
+            </div>
+            <div class="step-content">
+              <div class="step-name">形象音色</div>
+              <div class="step-description">选择配置</div>
+            </div>
+          </div>
+          <!-- 步骤3 - 新增选择模板步骤 -->
+          <div class="creation-step" :class="{'step-completed': currentStep > 3, 'step-current': currentStep === 3}">
+            <div class="step-indicator">
+              <i v-if="currentStep > 3" class="ri-check-line"></i>
+              <i v-else-if="currentStep === 3" class="ri-layout-2-line"></i>
+              <span v-else>3</span>
+            </div>
+            <div class="step-content">
+              <div class="step-name">选择模板</div>
+              <div class="step-description">背景配置</div>
+            </div>
+          </div>
+          <!-- 步骤4 - 原步骤3 -->
+          <div class="creation-step" :class="{'step-completed': currentStep > 4, 'step-current': currentStep === 4}">
+            <div class="step-indicator">
+              <i v-if="currentStep > 4" class="ri-check-line"></i>
+              <i v-else-if="currentStep === 4" class="ri-settings-3-line"></i>
+              <span v-else>4</span>
+            </div>
+            <div class="step-content">
+              <div class="step-name">视频参数</div>
+              <div class="step-description">调整设置</div>
+            </div>
+          </div>
+          <!-- 步骤5 - 原步骤4 -->
+          <div class="creation-step" :class="{'step-completed': currentStep > 5, 'step-current': currentStep === 5}">
+            <div class="step-indicator">
+              <i v-if="currentStep > 5" class="ri-check-line"></i>
+              <i v-else-if="currentStep === 5" class="ri-upload-cloud-line"></i>
+              <span v-else>5</span>
+            </div>
+            <div class="step-content">
+              <div class="step-name">提交任务</div>
+              <div class="step-description">确认信息</div>
+            </div>
+          </div>
+          <!-- 步骤6 - 原步骤5 -->
+          <div class="creation-step" :class="{'step-completed': currentStep > 6, 'step-current': currentStep === 6}">
+            <div class="step-indicator">
+              <i v-if="currentStep > 6" class="ri-check-line"></i>
+              <i v-else-if="currentStep === 6" class="ri-video-line"></i>
+              <span v-else>6</span>
+            </div>
+            <div class="step-content">
+              <div class="step-name">查看结果</div>
+              <div class="step-description">获取视频</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 右侧内容区 -->
+      <div class="step-content-container wide-content">
+        <!-- 步骤1：输入文本内容 -->
+        <div v-if="currentStep === 1" class="step-content-panel">
+          <div class="section-title">
+            <i class="ri-chat-1-line"></i>
+            <span>输入文本内容</span>
+          </div>
+          
+          <div class="form-group">
+            <label for="videoTitle" class="form-control-label">视频标题 <span class="optional-field-hint">(选填)</span></label>
+            <input
+              id="videoTitle"
+              v-model="formData.title"
+              class="form-control"
+              placeholder="请输入视频标题（最多30字）"
+              maxlength="30"
+              @input="trimTitle"
+            />
+            <div class="input-helper-text" v-if="formData.title">已输入 {{ formData.title.length }}/30 字</div>
+          </div>
+          
+          <div class="form-group">
+            <label for="textContent" class="form-control-label required">文本内容</label>
+            <textarea
+              id="textContent"
+              v-model="formData.text"
+              class="form-control"
+              placeholder="请输入要数字人播报的文本内容"
+              rows="10" 
+            ></textarea>
+          </div>
+          <div class="action-buttons">
+            <button class="primary-button" @click="nextStep" :disabled="!formData.text">
+              <span>下一步</span>
+              <i class="ri-arrow-right-line"></i>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 步骤2：选择数字人和音色 -->
+        <div v-if="currentStep === 2" class="step-content-panel">
+          <div class="section-title">
+            <i class="ri-user-voice-line"></i>
+            <span>选择数字人和音色</span>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-control-label required">数字人选择</label>
+            <div class="digital-human-grid inline-grid">
+              <div 
+                v-for="human in digitalHumans" 
+                :key="human.id"
+                class="digital-human-card compact-card"
+                :class="{ 'selected': formData.figureId === human.id }"
+                @click="selectDigitalHuman(human.id)"
+              >
+                <div class="human-avatar">
+                  <img :src="human.avatar" :alt="human.name">
+                </div>
+                <div class="human-name">{{ human.name }}</div>
+                <div class="digital-human-actions">
+                  <button class="demo-button" @click.stop="previewDigitalHumanVideo(human)" title="查看演示视频">
+                    <i class="ri-video-line"></i>
+                  </button>
+              </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-control-label required">音色选择 <span class="voice-filter-info">({{ getSelectedHumanGender() === '女' ? '女' : '男'}}性音色)</span></label>
+            
+            <div class="voice-list multi-column-list">
+              <div 
+                v-for="voice in activeVoices" 
+                :key="voice.id"
+                class="voice-item compact-voice-item"
+                :class="{ 'selected': formData.ttsParams.person === voice.id }"
+                @click="selectVoice(voice.id)"
+              >
+                <div class="voice-icon">
+                  <i class="ri-voice-recognition-line"></i>
+                </div>
+                <div class="voice-info">
+                  <div class="voice-name">{{ voice.name }}</div>
+                  <div class="voice-desc">{{ voice.gender }} · {{ voice.style }}</div>
+                </div>
+                <div class="voice-preview">
+                  <button 
+                    class="preview-button"
+                    @click.stop="previewVoice(voice.id)"
+                    title="试听音色"
+                    :disabled="!getVoicePreviewUrl(voice.id)" 
+                  >
+                    <i class="ri-play-circle-line"></i>
+                  </button>
+                </div>
+                </div>
+              </div>
+            </div>
+            
+          <div class="action-buttons">
+            <button class="secondary-button" @click="prevStep">
+              <i class="ri-arrow-left-line"></i>
+              <span>上一步</span>
+            </button>
+            <button class="primary-button" @click="nextStep">
+              <span>下一步</span>
+              <i class="ri-arrow-right-line"></i>
+            </button>
+                </div>
+              </div>
+        
+        <!-- 步骤3：选择模板 -->
+        <div v-if="currentStep === 3" class="step-content-panel">
+          <div class="section-title">
+            <i class="ri-layout-2-line"></i>
+            <span>选择模板</span>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-control-label required">模板选择</label>
+            <div class="template-grid">
+              <div 
+                v-for="template in templateOptions" 
+                :key="template.id"
+                class="template-card"
+                :class="{ 'selected': formData.templateId === template.id }"
+                @click="selectTemplate(template.id)"
+              >
+                <div class="template-card-preview">
+                  <img :src="template.previewImage" :alt="template.name">
+                </div>
+                <div class="template-info">
+                  <div class="template-name">{{ template.name }}</div>
+                  <div class="template-ratio">{{ template.ratio }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="action-buttons">
+            <button class="secondary-button" @click="prevStep">
+              <i class="ri-arrow-left-line"></i>
+              <span>上一步</span>
+            </button>
+            <button class="primary-button" @click="nextStep">
+              <span>下一步</span>
+              <i class="ri-arrow-right-line"></i>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 步骤4：设置视频参数 -->
+        <div v-if="currentStep === 4" class="step-content-panel">
+          <div class="section-title">
+            <i class="ri-settings-3-line"></i>
+            <span>设置视频参数</span>
+          </div>
+          
+          <!-- 上传区域容器（横向排列） -->
+          <div class="upload-container-flex">
+            <!-- 背景图片上传部分 -->
+            <div class="form-group flex-item">
+              <label class="form-control-label required">上传背景图片</label>
+              <!-- 背景图片上传区域 -->
+              <div class="background-upload-container">
+                <div class="background-upload-area" @click="triggerFileUpload" :class="{'has-image': formData.backgroundImageUrl, 'uploading': isUploading}">
+                  <input type="file" ref="fileInput" style="display: none;" accept="image/*" @change="handleFileUpload" />
+                  <div v-if="!formData.backgroundImageUrl && !isUploading" class="upload-placeholder">
+                    <i class="ri-image-add-line"></i>
+                    <span>点击上传背景图片</span>
+                    <span class="upload-tip">建议尺寸与视频分辨率一致</span>
+                  </div>
+                  <div v-else-if="isUploading" class="upload-loading">
+                    <i class="ri-loader-4-line spinning"></i>
+                    <span>图片上传中...</span>
+                  </div>
+                  <div v-else class="background-preview">
+                    <img :src="formData.backgroundImageUrl" alt="背景图片预览" />
+                    <div class="background-actions">
+                      <button class="action-icon-button" @click.stop="removeBackground" title="移除背景图片">
+                        <i class="ri-delete-bin-line"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <!-- 添加显式上传按钮 -->
+                <!-- <button v-if="!formData.backgroundImageUrl && !isUploading" class="explicit-upload-button" @click="triggerFileUpload">
+                  <i class="ri-upload-2-line"></i> 选择背景图片
+                </button> -->
+              </div>
+            </div>
+            
+            <!-- Logo上传部分 -->
+            <div class="form-group flex-item">
+              <label class="form-control-label">上传Logo</label>
+              <!-- Logo上传区域 -->
+              <div class="logo-upload-container">
+                <div class="logo-upload-area" @click="triggerLogoFileUpload" :class="{'has-image': formData.logoParams.imageUrl, 'uploading': isUploading}">
+                  <input type="file" ref="logoFileInput" style="display: none;" accept="image/*" @change="handleLogoFileUpload" />
+                  <div v-if="!formData.logoParams.imageUrl && !isUploading" class="upload-placeholder">
+                    <i class="ri-image-add-line"></i>
+                    <span>点击上传Logo</span>
+                    <span class="upload-tip">建议使用透明背景PNG格式</span>
+                  </div>
+                  <div v-else-if="isUploading" class="upload-loading">
+                    <i class="ri-loader-4-line spinning"></i>
+                    <span>Logo上传中...</span>
+                  </div>
+                  <div v-else class="logo-preview">
+                    <img :src="formData.logoParams.imageUrl" alt="Logo预览" />
+                    <div class="logo-actions">
+                      <button class="action-icon-button" @click.stop="removeLogo" title="移除Logo">
+                        <i class="ri-delete-bin-line"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <!-- 添加显式上传按钮 -->
+                <!-- <button v-if="!formData.logoParams.imageUrl && !isUploading" class="explicit-upload-button" @click="triggerLogoFileUpload">
+                  <i class="ri-upload-2-line"></i> 选择Logo
+                </button> -->
+              </div>
+              <div v-if="formData.logoParams.imageUrl" class="logo-position-selector">
+                <label class="form-control-label">Logo位置：</label>
+                <div class="position-options">
+                  <div 
+                    class="position-option" 
+                    :class="{ 'active': formData.logoParams.position === 'top-left' }"
+                    @click="formData.logoParams.position = 'top-left'"
+                  >左上角</div>
+                  <div 
+                    class="position-option" 
+                    :class="{ 'active': formData.logoParams.position === 'top-right' }"
+                    @click="formData.logoParams.position = 'top-right'"
+                  >右上角</div>
+                  <div 
+                    class="position-option" 
+                    :class="{ 'active': formData.logoParams.position === 'bottom-left' }"
+                    @click="formData.logoParams.position = 'bottom-left'"
+                  >左下角</div>
+                  <div 
+                    class="position-option" 
+                    :class="{ 'active': formData.logoParams.position === 'bottom-right' }"
+                    @click="formData.logoParams.position = 'bottom-right'"
+                  >右下角</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 新增：片头片尾视频上传区域 -->
+          <div class="upload-container-flex video-upload-section">
+            <!-- 片头视频上传 -->
+            <div class="form-group flex-item">
+              <label class="form-control-label">上传片头视频 <span class="optional-field-hint">(选填)</span></label>
+              <div class="video-upload-container">
+                <div class="video-upload-area" @click="triggerOpeningVideoUpload" :class="{'has-video': formData.openingMaterial.fileUrl, 'uploading': isUploadingOpening}">
+                  <input type="file" ref="openingVideoInput" style="display: none;" accept="video/*" @change="handleOpeningVideoUpload" />
+                  <div v-if="!formData.openingMaterial.fileUrl && !isUploadingOpening" class="upload-placeholder">
+                    <i class="ri-film-line"></i>
+                    <span>点击上传片头视频</span>
+                    <span class="upload-tip">支持MP4, MOV格式, 小于50MB</span>
+                  </div>
+                  <div v-else-if="isUploadingOpening" class="upload-loading">
+                    <i class="ri-loader-4-line spinning"></i>
+                    <span>片头上传中...</span>
+                  </div>
+                  <div v-else class="video-preview">
+                    <video :src="formData.openingMaterial.fileUrl" controls></video>
+                    <div class="video-actions">
+                      <button class="action-icon-button" @click.stop="removeOpeningVideo" title="移除片头视频">
+                        <i class="ri-delete-bin-line"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 片尾视频上传 -->
+            <div class="form-group flex-item">
+              <label class="form-control-label">上传片尾视频 <span class="optional-field-hint">(选填)</span></label>
+              <div class="video-upload-container">
+                <div class="video-upload-area" @click="triggerEndingVideoUpload" :class="{'has-video': formData.endingMaterial.fileUrl, 'uploading': isUploadingEnding}">
+                  <input type="file" ref="endingVideoInput" style="display: none;" accept="video/*" @change="handleEndingVideoUpload" />
+                  <div v-if="!formData.endingMaterial.fileUrl && !isUploadingEnding" class="upload-placeholder">
+                    <i class="ri-film-line"></i>
+                    <span>点击上传片尾视频</span>
+                    <span class="upload-tip">支持MP4, MOV格式, 小于50MB</span>
+                  </div>
+                  <div v-else-if="isUploadingEnding" class="upload-loading">
+                    <i class="ri-loader-4-line spinning"></i>
+                    <span>片尾上传中...</span>
+                  </div>
+                  <div v-else class="video-preview">
+                    <video :src="formData.endingMaterial.fileUrl" controls></video>
+                    <div class="video-actions">
+                      <button class="action-icon-button" @click.stop="removeEndingVideo" title="移除片尾视频">
+                        <i class="ri-delete-bin-line"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 新增：背景音乐上传区域 -->
+          <div class="form-group bgm-upload-section">
+            <label class="form-control-label">上传背景音乐 <span class="optional-field-hint">(选填)</span></label>
+            <div class="bgm-upload-container">
+              <div class="audio-upload-area" @click="triggerBgmUpload" :class="{'has-audio': formData.bgmParams.bgmUrl, 'uploading': isUploadingBgm}">
+                <input type="file" ref="bgmFileInput" style="display: none;" accept="audio/*" @change="handleBgmUpload" />
+                <div v-if="!formData.bgmParams.bgmUrl && !isUploadingBgm" class="upload-placeholder">
+                  <i class="ri-music-2-line"></i>
+                  <span>点击上传背景音乐</span>
+                  <span class="upload-tip">支持MP3, WAV, OGG格式, 小于10MB</span>
+                </div>
+                <div v-else-if="isUploadingBgm" class="upload-loading">
+                  <i class="ri-loader-4-line spinning"></i>
+                  <span>背景音乐上传中...</span>
+                </div>
+                <div v-else class="audio-preview">
+                  <div class="audio-info">
+                    <i class="ri-music-2-fill"></i>
+                    <span class="audio-name">背景音乐</span>
+                  </div>
+                  <audio :src="formData.bgmParams.bgmUrl" controls></audio>
+                  <div class="audio-actions">
+                    <button class="action-icon-button" @click.stop="removeBgm" title="移除背景音乐">
+                      <i class="ri-delete-bin-line"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- 背景音乐音量控制（仅当上传了音乐时显示） -->
+            <div v-if="formData.bgmParams.bgmUrl" class="bgm-volume-control">
+              <label class="form-control-label">背景音乐音量:</label>
+              <div class="volume-slider-container">
+                <i class="ri-volume-down-line"></i>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  step="1"
+                  v-model="formData.bgmParams.volume" 
+                  class="volume-slider" 
+                />
+                <i class="ri-volume-up-line"></i>
+                <span class="volume-value">{{ formData.bgmParams.volume }}%</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-control-label">视频分辨率</label>
+            <div class="resolution-info">
+              <div class="resolution-display">
+                {{ getResolutionLabel(formData.videoParams.width, formData.videoParams.height) }}
+              </div>
+              <div class="resolution-note">
+                <i class="ri-information-line"></i>
+                分辨率根据所选模板自动设置
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-control-label">视频选项</label>
+            <div class="checkbox-group">
+              <div class="checkbox-item" :class="{ 'checkbox-active': formData.videoParams.transparent }" @click="formData.videoParams.transparent = !formData.videoParams.transparent">
+                <input type="checkbox" id="transparent" v-model="formData.videoParams.transparent" style="display: none;" />
+                <label class="checkbox-label" for="transparent">透明背景</label>
+              </div>
+              
+              <div class="checkbox-item" :class="{ 'checkbox-active': formData.autoAnimoji }" @click="formData.autoAnimoji = !formData.autoAnimoji">
+                <input type="checkbox" id="autoAnimoji" v-model="formData.autoAnimoji" style="display: none;" />
+                <label class="checkbox-label" for="autoAnimoji">自动添加动作</label>
+              </div>
+              
+              <div class="checkbox-item" :class="{ 'checkbox-active': formData.subtitleParams.enabled }" @click="formData.subtitleParams.enabled = !formData.subtitleParams.enabled">
+                <input type="checkbox" id="subtitleEnabled" v-model="formData.subtitleParams.enabled" style="display: none;" />
+                <label class="checkbox-label" for="subtitleEnabled">显示字幕</label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="action-buttons">
+            <button class="secondary-button" @click="prevStep">
+              <i class="ri-arrow-left-line"></i>
+              <span>上一步</span>
+            </button>
+            <button class="primary-button" @click="nextStep">
+              <span>下一步</span>
+              <i class="ri-arrow-right-line"></i>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 步骤5：提交任务 -->
+        <div v-if="currentStep === 5" class="step-container">
+          <div class="task-summary-container">
+            <h3 class="summary-title">任务摘要信息</h3>
+            
+            <div class="task-summary-grid">
+              <!-- 文本内容区 -->
+              <div class="summary-section">
+                <h4 class="section-title">文本内容</h4>
+                <div class="section-content">
+                  <div class="form-item">
+                    <span class="label">视频标题:</span>
+                    <span class="value">{{ formData.title || '未设置' }}</span>
+                  </div>
+                  <div class="form-item">
+                    <span class="label">文本内容:</span>
+                    <div class="text-content" :class="{ 'expanded': textExpanded }">
+                      {{ formData.text || '未填写' }}
+                    </div>
+                    <el-button v-if="formData.text && formData.text.length > 50" 
+                               type="text" 
+                               @click="toggleTextExpand">
+                      {{ textExpanded ? '收起' : '展开全文' }}
+                    </el-button>
+                  </div>
+                </div>
+          </div>
+          
+              <!-- 数字人音色区 -->
+              <div class="summary-section">
+                <h4 class="section-title">数字人与音色</h4>
+                <div class="section-content">
+                  <div class="form-item">
+                    <span class="label">选择的数字人:</span>
+                    <div class="digital-human-preview">
+                      <img :src="getSelectedHumanAvatar()" alt="数字人头像" v-if="formData.figureId" class="avatar-preview" />
+                      <span>{{ getHumanName(formData.figureId) || '未选择' }}</span>
+                    </div>
+                  </div>
+                  <div class="form-item">
+                    <span class="label">选择的音色:</span>
+                    <span class="value">{{ getVoiceName(formData.ttsParams.person) || '未选择' }}</span>
+                  </div>
+                  <div class="form-item">
+                    <span class="label">语速:</span>
+                    <span class="value">{{ formData.ttsParams.speed }}</span>
+                  </div>
+                  <div class="form-item">
+                    <span class="label">音量:</span>
+                    <span class="value">{{ formData.ttsParams.volume }}</span>
+                  </div>
+                  <div class="form-item">
+                    <span class="label">音调:</span>
+                    <span class="value">{{ formData.ttsParams.pitch }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 模板选择区 -->
+              <div class="summary-section">
+                <h4 class="section-title">模板选择</h4>
+                <div class="section-content">
+                  <div class="form-item template-preview">
+                    <img :src="getSelectedTemplatePreview()" alt="模板预览" v-if="formData.templateId" class="template-preview-image" />
+                    <span v-else>未选择模板</span>
+                </div>
+                </div>
+              </div>
+              
+              <!-- 视频参数区 -->
+              <div class="summary-section">
+                <h4 class="section-title">视频参数</h4>
+                <div class="section-content">
+                  <div class="form-item">
+                    <span class="label">分辨率:</span>
+                    <span class="value">{{ formData.videoParams.resolution || getResolutionLabel(formData.videoParams.width, formData.videoParams.height) }}</span>
+                </div>
+                  
+                  <div class="form-item" v-if="formData.backgroundImageUrl">
+                    <span class="label">背景图片:</span>
+                    <div class="image-preview">
+                      <img :src="formData.backgroundImageUrl" alt="背景图片" class="small-preview" />
+              </div>
+                </div>
+                  
+                  <div class="form-item" v-if="formData.logoParams.imageUrl">
+                    <span class="label">Logo:</span>
+                    <div class="image-preview">
+                      <img :src="formData.logoParams.imageUrl" alt="Logo" class="small-preview" />
+                      <span class="value">位置: {{ getLogoPositionName(formData.logoParams.position) }}</span>
+              </div>
+                </div>
+                  
+                  <div class="form-item" v-if="formData.openingMaterial.fileUrl">
+                    <span class="label">片头视频:</span>
+                    <span class="value">已上传</span>
+              </div>
+                  
+                  <div class="form-item" v-if="formData.endingMaterial.fileUrl">
+                    <span class="label">片尾视频:</span>
+                    <span class="value">已上传</span>
+                </div>
+                  
+                  <div class="form-item" v-if="formData.bgmParams.bgmUrl">
+                    <span class="label">背景音乐:</span>
+                    <span class="value">已上传 (音量: {{ formData.bgmParams.volume }}%)</span>
+              </div>
+                  
+                  <div class="form-item">
+                    <span class="label">字幕:</span>
+                    <span class="value">{{ formData.videoParams.subtitles ? '开启' : '关闭' }}</span>
+                </div>
+                  
+                  <div class="form-item" v-if="formData.videoParams.subtitles">
+                    <span class="label">字幕颜色:</span>
+                    <span class="color-preview" :style="{ backgroundColor: formData.videoParams.subtitlesOptions.fontColor }"></span>
+                    <span class="value">{{ formData.videoParams.subtitlesOptions.fontColor }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+            <!-- 操作按钮 -->
+          <div class="action-buttons">
+              <el-button type="primary" plain @click="prevStep">上一步</el-button>
+              <el-button type="primary" @click="submitTask" :loading="submitting">
+                {{ submitting ? '提交中...' : '提交任务' }}
+              </el-button>
+          </div>
+        </div>
+        
+          <!-- 任务状态显示 -->
+          <div v-if="taskId" class="task-status-container">
+            <h3 class="task-status-title">
+              <i class="el-icon-video-camera"></i> 任务状态
+            </h3>
+            
+            <div class="task-info">
+              <div class="task-info-item">
+                <span class="label">任务ID:</span>
+                <span class="value">{{ taskId }}</span>
+              </div>
+              <div class="task-info-item">
+                <span class="label">状态:</span>
+                <span class="value status-badge" :class="getStatusClass(taskResult.status)">
+                  {{ getStatusText(taskResult.status) }}
+                </span>
+              </div>
+              <div class="task-info-item" v-if="taskResult.progress">
+                <span class="label">进度:</span>
+                <el-progress :percentage="taskResult.progress"></el-progress>
+              </div>
+            </div>
+            
+            <div v-if="taskResult.status === 'success'" class="video-result">
+              <div class="preview-container">
+                <video ref="videoPlayer" controls class="result-video">
+                  <source :src="taskResult.videoUrl" type="video/mp4">
+                  您的浏览器不支持视频播放
+                </video>
+              </div>
+              
+              <div class="video-actions">
+                <el-button type="primary" @click="downloadVideo" icon="el-icon-download">
+                  下载视频
+                </el-button>
+                <el-button type="success" @click="copyVideoLink" icon="el-icon-link">
+                  复制视频链接
+                </el-button>
+              </div>
+            </div>
+            
+            <el-alert
+              v-if="taskResult.status === 'error'"
+              title="任务失败"
+              type="error"
+              :description="taskResult.errorInfo || '视频生成失败，请重试'"
+              show-icon
+            ></el-alert>
+          </div>
+        </div>
+        
+        <!-- 步骤6：查看结果 -->
+        <div v-if="currentStep === 6" class="step-content-panel">
+          <div class="section-title">
+            <i class="ri-video-line"></i>
+            <span>任务结果</span>
+          </div>
+          
+          <div v-if="taskResult" class="task-result-info">
+            <div class="result-card">
+              <div class="result-header">
+                <h3>
+                  <i class="ri-information-line"></i>
+                  任务信息
+                </h3>
+                <div class="task-status-badge" :class="getStatusClass(taskStatus?.status)">
+                  <i v-if="taskStatus?.status === 'PROCESSING'" class="ri-loader-4-line spinning"></i>
+                  <i v-else-if="taskStatus?.status === 'SUCCESS'" class="ri-check-line"></i>
+                  <i v-else-if="taskStatus?.status === 'FAILED'" class="ri-close-line"></i>
+                  <i v-else class="ri-question-line"></i>
+                  {{ getStatusText(taskStatus?.status) }}
+                </div>
+              </div>
+              
+              <div class="result-info-grid">
+                <div class="info-item">
+                  <div class="info-label">
+                    <i class="ri-fingerprint-line"></i>
+                    任务ID:
+                  </div>
+                  <div class="info-value">
+                    <span class="task-id">{{ taskResult.taskId }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="task-actions">
+                <button class="action-button refresh-button" @click="queryTask" :disabled="isQuerying">
+                  <i v-if="isQuerying" class="ri-loader-4-line spinning"></i>
+                  <i v-else class="ri-refresh-line"></i>
+                  <span>{{ isQuerying ? '查询中...' : '刷新状态' }}</span>
+                </button>
+              </div>
+            </div>
+            
+            <div v-if="taskStatus?.videoUrl" class="video-result-card">
+              <h3 class="video-result-title">
+                <i class="ri-movie-line"></i>
+                视频预览
+              </h3>
+              <div class="video-container">
+                <video ref="videoPlayer" controls class="video-player">
+                  <source :src="taskStatus.videoUrl" :type="taskStatus.videoUrl.endsWith('.webm') ? 'video/webm' : 'video/mp4'">
+                  您的浏览器不支持视频播放
+                </video>
+              </div>
+              <div class="video-actions">
+                <div v-if="taskResult?.status === 'SUCCEED'" class="btn-group">
+                  <a v-if="taskResult?.video_url" :href="taskResult.video_url" target="_blank" class="primary-btn">
+                    <i class="ri-download-line"></i>
+                    下载视频
+                  </a>
+                </div>
+                <div v-else-if="taskResult?.status === 'FAILED'" class="error-message">
+                  <i class="ri-error-warning-line"></i>
+                  任务生成失败，请重试
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div v-else class="empty-result">
+            <div class="empty-content">
+              <div class="empty-image">
+                <i class="ri-vidicon-2-line"></i>
+              </div>
+              <div class="empty-message">暂无任务结果，请先提交任务</div>
+              <button class="primary-button back-button" @click="currentStep = 1">
+                <i class="ri-arrow-left-line"></i>
+                <span>返回创建任务</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 数字人演示视频预览弹窗 -->
+  <div v-if="showDigitalHumanPreview" class="preview-modal-overlay" @click.self="closeDigitalHumanPreview">
+    <div class="preview-modal">
+      <div class="preview-modal-header">
+        <h3>{{ previewDigitalHuman?.name }} 数字人演示</h3>
+        <button class="close-button" @click="closeDigitalHumanPreview">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+      <div class="preview-modal-content">
+        <video id="digital-human-preview-video" controls autoplay class="preview-video">
+          <source :src="previewDigitalHuman?.demoVideo" type="video/mp4">
+          您的浏览器不支持视频播放
+        </video>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 添加错误信息组件 -->
+  <ErrorMessage 
+    :title="errorTitle"
+    :message="errorMessage"
+    :details="errorDetails"
+    :suggestions="errorSuggestions"
+    :show="showErrorModal"
+    :show-retry="errorCanRetry"
+    @close="closeErrorModal"
+    @retry="retryOperation"
+  />
+</template>
+
+<script setup>
+import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
+import digitalHumanAPI from '@/utils/digitalHumanAPI';
+import ErrorMessage from '@/components/ErrorMessage.vue';
+
+// 数字人列表
+const digitalHumans = [
+  { id: '211808', name: '小微', avatar: '/assets/digital-humans/xiaowei.png', gender: 'female', demoVideo: '/assets/digital-humans/preview/xiaowei.mp4' },
+  { id: '218320', name: '小强', avatar: '/assets/digital-humans/xiaoqiang.png', gender: 'male', demoVideo: '/assets/digital-humans/preview/xiaoqiang.mp4' },
+  { id: '211809', name: '小兰', avatar: '/assets/digital-humans/xiaolan.png', gender: 'female', demoVideo: '/assets/digital-humans/preview/xiaolan.mp4' },
+  { id: '211806', name: '小刚', avatar: '/assets/digital-humans/xiaogang.png', gender: 'male', demoVideo: '/assets/digital-humans/preview/xiaogang.mp4' }
+];
+
+// 声音列表
+const femaleVoices = [
+  { id: 'baidu_sichuan_140', name: '小芸', gender: '女', style: '四川话', previewUrl: '/assets/voices/preview/xiaoyun.mp3' },
+  { id: 'zh-CN-XiaoxiaoNeural', name: '晓晓', gender: '女', style: '标准女声', previewUrl: '/assets/voices/preview/xiaoxiao.mp3' },
+  { id: 'zh-CN-XiaoyiNeural', name: '晓伊', gender: '女', style: '温柔女声', previewUrl: '/assets/voices/preview/xiaoyi.mp3' },
+  { id: 'zh-CN-liaoning-XiaobeiNeural', name: '小北', gender: '女', style: '东北话', previewUrl: '/assets/voices/preview/xiaobei.mp3' }
+];
+
+const maleVoices = [
+  { id: 'zh-CN-YunxiNeural', name: '云希', gender: '男', style: '标准男声', previewUrl: '/assets/voices/preview/yunxi.mp3' },
+  { id: 'zh-CN-YunjianNeural', name: '云健', gender: '男', style: '温和男声', previewUrl: '/assets/voices/preview/yunjian.mp3' },
+  { id: 'baidu_sichuan_139', name: '小明', gender: '男', style: '四川话', previewUrl: '/assets/voices/preview/xiaoming.mp3' }
+];
+
+// 当前激活的声音列表
+const activeVoices = ref(femaleVoices);
+
+// 预览相关状态
+const showDigitalHumanPreview = ref(false);
+const previewDigitalHuman = ref(null);
+
+// 模板选项
+const templateOptions = [
+  { id: 't-pf4kqasspwzwyexyte121', name: '模板1', ratio: '9:16', isVertical: true, previewImage: '/assets/templates/template1.png' },
+  { id: 't-af4keqsspfzwyexyte123', name: '模板2', ratio: '9:16', isVertical: true, previewImage: '/assets/templates/template2.png' },
+  { id: 't-ad4eeqsspfzwyqxyte125', name: '模板3', ratio: '9:16', isVertical: true, previewImage: '/assets/templates/template3.png' },
+  { id: 't-cd4eeqsspfzwyqxyte127', name: '模板4', ratio: '9:16', isVertical: true, previewImage: '/assets/templates/template4.png' },
+  { id: 't-hb4eeqsspfzwyqxyte129', name: '模板5', ratio: '16:9', isVertical: false, previewImage: '/assets/templates/template5.png' }
+];
+
+// 表单数据
+const formData = ref({
+  currentStep: 1,
+  figureId: '211808',
+  templateId: 't-pf4kqasspwzwyexyte121',
+  text: '',
+  ttsParams: {
+    person: '',
+    speed: 5,
+    volume: 9,
+    pitch: 5
+  },
+  videoParams: {
+    width: 540,
+    height: 960,
+    transparent: false,
+    autoAction: true,
+    subtitles: true,
+    subtitlesOptions: {
+      fontSize: 16,
+      fontColor: '#FFFFFF',
+    },
+  },
+  subtitleParams: {
+    enabled: true,
+    fontSize: 16,
+    fontColor: '#FFFFFF'
+  },
+  logoParams: {
+    enabled: false,
+    imageUrl: '',
+    position: 'bottom-right',
+    logoUrl: '' // 添加logoUrl用于提交
+  },
+  backgroundImageUrl: '',
+  materialUrl: '', // 添加背景图的OSS URL
+  callbackUrl: '',
+  // 片头片尾材质对象
+  openingMaterial: {
+    fileUrl: ''
+  },
+  endingMaterial: {
+    fileUrl: ''
+  },
+  // 添加背景音乐参数
+  bgmParams: {
+    bgmUrl: '',
+    volume: 50 // 背景音乐音量，默认50%
+  }
+});
+
+// 状态变量
+const currentStep = ref(1);
+const isSubmitting = ref(false);
+const isQuerying = ref(false);
+const taskResult = ref(null);
+const taskStatus = ref(null);
+const autoQueryInterval = ref(null);
+
+// 错误处理状态
+const errorMessage = ref('');
+const errorDetails = ref('');
+const errorSuggestions = ref('');
+const errorTitle = ref('');
+const showErrorModal = ref(false);
+const errorCanRetry = ref(false);
+const lastOperation = ref(null);
+
+// 关闭错误提示
+const closeErrorModal = () => {
+  showErrorModal.value = false;
+  errorMessage.value = '';
+  errorDetails.value = '';
+  errorSuggestions.value = '';
+  errorTitle.value = '';
+  errorCanRetry.value = false;
+};
+
+// 重试操作
+const retryOperation = () => {
+  closeErrorModal();
+  if (lastOperation.value === 'submit') {
+    submitTask();
+  } else if (lastOperation.value === 'query') {
+    queryTask();
+  }
+};
+
+// 显示错误信息
+const showError = (title, message, details = '', suggestions = '', canRetry = false, operation = null) => {
+  errorTitle.value = title;
+  errorMessage.value = message;
+  errorDetails.value = details;
+  errorSuggestions.value = suggestions;
+  errorCanRetry.value = canRetry;
+  showErrorModal.value = true;
+  
+  if (operation) {
+    lastOperation.value = operation;
+  }
+};
+
+// 下一步方法
+const nextStep = () => {
+  if (currentStep.value < 6) {
+    currentStep.value++;
+  }
+};
+
+// 上一步方法
+const prevStep = () => {
+  if (currentStep.value > 1) {
+    currentStep.value--;
+  }
+};
+
+// 获取选中数字人的性别
+const getSelectedHumanGender = () => {
+  const selectedHuman = digitalHumans.find(h => h.id === formData.figureId);
+  return selectedHuman?.gender === 'female' ? '女' : '男';
+};
+
+// 提交任务方法
+const submitTask = async () => {
+  if (isSubmitting.value) return;
+  isSubmitting.value = true;
+  
+  // 基本参数验证
+  if (!formData.text.trim()) {
+    showError('提交失败', '请输入文本内容', '', '文本内容不能为空');
+    isSubmitting.value = false;
+    return;
+  }
+  
+  if (!formData.figureId) {
+    showError('提交失败', '请选择数字人', '', '请返回"形象音色"步骤选择数字人');
+    isSubmitting.value = false;
+    return;
+  }
+  
+  if (!formData.ttsParams.person) {
+    showError('提交失败', '请选择音色', '', '请返回"形象音色"步骤选择音色');
+    isSubmitting.value = false;
+    return;
+  }
+  
+  if (!formData.backgroundImageUrl) {
+    showError('提交失败', '请上传背景图片', '', '背景图片是必须的');
+    isSubmitting.value = false;
+    return;
+  }
+  
+  // 确保materialUrl也被设置
+  if (!formData.materialUrl) {
+    formData.materialUrl = formData.backgroundImageUrl;
+  }
+  
+  // 如果启用了Logo但没有设置logoUrl
+  if (formData.logoParams.enabled && !formData.logoParams.logoUrl && formData.logoParams.imageUrl) {
+    formData.logoParams.logoUrl = formData.logoParams.imageUrl;
+  }
+  
+  // 构建请求参数
+  const params = {
+    figureId: formData.figureId,
+    templateId: formData.templateId,
+    text: formData.text,
+    ttsParams: formData.ttsParams,
+    videoParams: formData.videoParams,
+    title: formData.title || undefined,
+    materialUrl: formData.materialUrl, // 确保包含materialUrl
+    logoParams: formData.logoParams.enabled ? {
+      logoUrl: formData.logoParams.logoUrl,
+      position: formData.logoParams.position
+    } : undefined
+  };
+  
+  // 添加可选参数
+  if (formData.openingMaterial.fileUrl) {
+    params.openingMaterial = {
+      fileUrl: formData.openingMaterial.fileUrl
+    };
+  }
+  
+  if (formData.endingMaterial.fileUrl) {
+    params.endingMaterial = {
+      fileUrl: formData.endingMaterial.fileUrl
+    };
+  }
+  
+  if (formData.bgmParams.bgmUrl) {
+    params.bgmParams = {
+      bgmUrl: formData.bgmParams.bgmUrl,
+      volume: formData.bgmParams.volume
+    };
+  }
+  
+  console.log('提交任务参数:', JSON.stringify(params));
+  
+  try {
+    const response = await digitalHumanAPI.submitVideoTask(params);
+    
+    if (response.data.success) {
+      taskResult.value = response.data.data;
+      console.log('任务提交成功:', taskResult.value);
+      
+      startAutoQuery();
+      currentStep.value = 6;
+    } else {
+      // 增强错误处理
+      const errorCode = response.data.code;
+      const errorMsg = response.data.message || '任务提交失败';
+      const moreSuggestions = response.data.suggestions || '';
+      const moreDetails = response.data.more_detail || '';
+      
+      // 根据错误代码或消息显示不同的提示
+      if (errorMsg.includes('模板校验异常')) {
+        showError(
+          '模板无效', 
+          errorMsg, 
+          moreDetails,
+          moreSuggestions || '请检查选择的模板ID是否正确，或选择其他模板重试。',
+          true,
+          'submit'
+        );
+      } else if (errorMsg.includes('音色ID不存在')) {
+        showError(
+          '语音人声无效', 
+          errorMsg, 
+          moreDetails,
+          moreSuggestions || '请选择其他有效的语音人声。',
+          true,
+          'submit'
+        );
+      } else if (errorMsg.includes('未识别错误')) {
+        showError(
+          '生成失败', 
+          '视频生成服务返回未识别错误',
+          moreDetails || '服务端未返回具体错误原因，可能是参数组合不兼容导致。',
+          moreSuggestions || '1. 检查数字人ID是否正确\n2. 检查模板ID是否兼容\n3. 检查语音人声是否受支持\n4. 尝试更改文本内容或长度\n5. 尝试调整视频尺寸',
+          true,
+          'submit'
+        );
+      } else {
+        showError(
+          '提交失败', 
+          errorMsg,
+          moreDetails,
+          moreSuggestions,
+          true,
+          'submit'
+        );
+      }
+    }
+  } catch (error) {
+    console.error('提交任务出错:', error);
+    
+    // 网络错误或后端异常
+    showError(
+      '提交失败',
+      error.response?.data?.message || '网络错误，请稍后重试',
+      `状态码: ${error.response?.status || '未知'}`,
+      '请检查网络连接，或联系管理员。',
+      true,
+      'submit'
+    );
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+// 查询任务
+const queryTask = async (showLoading = true) => {
+  if (!taskResult.value || !taskResult.value.taskId) {
+    showError('查询失败', '请先提交任务', '', '请完成任务提交后再查询状态。');
+    return;
+  }
+  
+  if (showLoading) {
+    isQuerying.value = true;
+  }
+  
+  try {
+    const response = await digitalHumanAPI.queryVideoTask(taskResult.value.taskId);
+    
+    if (response.data.success) {
+      taskStatus.value = response.data.data;
+      console.log('任务状态:', taskStatus.value);
+    } else {
+      errorMessage.value = response.data.message || '查询任务失败';
+      
+      if (showLoading) {
+        showError(
+          '查询失败',
+          errorMessage.value,
+          '',
+          '请稍后重试，或检查任务ID是否正确。',
+          true,
+          'query'
+        );
+      } else {
+        console.error(errorMessage.value);
+      }
+    }
+  } catch (error) {
+    console.error('查询任务出错:', error);
+    errorMessage.value = error.response?.data?.message || '网络错误，请稍后重试';
+    
+    if (showLoading) {
+      showError(
+        '查询失败',
+        errorMessage.value,
+        `状态码: ${error.response?.status || '未知'}`,
+        '请检查网络连接，或联系管理员。',
+        true,
+        'query'
+      );
+    } else {
+      console.error(errorMessage.value);
+    }
+  } finally {
+    if (showLoading) {
+      isQuerying.value = false;
+    }
+  }
+};
+
+// 其他方法
+const startAutoQuery = () => {
+  stopAutoQuery();
+  
+  autoQueryInterval.value = setInterval(() => {
+    if (taskResult.value && taskResult.value.taskId) {
+      queryTask(false);
+      
+      if (taskStatus.value && (taskStatus.value.status === 'SUCCESS' || taskStatus.value.status === 'FAILED')) {
+        stopAutoQuery();
+      }
+    } else {
+      stopAutoQuery();
+    }
+  }, 5000);
+};
+
+const stopAutoQuery = () => {
+  if (autoQueryInterval.value) {
+    clearInterval(autoQueryInterval.value);
+    autoQueryInterval.value = null;
+  }
+};
+
+// 生命周期钩子
+onMounted(() => {
+  // ... 保持原有的onMounted逻辑 ...
+});
+
+onBeforeUnmount(() => {
+  stopAutoQuery();
+});
+
+// ... 保持其他原有的计算属性和方法 ...
+
+// 触发文件上传的方法
+const triggerFileUpload = () => {
+  if (isUploading.value) return;
+  fileInput.value.click();
+};
+
+// 处理背景图片上传
+const handleFileUpload = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  // 检查文件类型
+  if (!file.type.match('image.*')) {
+    showError('文件类型错误', '请上传图片文件', '', '支持的格式：JPG、PNG、JPEG');
+    return;
+  }
+  
+  // 检查文件大小 (10MB 限制)
+  if (file.size > 10 * 1024 * 1024) {
+    showError('文件过大', '图片大小不能超过10MB', '', '请压缩图片后重试');
+    return;
+  }
+  
+  isUploading.value = true;
+  
+  try {
+    // 使用百度云接口上传
+    const response = await digitalHumanAPI.uploadImageToBaiduBOS(file, 'background');
+    
+    if (response.data && response.data.url) {
+      formData.backgroundImageUrl = response.data.url;
+      // 重要：同时设置materialUrl，确保提交任务时使用
+      formData.materialUrl = response.data.url;
+      console.log('背景图片上传成功：', response.data.url);
+    } else {
+      throw new Error(response.data?.message || '上传失败');
+    }
+  } catch (error) {
+    console.error('背景图片上传错误：', error);
+    showError(
+      '上传失败',
+      '背景图片上传失败',
+      error.response?.data?.message || error.message || '未知错误',
+      '请检查网络连接和图片格式，然后重试',
+      true
+    );
+  } finally {
+    isUploading.value = false;
+  }
+};
+
+// 移除背景图片
+const removeBackground = () => {
+  formData.backgroundImageUrl = '';
+  formData.materialUrl = ''; // 同时清除materialUrl
+};
+
+// 触发Logo上传
+const triggerLogoFileUpload = () => {
+  if (isUploading.value) return;
+  logoFileInput.value.click();
+};
+
+// 处理Logo上传
+const handleLogoFileUpload = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  // 检查文件类型
+  if (!file.type.match('image.*')) {
+    showError('文件类型错误', '请上传图片文件', '', '支持的格式：JPG、PNG、JPEG');
+    return;
+  }
+  
+  // 检查文件大小 (5MB 限制)
+  if (file.size > 5 * 1024 * 1024) {
+    showError('文件过大', 'Logo图片大小不能超过5MB', '', '请压缩图片后重试');
+    return;
+  }
+  
+  isUploading.value = true;
+  
+  try {
+    // 使用百度云接口上传
+    const response = await digitalHumanAPI.uploadImageToBaiduBOS(file, 'logo');
+    
+    if (response.data && response.data.url) {
+      formData.logoParams.imageUrl = response.data.url;
+      // 重要：同时设置logoUrl，确保提交任务时使用
+      formData.logoParams.logoUrl = response.data.url;
+      formData.logoParams.enabled = true;
+      console.log('Logo上传成功：', response.data.url);
+    } else {
+      throw new Error(response.data?.message || '上传失败');
+    }
+  } catch (error) {
+    console.error('Logo上传错误：', error);
+    showError(
+      '上传失败',
+      'Logo上传失败',
+      error.response?.data?.message || error.message || '未知错误',
+      '请检查网络连接和图片格式，然后重试',
+      true
+    );
+  } finally {
+    isUploading.value = false;
+  }
+};
+
+// 移除Logo
+const removeLogo = () => {
+  formData.logoParams.imageUrl = '';
+  formData.logoParams.logoUrl = ''; // 同时清除logoUrl
+  formData.logoParams.enabled = false;
+};
+
+// 选择数字人
+const selectDigitalHuman = (id) => {
+  formData.figureId = id;
+  // 根据性别过滤音色
+  if (getSelectedHumanGender() === '女') {
+    activeVoices.value = femaleVoices;
+  } else {
+    activeVoices.value = maleVoices;
+  }
+};
+
+// 选择音色
+const selectVoice = (id) => {
+  formData.ttsParams.person = id;
+};
+
+// 获取选中数字人的头像
+const getSelectedHumanAvatar = () => {
+  const selectedHuman = digitalHumans.find(h => h.id === formData.figureId);
+  return selectedHuman?.avatar;
+};
+
+// 获取选中数字人的名称
+const getHumanName = (id) => {
+  const selectedHuman = digitalHumans.find(h => h.id === id);
+  return selectedHuman?.name;
+};
+
+// 获取选中音色的名称
+const getVoiceName = (id) => {
+  const selectedVoice = activeVoices.value.find(v => v.id === id);
+  return selectedVoice?.name;
+};
+
+// 获取选中模板预览图
+const getSelectedTemplatePreview = () => {
+  const selectedTemplate = templateOptions.find(t => t.id === formData.templateId);
+  return selectedTemplate?.previewImage;
+};
+
+// 获取视频预览URL
+const getVoicePreviewUrl = (id) => {
+  const selectedVoice = activeVoices.value.find(v => v.id === id);
+  return selectedVoice?.previewUrl;
+};
+
+// 切换文本展开状态
+const textExpanded = ref(false);
+const toggleTextExpand = () => {
+  textExpanded.value = !textExpanded.value;
+};
+
+// 设置视频参数
+const setVideoParams = (params) => {
+  formData.videoParams = { ...formData.videoParams, ...params };
+};
+
+// 设置Logo参数
+const setLogoParams = (params) => {
+  formData.logoParams = { ...formData.logoParams, ...params };
+};
+
+// 设置背景音乐参数
+const setBgmParams = (params) => {
+  formData.bgmParams = { ...formData.bgmParams, ...params };
+};
+
+// 设置片头片尾视频参数
+const setOpeningVideoParams = (params) => {
+  formData.openingMaterial = { ...formData.openingMaterial, ...params };
+};
+
+// 设置片尾视频参数
+const setEndingVideoParams = (params) => {
+  formData.endingMaterial = { ...formData.endingMaterial, ...params };
+};
+
+// 设置字幕参数
+const setSubtitlesParams = (params) => {
+  formData.subtitleParams = { ...formData.subtitleParams, ...params };
+};
+
+// 设置字幕颜色
+const setSubtitlesColor = (color) => {
+  formData.videoParams.subtitlesOptions.fontColor = color;
+};
+
+// 设置视频尺寸
+const setVideoSize = (width, height) => {
+  formData.videoParams.width = width;
+  formData.videoParams.height = height;
+};
+
+// 设置视频透明度
+const setTransparent = (transparent) => {
+  formData.videoParams.transparent = transparent;
+};
+
+// 设置自动添加动作
+const setAutoAnimoji = (autoAnimoji) => {
+  formData.autoAnimoji = autoAnimoji;
+};
+
+// 设置显示字幕
+const setSubtitlesEnabled = (enabled) => {
+  formData.subtitleParams.enabled = enabled;
+};
+
+// 设置视频分辨率
+const setResolution = (width, height) => {
+  formData.videoParams.width = width;
+  formData.videoParams.height = height;
+};
+
+// 设置视频选项
+const setVideoOptions = (options) => {
+  formData.videoParams = { ...formData.videoParams, ...options };
+};
+
+// 设置视频背景音乐
+const setBgm = (bgmUrl) => {
+  formData.bgmParams.bgmUrl = bgmUrl;
+};
+
+// 设置背景音乐音量
+const setBgmVolume = (volume) => {
+  formData.bgmParams.volume = volume;
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+  formData.videoParams = { ...formData.videoParams, ...option };
+};
+
+// 设置视频选项
+const setVideoOption = (option) => {
+</script>
+
+<style scoped>
+@import '../../assets/css/text-creation-common.css';
+
+/* 主容器布局调整 */
+.main-container {
+  display: flex;
+  gap: 15px;
+  height: 100%;
+}
+
+/* 左侧步骤条变窄 */
+.steps-container.slim-steps {
+  width: 200px; /* 调小左侧宽度 */
+  flex-shrink: 0;
+  margin-bottom: 0; /* 移除底部间距，因为右侧会滚动 */
+}
+
+/* 右侧内容区变宽 */
+.step-content-container.wide-content {
+  flex-grow: 1; /* 占据剩余宽度 */
+  max-height: calc(100vh - 120px); /* 限制高度，留出顶部导航空间 */
+  overflow-y: auto; /* 内容超出时允许滚动 */
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* 步骤内容面板 */
+.step-content-panel {
+  padding: 20px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 表单组样式 */
+.form-group {
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+/* 优化数字人选择布局 */
+.digital-human-grid.inline-grid {
+  display: grid; 
+  grid-template-columns: repeat(6, 1fr); /* 六列布局 */
+  gap: 15px; /* 增加间距 */
+  max-height: 250px; /* 提高高度，从220px增加到250px */
+  overflow-y: auto; /* 超出时添加滚动 */
+  padding: 10px; /* 增加内边距 */
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+
+.digital-human-card.compact-card {
+  width: auto;
+  margin: 0;
+  padding: 10px; /* 增加内边距 */
+  border: 2px solid transparent;
+  border-radius: 8px;
+  transition: all 0.2s;
+  position: relative; /* 添加相对定位，便于预览按钮的绝对定位 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.digital-human-card.compact-card:hover {
+  background-color: #f9f9f9;
+  transform: translateY(-2px);
+}
+
+.digital-human-card.compact-card.selected {
+  border-color: var(--primary-color, #ba003f);
+  background-color: rgba(186, 0, 63, 0.05);
+}
+
+.compact-card .human-avatar {
+  width: 85px; /* 增加头像尺寸，从70px增加到85px */
+  height: 85px; /* 增加头像尺寸，从70px增加到85px */
+  margin: 0 auto 8px; /* 增加底部间距 */
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.compact-card .human-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* 改为contain，确保头像完全显示 */
+  object-position: center top; /* 居中并靠上对齐 */
+}
+
+.compact-card .human-name {
+  font-size: 13px; /* 增大字体 */
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 优化音色选择列表布局，适应更多音色 */
+.voice-list.multi-column-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 修改为4列 */
+  gap: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 5px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+
+.voice-item.compact-voice-item {
+  padding: 8px 10px;
+  border: 2px solid #eee;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.voice-item.compact-voice-item:hover {
+  border-color: var(--primary-color, #ba003f);
+  background-color: #f9f9f9;
+  transform: translateY(-2px);
+}
+
+.voice-item.compact-voice-item.selected {
+  border-color: var(--primary-color, #ba003f);
+  background-color: rgba(186, 0, 63, 0.05);
+}
+
+.voice-icon {
+  font-size: 20px;
+  color: #666;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.voice-info {
+  flex: 1;
+  min-width: 0; /* 防止flex子项溢出 */
+}
+
+.voice-name {
+  font-weight: bold;
+  color: #333;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.voice-desc {
+  color: #666;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.voice-preview {
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+/* 试听按钮强调 */
+.preview-button {
+  background: none;
+  border: none;
+  color: var(--primary-color, #ba003f);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  transition: transform 0.2s;
+  line-height: 1;
+}
+
+.preview-button:hover {
+  transform: scale(1.2);
+}
+
+.preview-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 音色过滤器 */
+.voice-filter {
+  margin-bottom: 10px;
+}
+
+.voice-search-input {
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+  width: 100%;
+  font-size: 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23999' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 10px center;
+  background-size: 16px;
+  padding-left: 32px;
+}
+
+.voice-filter-info {
+  font-size: 12px;
+  color: #666;
+  background-color: #f0f0f0;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: 8px;
+}
+
+/* 动作按钮 */
+.action-buttons {
+  margin-top: auto; /* 推到底部 */
+  display: flex;
+  justify-content: space-between;
+  padding-top: 20px;
+}
+
+/* 响应式调整 */
+@media (max-width: 1200px) {
+  .digital-human-grid.inline-grid {
+    grid-template-columns: repeat(4, 1fr); /* 四列 */
+    max-height: 280px; /* 响应式调整高度 */
+  }
+  
+  .voice-list.multi-column-list {
+    grid-template-columns: repeat(2, 1fr); /* 两列 */
+  }
+}
+
+@media (max-width: 768px) { 
+  .main-container {
+    flex-direction: column;
+  }
+  
+  .steps-container.slim-steps {
+    width: 100%;
+    margin-bottom: 15px;
+  }
+  
+  .step-content-container.wide-content {
+    max-height: none;
+  }
+  
+  .digital-human-grid.inline-grid {
+    grid-template-columns: repeat(3, 1fr); /* 三列 */
+    max-height: 330px; /* 在移动端增加更多高度 */
+  }
+  
+  .voice-list.multi-column-list {
+    grid-template-columns: 1fr; /* 单列 */
+  }
+}
+
+.resolution-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.resolution-option {
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.resolution-option.active {
+  border-color: #007bff;
+  background-color: rgba(0, 123, 255, 0.1);
+  color: #007bff;
+}
+
+/* 提交任务和查看结果步骤样式优化 */
+.task-summary-container {
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.summary-heading {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 12px;
+}
+
+.summary-heading i {
+  margin-right: 8px;
+  color: var(--primary-color, #ba003f);
+}
+
+.task-summary {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.summary-item {
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s;
+}
+
+.summary-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.summary-label {
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+}
+
+.summary-label i {
+  margin-right: 6px;
+  color: var(--primary-color, #ba003f);
+  font-size: 16px;
+}
+
+.summary-value {
+  font-size: 15px;
+  color: #333;
+  line-height: 1.5;
+}
+
+.text-value {
+  max-height: 80px;
+  overflow-y: auto;
+  white-space: pre-line;
+  padding: 8px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+.summary-tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: rgba(186, 0, 63, 0.1);
+  color: var(--primary-color, #ba003f);
+  border-radius: 16px;
+  padding: 4px 10px;
+  margin-right: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.summary-tag i {
+  margin-right: 4px;
+}
+
+.submit-button {
+  background-color: var(--primary-color, #ba003f);
+  font-size: 16px;
+  padding: 10px 20px;
+  transition: all 0.3s;
+}
+
+.submit-button:hover {
+  background-color: darken(var(--primary-color, #ba003f), 10%);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(186, 0, 63, 0.3);
+}
+
+/* 查看结果样式 */
+.task-result-info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.result-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  transition: transform 0.3s;
+}
+
+.result-card:hover {
+  transform: translateY(-4px);
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 12px;
+}
+
+.result-header h3 {
+  font-size: 18px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.result-header h3 i {
+  margin-right: 8px;
+  color: var(--primary-color, #ba003f);
+}
+
+.task-status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+}
+
+.task-status-badge i {
+  margin-right: 6px;
+}
+
+.status-processing {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-success {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-failed {
+  background-color: #fdeaea;
+  color: #ef5350;
+}
+
+.status-unknown {
+  background-color: #f5f5f5;
+  color: #9e9e9e;
+}
+
+.result-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.info-item {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.info-label {
+  font-weight: bold;
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+}
+
+.info-label i {
+  margin-right: 6px;
+  color: var(--primary-color, #ba003f);
+}
+
+.info-value {
+  font-size: 15px;
+  color: #333;
+}
+
+.task-id {
+  font-family: monospace;
+  background-color: #f0f0f0;
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+
+.task-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-button:hover {
+  background-color: #eee;
+  transform: translateY(-2px);
+}
+
+.action-button i {
+  margin-right: 6px;
+}
+
+.refresh-button {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.refresh-button:hover {
+  background-color: #bbdefb;
+}
+
+.video-result-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  overflow: hidden;
+}
+
+.video-result-title {
+  font-size: 18px;
+  margin-top: 0;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.video-result-title i {
+  margin-right: 8px;
+  color: var(--primary-color, #ba003f);
+}
+
+.video-container {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background-color: #000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.video-player {
+  width: 100%;
+  display: block;
+}
+
+.video-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.download-button {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.download-button:hover {
+  background-color: #c8e6c9;
+}
+
+.copy-button {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.copy-button:hover {
+  background-color: #bbdefb;
+}
+
+.empty-result {
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-content {
+  text-align: center;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.empty-image {
+  font-size: 80px;
+  color: #ccc;
+  margin-bottom: 20px;
+}
+
+.empty-message {
+  font-size: 18px;
+  color: #888;
+  margin-bottom: 20px;
+}
+
+.back-button {
+  margin-top: 16px;
+}
+
+@media (max-width: 768px) {
+  /* 移动端样式 */
+}
+
+/* 背景图片上传样式 */
+.background-upload-container {
+  margin-top: 10px;
+}
+
+.background-upload-area {
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 180px; /* 固定高度 */
+}
+
+.background-upload-area:hover {
+  border-color: var(--primary-color, #ba003f);
+  background-color: rgba(186, 0, 63, 0.05);
+}
+
+.background-upload-area.has-image {
+  border-style: solid;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #666;
+  height: 100%;
+  justify-content: center;
+  width: 100%;
+}
+
+.upload-placeholder i {
+  font-size: 48px;
+  color: #aaa;
+}
+
+.upload-tip {
+  font-size: 12px;
+  color: #999;
+  margin-top: 5px;
+}
+
+.background-preview {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.background-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.background-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 5px;
+}
+
+.action-icon-button {
+  background-color: rgba(0, 0, 0, 0.5);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-icon-button:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+  transform: scale(1.1);
+}
+
+.background-thumbnail {
+  max-width: 150px;
+  max-height: 100px;
+  overflow: hidden;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.background-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Logo上传样式 */
+.logo-upload-container {
+  margin-top: 10px;
+}
+
+.logo-upload-area {
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 180px; /* 匹配背景图片上传区域高度 */
+}
+
+.logo-upload-area:hover {
+  border-color: var(--primary-color, #ba003f);
+  background-color: rgba(186, 0, 63, 0.05);
+}
+
+.logo-upload-area.has-image {
+  border-style: solid;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  min-height: auto;
+  max-height: 120px;
+}
+
+.logo-preview {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.logo-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 5px;
+}
+
+.logo-position-selector {
+  margin-top: 10px;
+}
+
+.position-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.position-option {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.position-option:hover {
+  border-color: #007bff;
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+.position-option.active {
+  border-color: #007bff;
+  background-color: rgba(0, 123, 255, 0.1);
+  color: #007bff;
+}
+
+/* 分辨率展示样式 */
+.resolution-info {
+  background-color: #f5f7fa;
+  border-radius: 6px;
+  padding: 12px 15px;
+  margin-top: 8px;
+}
+
+.resolution-display {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+}
+
+.resolution-note {
+  font-size: 13px;
+  color: #666;
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.resolution-note i {
+  margin-right: 5px;
+  color: #007bff;
+}
+
+/* 数字人卡片新增的预览按钮样式 */
+.digital-human-actions {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  z-index: 10;
+}
+
+.demo-button {
+  background-color: rgba(186, 0, 63, 0.8); /* 更深的背景色 */
+  color: white; /* 白色图标 */
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  transition: all 0.2s;
+  padding: 0;
+  opacity: 0.85;
+  font-size: 14px;
+}
+
+.demo-button:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* 预览弹窗样式 */
+.preview-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.preview-modal {
+  background: white;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 800px;
+  overflow: hidden;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.preview-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: #f5f7fa;
+  border-bottom: 1px solid #e6e9ed;
+}
+
+.preview-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #909399;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.close-button:hover {
+  color: #333;
+}
+
+.preview-modal-content {
+  padding: 0;
+}
+
+.preview-video {
+  width: 100%;
+  display: block;
+}
+
+/* 调整数字人卡片的样式，添加相对定位以支持绝对定位的子元素 */
+.digital-human-card {
+  position: relative;
+}
+
+/* 表单辅助样式 */
+.optional-field-hint {
+  font-size: 12px;
+  color: #999;
+  font-weight: normal;
+  margin-left: 5px;
+}
+
+.input-helper-text {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.no-voices-found {
+  margin-top: 10px;
+  text-align: center;
+  color: #999;
+}
+
+/* 模板选择样式 */
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 8px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+
+.template-card {
+  position: relative;
+  outline: 2px solid transparent; 
+  outline-offset: -2px;
+  border-radius: 6px;
+  overflow: hidden;
+  transition: outline-color 0.2s;
+  background-color: #f9f9f9;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.template-card:hover {
+  outline-color: rgba(186, 0, 63, 0.5); /* 改变outline颜色进行高亮 */
+}
+
+.template-card.selected {
+  outline-color: var(--primary-color, #ba003f); /* 使用outline表示选中 */
+  background-color: rgba(186, 0, 63, 0.05);
+}
+
+/* 为模板卡片内的预览区使用更具体的选择器 */
+.template-card .template-card-preview {
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 9 / 16;
+  background-color: #eee;
+}
+
+.template-card .template-card-preview img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.template-info {
+  padding: 6px;
+  flex-shrink: 0;
+}
+
+.template-name {
+  font-weight: 500;
+  font-size: 13px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.template-ratio {
+  color: #666;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 响应式调整 */
+@media (max-width: 1200px) {
+  .template-grid {
+    grid-template-columns: repeat(3, 1fr); /* 中等屏幕3列 */
+  }
+}
+
+@media (max-width: 768px) {
+  .template-grid {
+    grid-template-columns: repeat(2, 1fr); /* 小屏幕2列 */
+  }
+}
+
+/* 上传中的状态样式 */
+.upload-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: #1976d2;
+  height: 100%;
+  width: 100%;
+}
+
+.upload-loading i {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.background-upload-area.uploading,
+.logo-upload-area.uploading {
+  border-color: #1976d2;
+  background-color: rgba(25, 118, 210, 0.05);
+  cursor: wait;
+}
+
+.spinning {
+  animation: spinner-rotate 1s linear infinite;
+}
+
+@keyframes spinner-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 显式上传按钮样式 */
+.explicit-upload-button {
+  background-color: #f5f7fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 10px;
+}
+
+.explicit-upload-button:hover {
+  background-color: #e9ebee;
+}
+
+/* 横向排列的上传容器 */
+.upload-container-flex {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+/* 每个上传区域项 */
+.flex-item {
+  flex: 1;
+  min-width: 0; /* 防止flex项溢出 */
+}
+
+/* 在小屏幕上改为纵向 */
+@media (max-width: 768px) {
+  .upload-container-flex {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+/* 操作按钮容器 */
+.operations-container {
+  display: flex;
+  gap: 15px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+
+.operation-item {
+  flex: 1;
+  min-width: 150px;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+  width: 100%;
+}
+
+.action-button:hover {
+  background-color: #d32f2f;
+}
+
+/* 修改现有上传按钮样式 */
+.explicit-upload-button {
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+  width: 100%;
+  transition: background-color 0.3s;
+}
+
+.explicit-upload-button:hover {
+  background-color: #1565c0;
+}
+
+/* 新增：片头片尾视频上传区域 */
+.video-upload-container {
+  margin-top: 10px;
+}
+
+.video-upload-area {
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 180px; /* 固定高度 */
+}
+
+.video-upload-area:hover {
+  border-color: var(--primary-color, #ba003f);
+  background-color: rgba(186, 0, 63, 0.05);
+}
+
+.video-upload-area.has-video {
+  border-style: solid;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #666;
+  height: 100%;
+  justify-content: center;
+  width: 100%;
+}
+
+.upload-placeholder i {
+  font-size: 48px;
+  color: #aaa;
+}
+
+.upload-tip {
+  font-size: 12px;
+  color: #999;
+  margin-top: 5px;
+}
+
+.video-preview {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-preview video {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.video-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 5px;
+}
+
+.action-icon-button {
+  background-color: rgba(0, 0, 0, 0.5);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-icon-button:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+  transform: scale(1.1);
+}
+
+.video-thumbnail {
+  max-width: 150px;
+  max-height: 100px;
+  overflow: hidden;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.video-thumbnail video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 在原有样式文件末尾添加 */
+
+/* 片头片尾视频上传区域特定样式 */
+.video-upload-section {
+  margin-top: 20px; /* 与上方区域增加间距 */
+}
+
+.video-upload-container {
+  margin-top: 10px;
+}
+
+.video-upload-area {
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 180px; /* 固定高度，与背景/logo一致 */
+  position: relative; /* 为了预览和加载状态 */
+  overflow: hidden;
+  background-color: #fafafa;
+}
+
+.video-upload-area:hover {
+  border-color: var(--primary-color, #ba003f);
+  background-color: rgba(186, 0, 63, 0.02);
+}
+
+.video-upload-area.has-video {
+  border-style: solid;
+  padding: 0;
+}
+
+.video-upload-area.uploading {
+  border-color: #1976d2;
+  background-color: rgba(25, 118, 210, 0.05);
+  cursor: wait;
+}
+
+/* 视频预览样式 */
+.video-preview {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000;
+}
+
+.video-preview video {
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.video-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 5px;
+  z-index: 1;
+}
+
+/* 移除按钮等图标按钮样式复用 */
+.action-icon-button {
+  /* 样式已在之前定义，可复用 */
+}
+
+/* 背景音乐上传样式 */
+.bgm-upload-container {
+  margin-top: 10px;
+}
+
+.audio-upload-area {
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-height: 100px; /* 音频上传区域高度小一点 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #fafafa;
+}
+
+.audio-upload-area:hover {
+  border-color: var(--primary-color, #ba003f);
+  background-color: rgba(186, 0, 63, 0.05);
+}
+
+.audio-upload-area.has-audio {
+  border-style: solid;
+  padding: 12px;
+  position: relative;
+}
+
+.audio-preview {
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.audio-preview .audio-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  align-self: flex-start;
+}
+
+.audio-preview .audio-info i {
+  font-size: 24px;
+  color: var(--primary-color, #ba003f);
+}
+
+.audio-preview .audio-name {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+.audio-preview audio {
+  width: 100%;
+  max-width: 100%;
+  height: 40px;
+}
+
+/* 音量控制样式优化 */
+.bgm-volume-control {
+  margin-top: 15px;
+  background-color: #f9f9f9;
+  padding: 10px 15px;
+  border-radius: 8px;
+}
+
+.volume-slider-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.volume-slider {
+  flex: 1;
+  height: 5px;
+  accent-color: var(--primary-color, #ba003f);
+}
+
+.volume-value {
+  font-size: 14px;
+  font-weight: bold;
+  min-width: 40px;
+  text-align: right;
+  color: #555;
+}
+
+/* 通用上传相关样式(被误删恢复) */
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #666;
+  height: 100%;
+  justify-content: center;
+  width: 100%;
+}
+
+.upload-placeholder i {
+  font-size: 48px;
+  color: #aaa;
+}
+
+.upload-tip {
+  font-size: 12px;
+  color: #999;
+  margin-top: 5px;
+}
+
+.audio-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 5px;
+}
+
+.audio-preview {
+  width: 100%;
+}
+
+/* 任务摘要和提交页样式 */
+.task-summary-container {
+  margin-bottom: 30px;
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.summary-title {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: #409EFF;
+  border-bottom: 1px solid #EBEEF5;
+  padding-bottom: 10px;
+}
+
+.task-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.summary-section {
+  background-color: #F8F9FA;
+  border-radius: 6px;
+  padding: 15px;
+}
+
+.section-title {
+  font-size: 16px;
+  color: #606266;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.section-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-item {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.label {
+  font-weight: 500;
+  color: #606266;
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.value {
+  color: #303133;
+  flex-grow: 1;
+}
+
+.text-content {
+  max-height: 60px;
+  overflow: hidden;
+  color: #303133;
+  line-height: 1.5;
+  transition: max-height 0.3s;
+  
+  &.expanded {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+}
+
+.digital-human-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-preview {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.template-preview {
+  display: flex;
+  justify-content: center;
+}
+
+.template-preview-image {
+  max-width: 100%;
+  max-height: 150px; /* 增加高度从80px到150px */
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.small-preview {
+  max-width: 80px;
+  max-height: 60px;
+  border-radius: 4px;
+}
+
+.image-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-preview {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  margin-right: 8px;
+  vertical-align: middle;
+  border: 1px solid #dcdfe6;
+}
+
+.action-buttons {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* 任务状态容器样式 */
+.task-status-container {
+  margin-top: 30px;
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.task-status-title {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: #409EFF;
+  border-bottom: 1px solid #EBEEF5;
+  padding-bottom: 10px;
+}
+
+.task-info {
+  margin-bottom: 20px;
+}
+
+.task-info-item {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 14px;
+  
+  &.status-success {
+    background-color: #67C23A;
+    color: white;
+  }
+  
+  &.status-error {
+    background-color: #F56C6C;
+    color: white;
+  }
+  
+  &.status-processing {
+    background-color: #E6A23C;
+    color: white;
+  }
+  
+  &.status-waiting {
+    background-color: #909399;
+    color: white;
+  }
+}
+
+.video-result {
+  margin-top: 20px;
+}
+
+.preview-container {
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.result-video {
+  width: 100%;
+  max-height: 400px;
+  border-radius: 6px;
+}
+
+.video-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .task-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 任务摘要中的模板预览容器，注意这里使用更具体的选择器以避免与上面的冲突 */
+.summary-section .template-preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5;
+  padding: 8px;
+  border-radius: 4px;
+  min-height: 160px;
+}
+
+.summary-section .template-preview-image {
+  max-width: 100%;
+  max-height: 150px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+</style> 

@@ -253,15 +253,11 @@ def chat():
         }), 400
     
     # 调用聊天接口
-    response = api_client.chat_completion(
+    response = api_client.chat(
+        model=model_info["model_id"],
         messages=messages,
-        model_id=model_info["model_id"],
         temperature=temperature,
-        max_tokens=max_tokens,
-        top_p=top_p,
-        frequency_penalty=frequency_penalty,
-        presence_penalty=presence_penalty,
-        stop=stop
+        max_tokens=max_tokens
     )
     
     # 增加详细的响应日志

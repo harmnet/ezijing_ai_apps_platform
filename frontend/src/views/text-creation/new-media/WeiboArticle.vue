@@ -5,8 +5,9 @@
         <h2>微博文章生成</h2>
       </div>
       <div class="page-actions">
-        <button class="action-btn" title="创作小贴士" @click="showTips">
-          <i class="ri-lightbulb-line"></i>
+        <button class="learn-button" title="知识学习" @click="showTips">
+          <i class="ri-book-open-line"></i>
+          知识学习
         </button>
       </div>
     </div>
@@ -91,22 +92,23 @@
           </div>
         </div>
         
+        <!-- 内容元素 - 优化复选框布局和视觉效果 -->
         <div class="form-group">
           <label>内容元素</label>
           <div class="checkbox-group">
-            <div class="checkbox-item">
+            <div class="checkbox-item" :class="{'checkbox-active': includeEmoji}">
               <input type="checkbox" id="include-emoji" v-model="includeEmoji">
               <label for="include-emoji" class="checkbox-label">表情符号</label>
             </div>
-            <div class="checkbox-item">
+            <div class="checkbox-item" :class="{'checkbox-active': includeHashtags}">
               <input type="checkbox" id="include-hashtags" v-model="includeHashtags">
               <label for="include-hashtags" class="checkbox-label">话题标签</label>
             </div>
-            <div class="checkbox-item">
+            <div class="checkbox-item" :class="{'checkbox-active': includeMention}">
               <input type="checkbox" id="include-mention" v-model="includeMention">
               <label for="include-mention" class="checkbox-label">@提及</label>
             </div>
-            <div class="checkbox-item">
+            <div class="checkbox-item" :class="{'checkbox-active': includeQuestion}">
               <input type="checkbox" id="include-question" v-model="includeQuestion">
               <label for="include-question" class="checkbox-label">互动提问</label>
             </div>
@@ -167,14 +169,19 @@
           </div>
           
           <div class="example-carousel">
-            <div class="example-cards" ref="exampleCarousel">
+            <div class="example-cards" ref="exampleCarouselRef">
               <div class="example-card" v-for="(example, index) in examples" :key="index" @click="loadExample('example' + (index + 1))">
-                <div class="example-icon">
-                  <i :class="example.icon"></i>
+                <div class="example-card-header">
+                  <div class="example-icon">
+                    <i :class="example.icon"></i>
+                  </div>
+                  <div class="example-info">
+                    <div class="example-title">{{ example.title }}</div>
+                    <div class="example-desc">{{ example.type }}</div>
+                  </div>
                 </div>
-                <div class="example-info">
-                  <span class="example-title">{{ example.title }}</span>
-                  <span class="example-desc">{{ example.desc }}</span>
+                <div class="example-content" v-if="example.desc">
+                  <div class="example-detail">{{ example.desc }}</div>
                 </div>
               </div>
             </div>
@@ -198,7 +205,7 @@
                 <i class="ri-file-copy-line"></i>
                 复制内容
               </button>
-              <button @click="showPrompt" class="prompt-button" :disabled="!lastUsedPrompt">
+              <button @click="showPrompt" class="primary-button" :disabled="!lastUsedPrompt">
                 <i class="ri-code-line"></i>
                 查看提示词
               </button>
@@ -220,29 +227,82 @@
             </div>
             
             <div v-else-if="generatedWeibo" class="weibo-result" :class="{'blur-content': isLoading}">
-              <div class="weibo-post">
-                <div class="weibo-header">
-                  <div class="weibo-avatar">
-                    <i class="ri-user-line"></i>
+              <div class="weibo-phone-mockup">
+                <div class="weibo-status-bar">
+                  <div class="status-icons">
+                    <i class="ri-wifi-line"></i>
+                    <i class="ri-signal-wifi-line"></i>
+                    <i class="ri-battery-charge-line"></i>
                   </div>
-                  <div class="weibo-user-info">
-                    <h4 class="weibo-username">AI助手</h4>
-                    <div class="weibo-timestamp">刚刚</div>
+                  <div class="status-time">10:30</div>
+                </div>
+                <div class="weibo-app-header">
+                  <div class="app-back">
+                    <i class="ri-arrow-left-s-line"></i>
+                  </div>
+                  <div class="app-title">微博热门</div>
+                  <div class="app-more">
+                    <i class="ri-more-line"></i>
                   </div>
                 </div>
-                <div class="weibo-body">{{ generatedWeibo }}</div>
-                <div class="weibo-stats">
-                  <div class="weibo-stat">
-                    <i class="ri-thumb-up-line"></i>
-                    <span>赞</span>
+                <div class="weibo-article-container">
+                  <div class="weibo-post">
+                    <div class="weibo-header">
+                      <div class="weibo-avatar">
+                        <i class="ri-user-line"></i>
+                      </div>
+                      <div class="weibo-user-info">
+                        <h4 class="weibo-username">AI助手</h4>
+                        <div class="weibo-timestamp">刚刚</div>
+                      </div>
+                      <div class="weibo-follow-btn">关注</div>
+                    </div>
+                    <div class="weibo-body" v-html="formatWeiboContent(generatedWeibo)"></div>
+                    
+                    <!-- 添加模拟图片区域 -->
+                    <div v-if="includeEmoji && hasImageContent()" class="weibo-image-container">
+                      <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQwIiBoZWlnaHQ9IjI0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgZmlsbD0iI0YyRjJGMiIgY3g9IjEyMCIgY3k9IjEyMCIgcj0iMTIwIi8+PHBhdGggZD0iTTg2LjQgMTM5LjVjMCAyNi4zIDI3IDQ3LjYgNjAuMyA0Ny42czYwLjMtMjEuMyA2MC4zLTQ3LjZIODYuNHoiIGZpbGw9IiNFMkU1RTciLz48cGF0aCBkPSJNODYuNCAxMjBjMC0zMi4zIDI3LTU4LjUgNjAuMy01OC41czYwLjMgMjYuMiA2MC4zIDU4LjUiIHN0cm9rZT0iI0UyRTVFNyIgc3Ryb2tlLXdpZHRoPSIxOCIvPjxjaXJjbGUgZmlsbD0iIzFEMUQxQiIgY3g9IjExNyIgY3k9IjEyMCIgcj0iOSIvPjxjaXJjbGUgZmlsbD0iIzFEMUQxQiIgY3g9IjE3NiIgY3k9IjEyMCIgcj0iOSIvPjwvZz48L3N2Zz4=" class="weibo-image" alt="示例图片">
+                    </div>
+                    
+                    <div class="weibo-stats">
+                      <div class="weibo-stat">
+                        <i class="ri-thumb-up-line"></i>
+                        <span>赞</span>
+                      </div>
+                      <div class="weibo-stat">
+                        <i class="ri-chat-1-line"></i>
+                        <span>评论</span>
+                      </div>
+                      <div class="weibo-stat">
+                        <i class="ri-share-forward-line"></i>
+                        <span>转发</span>
+                      </div>
+                      <div class="weibo-stat">
+                        <i class="ri-star-line"></i>
+                        <span>收藏</span>
+                      </div>
+                    </div>
                   </div>
-                  <div class="weibo-stat">
-                    <i class="ri-chat-1-line"></i>
-                    <span>评论</span>
+                </div>
+                <div class="weibo-interaction-bar">
+                  <div class="interaction-item">
+                    <i class="ri-home-line"></i>
+                    <span>首页</span>
                   </div>
-                  <div class="weibo-stat">
-                    <i class="ri-share-forward-line"></i>
-                    <span>转发</span>
+                  <div class="interaction-item">
+                    <i class="ri-video-line"></i>
+                    <span>视频</span>
+                  </div>
+                  <div class="interaction-item">
+                    <i class="ri-add-circle-line"></i>
+                  </div>
+                  <div class="interaction-item">
+                    <i class="ri-message-3-line"></i>
+                    <span>消息</span>
+                  </div>
+                  <div class="interaction-item">
+                    <i class="ri-user-line"></i>
+                    <span>我</span>
                   </div>
                 </div>
               </div>
@@ -256,55 +316,82 @@
     <div class="modal" v-if="showPromptModal">
       <div class="modal-content">
         <div class="modal-header">
-          <h3 class="modal-title">AI提示词</h3>
-          <button class="modal-close" @click="showPromptModal = false">&times;</button>
-        </div>
-        <div class="modal-body">
-          <pre class="prompt-content">{{ lastUsedPrompt }}</pre>
-        </div>
-        <div class="modal-footer">
-          <button class="secondary-button" @click="showPromptModal = false">关闭</button>
+          <h3 class="modal-title">
+            <i class="ri-code-line"></i>
+            AI提示词
+          </h3>
+          <div class="modal-actions">
           <button class="primary-button" @click="copyPrompt">
             <i class="ri-file-copy-line"></i>
             复制提示词
           </button>
+            <button class="close-btn" @click="showPromptModal = false">&times;</button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <pre class="prompt-content">{{ lastUsedPrompt }}</pre>
         </div>
       </div>
     </div>
     
-    <!-- 小贴士模态框 -->
-    <div class="modal" v-if="showTipsModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3 class="modal-title">微博创作小贴士</h3>
-          <button class="modal-close" @click="showTipsModal = false">&times;</button>
-        </div>
-        <div class="modal-body">
-          <ul class="tips-list">
-            <li>微博内容简洁有力，直入主题效果更好</li>
-            <li>使用表情符号和话题标签可以增加互动性</li>
-            <li>提出问题或邀请互动可以提高转发和评论率</li>
-            <li>图文结合的内容更容易获得关注</li>
-            <li>紧跟热点话题可以提高微博曝光度</li>
-            <li>真实生活中的分享往往比抽象观点更有共鸣</li>
-            <li>保持自己独特的风格和态度，更容易塑造个人品牌</li>
-          </ul>
-        </div>
-        <div class="modal-footer">
-          <button class="primary-button" @click="showTipsModal = false">明白了</button>
+    <!-- 知识学习侧边栏 -->
+    <el-drawer
+      v-model="showTipsModal"
+      title="微博文章创作指南"
+      direction="rtl"
+      size="30%"
+      :destroy-on-close="false"
+      class="knowledge-drawer"
+    >
+      <div class="knowledge-content">
+        <div v-for="(item, index) in weiboArticleKnowledge" :key="index" class="knowledge-section">
+          <h3 class="knowledge-subtitle">
+            <i :class="item.icon" class="knowledge-icon"></i>
+            {{ item.subtitle }}
+          </h3>
+          <div class="knowledge-text" v-html="formatMarkdown(item.text)"></div>
         </div>
       </div>
-    </div>
+    </el-drawer>
   </div>
 </template>
 
 <script>
 import axios from 'axios';
+import '@/assets/css/text-creation-common.css'; // 引入统一CSS样式文件
+import '@/assets/css/mobile-preview.css'; // 引入手机预览样式文件
+import { weiboArticleExamples } from '@/views/example_data.js'; // 导入参考案例数据
+import { weiboArticleKnowledge } from '@/views/Knowledge_data.js'; // 导入知识学习数据
+import { ref, reactive, toRefs, computed, onMounted } from 'vue';
+import { ElDrawer } from 'element-plus'; // 引入Element Plus的Drawer组件
+
+// 检查导入是否成功，如果不成功则提供默认数据
+const defaultWeiboKnowledge = [{
+  title: '微博创作知识学习',
+  tips: [
+    '微博内容简洁有力，直入主题效果更好',
+    '使用表情符号和话题标签可以增加互动性',
+    '提出问题或邀请互动可以提高转发和评论率',
+    '图文结合的内容更容易获得关注',
+    '紧跟热点话题可以提高微博曝光度',
+    '真实生活中的分享往往比抽象观点更有共鸣',
+    '保持自己独特的风格和态度，更容易塑造个人品牌'
+  ]
+}];
 
 export default {
   name: 'WeiboArticle',
-  data() {
-    return {
+  components: {
+    ElDrawer
+  },
+  setup() {
+    // 创建DOM引用 - 修复refs问题
+    const exampleCarouselRef = ref(null);
+    
+    // 检查导入的知识数据，如果不可用则使用默认数据
+    const knowledgeData = typeof weiboArticleKnowledge !== 'undefined' ? weiboArticleKnowledge : defaultWeiboKnowledge;
+
+    const state = reactive({
       // 微博参数
       weiboType: 'trending',
       weiboTitle: '',
@@ -332,159 +419,133 @@ export default {
       showTipsModal: false,
       
       // 模型选择
-      selectedModel: 'deepseek-v3-vol', // 设置默认值
+      selectedModel: 'deepseek-v3', // 设置默认值
       modelList: [],
       
-      // 参考案例
+      // 参考案例设置
       currentExampleIndex: 0,
       exampleTranslateX: 0,
-      examples: [
-        { icon: 'ri-briefcase-line', title: '职场感悟', desc: '分享工作中的感悟和经验' },
-        { icon: 'ri-shopping-bag-line', title: '好物推荐', desc: '推荐最近使用的好产品' },
-        { icon: 'ri-film-line', title: '影视评论', desc: '分享观影感受和推荐' },
-        { icon: 'ri-football-line', title: '体育热点', desc: '体育赛事相关评论' },
-        { icon: 'ri-book-open-line', title: '读书心得', desc: '分享阅读体验和推荐' },
-        { icon: 'ri-seedling-line', title: '农业科技', desc: '农业技术与发展趋势' },
-        { icon: 'ri-snowy-line', title: '冰雪产业', desc: '冬奥会后的冰雪经济' },
-        { icon: 'ri-traffic-light-line', title: '智能交通', desc: '智能交通的应用与前景' },
-        { icon: 'ri-charging-pile-line', title: '新能源汽车', desc: '电动汽车的现状与前景' },
-        { icon: 'ri-bank-line', title: '金融科技', desc: '金融科技的创新与发展' }
-      ]
-    };
-  },
-  computed: {
-    // 判断是否已经到达最后一页
-    isLastPage() {
+      examples: weiboArticleExamples, // 使用导入的参考案例数据
+      
+      // 添加微博知识学习内容
+      weiboArticleKnowledge: weiboArticleKnowledge
+    });
+
+    const isLastPage = computed(() => {
       // 计算是否已经滚动到最后一页
       const cardWidth = 185; // 卡片宽度+间距
-      const containerWidth = this.$refs.exampleCarousel?.parentElement?.clientWidth || 0;
-      const totalWidth = this.examples.length * cardWidth;
+      const containerWidth = exampleCarouselRef.value?.parentElement?.clientWidth || 0;
+      const totalWidth = state.examples.length * cardWidth;
       const maxScrollX = totalWidth - containerWidth;
       
       // 当滚动到最大滚动距离的90%以上时，认为是最后一页
-      return Math.abs(this.exampleTranslateX) >= maxScrollX * 0.9;
-    }
-  },
-  mounted() {
-    // 设置默认模型列表，防止等待API返回时界面显示"加载中"
-    this.setupDefaultModels();
-    // 然后尝试从API加载
-    this.loadModels();
-  },
-  methods: {
-    // 加载模型列表
-    async loadModels() {
-      try {
-        const response = await axios.get('/api/v1/llm/models');
-        console.log('获取模型响应:', response);
-        
-        if (response.data.status === 'success') {
-          // 获取模型列表
-          const models = response.data.data;
-          
-          // 按照指定顺序排序模型
-          const orderedModelIds = [
-            'deepseek-v3-vol',  // DeepSeek-V3（火山引擎）- 放在第一位
-            'deepseek-r1-vol',  // DeepSeek-R1（火山引擎）
-            'deepseek-r1-sf',   // DeepSeek-R1（硅基流动）
-            'deepseek-v3-sf',   // DeepSeek-V3（硅基流动）
-            'qwq-32b',          // 通义千问-32B（硅基流动）
-            'qwen-max',         // 通义千问-Max（阿里云）
-            'doubao-pro'        // 豆包-Pro（火山引擎）
-          ];
-          
-          // 按指定顺序排序
-          this.modelList = orderedModelIds
-            .map(id => models.find(model => model.id === id))
-            .filter(model => model !== undefined);
-          
-          console.log('可用模型:', this.modelList);
-          
-          // 默认选择火山引擎的DeepSeek V3模型
-          this.selectedModel = 'deepseek-v3-vol';
-          
-          // 如果没有可用模型，创建一个默认列表作为备用
-          if (this.modelList.length === 0) {
-            this.setupDefaultModels();
-          }
-        } else {
-          console.error('获取模型列表失败:', response.data.message);
-          this.setupDefaultModels();
-        }
-      } catch (error) {
-        console.error('获取模型列表异常:', error);
-        this.setupDefaultModels();
-      }
-    },
-    
-    setupDefaultModels() {
-      this.modelList = [
-        { id: 'deepseek-v3-vol', name: 'DeepSeek-V3（火山引擎）' },
+      return Math.abs(state.exampleTranslateX) >= maxScrollX * 0.9;
+    });
+
+    const setupDefaultModels = () => {
+      state.modelList = [
+        { id: 'deepseek-v3', name: 'DeepSeek-V3（火山引擎）' },
         { id: 'deepseek-r1-vol', name: 'DeepSeek-R1（火山引擎）' },
-        { id: 'deepseek-r1-sf', name: 'DeepSeek-R1（硅基流动）' },
-        { id: 'deepseek-v3-sf', name: 'DeepSeek-V3（硅基流动）' },
         { id: 'qwq-32b', name: '通义千问-32B（硅基流动）' }
       ];
-      this.selectedModel = 'deepseek-v3-vol';
-    },
-    
-    // 生成微博
-    async generateWeibo() {
-      if (!this.validateForm()) return;
+      state.selectedModel = 'deepseek-v3';
+    };
+
+    const generateWeibo = async () => {
+      if (!validateForm()) return;
       
-      this.isGenerating = true;
-      this.isLoading = true;
-      this.loadingText = 'AI正在创作中，请稍候...';
+      state.isGenerating = true;
+      state.isLoading = true;
+      state.loadingText = 'AI正在创作中，请稍候...';
+      state.generatedWeibo = ''; // 清空之前的内容
       
       try {
         // 构建提示词
-        const prompt = this.buildPrompt();
-        this.lastUsedPrompt = prompt;
+        const prompt = buildPrompt();
+        state.lastUsedPrompt = prompt;
         
-        // 调用API并获取结果
         try {
           // 检查是否有可用模型
-          if (!this.selectedModel) {
+          if (!state.selectedModel) {
             console.error('未选择模型');
             throw new Error('请选择AI模型');
           }
           
-          console.log(`正在调用API，使用模型: ${this.selectedModel}，提示词长度: ${prompt.length}`);
+          console.log(`正在调用API，使用模型: ${state.selectedModel}，提示词长度: ${prompt.length}`);
           
           // 构建API请求参数
           const apiParams = {
-            model: this.selectedModel,
+            model: state.selectedModel,
             messages: [{ role: 'user', content: prompt }],
             temperature: 0.7,
-            max_tokens: this.getMaxTokensByLength(this.weiboLength)
+            max_tokens: getMaxTokensByLength(state.weiboLength),
+            stream: true // 启用流式输出
           };
           
           // 记录API请求详情，方便调试
           console.log('API请求参数:', JSON.stringify(apiParams));
           
-          // 发送API请求 - 使用正确的API路径
-          const response = await axios.post('/api/v1/llm/chat', apiParams, { timeout: 60000 });
-          console.log('API响应:', response);
+          // 使用fetch API处理流式响应
+          const response = await fetch('/api/v1/v1/deepseek_volcano/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'text/event-stream'
+            },
+            body: JSON.stringify(apiParams)
+          });
           
-          if (response.data.status === 'success') {
-            const content = response.data.data.choices[0].message.content;
-            console.log('成功获取到结果:', content);
-            this.generatedWeibo = content;
-            // 添加提示消息到结果中，表明是调用API生成的
-            this.$message && this.$message.success('已成功调用后端大模型生成内容');
-          } else {
-            console.error('API返回错误:', response.data.message);
-            throw new Error(`服务器返回错误: ${response.data.message || '未知错误'}`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
           }
+          
+          console.log('开始接收流式响应...');
+          
+          // 获取响应的reader
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder('utf-8');
+          let buffer = ''; // 用于存储不完整的数据块
+          
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) {
+              console.log('Reader 已完成');
+              break;
+            }
+            
+            const chunk = decoder.decode(value, { stream: true });
+            console.log('收到数据块:', chunk);
+            
+            // 将新块添加到缓冲区
+            buffer += chunk;
+            
+            // 尝试处理完整的SSE消息
+            let processedBuffer = processSSEMessages(buffer);
+            
+            // 更新缓冲区为未处理的部分
+            buffer = processedBuffer;
+          }
+          
+          console.log('流式响应完成');
+          
+          // 如果到此时还没有内容，则尝试离线生成
+          if (!state.generatedWeibo || state.generatedWeibo.trim() === '') {
+            console.warn('未能从API获取内容，切换到离线模式');
+            state.generatedWeibo = getOfflineGeneratedWeibo();
+            state.$message && state.$message.warning('未能从服务器获取内容，使用离线模式生成');
+          } else {
+            state.$message && state.$message.success('已成功调用后端大模型生成内容');
+          }
+          
         } catch (error) {
           console.error('API调用异常:', error);
           
           // 判断是否是网络错误或服务器不可用
-          if (error.code === 'ECONNABORTED' || !error.response || error.message.includes('Network Error')) {
+          if (error.name === 'AbortError' || !error.response || error.message.includes('Network Error')) {
             console.warn('后端服务不可用，切换到离线模式');
             // 离线模式
-            this.generatedWeibo = this.getOfflineGeneratedWeibo();
-            this.$message && this.$message.warning('后端服务不可用，使用离线模式生成内容');
+            state.generatedWeibo = getOfflineGeneratedWeibo();
+            state.$message && state.$message.warning('后端服务不可用，使用离线模式生成内容');
           } else {
             // 其他API错误
             throw error;
@@ -492,22 +553,21 @@ export default {
         }
       } catch (error) {
         console.error('生成微博出错:', error);
-        this.generatedWeibo = '抱歉，服务器暂时无法响应，请稍后再试';
+        state.generatedWeibo = '抱歉，服务器暂时无法响应，请稍后再试';
         
         // 开发环境下提供测试数据
         if (process.env.NODE_ENV === 'development') {
           setTimeout(() => {
-            this.generatedWeibo = this.getOfflineGeneratedWeibo();
+            state.generatedWeibo = getOfflineGeneratedWeibo();
           }, 1000);
         }
       } finally {
-        this.isGenerating = false;
-        this.isLoading = false;
+        state.isGenerating = false;
+        state.isLoading = false;
       }
-    },
-    
-    // 构建提示词
-    buildPrompt() {
+    };
+
+    const buildPrompt = () => {
       let prompt = `请你扮演一位专业的社交媒体内容创作者，为我创作一条原创微博。\n\n`;
       
       // 添加微博类型
@@ -518,14 +578,14 @@ export default {
         humor: '幽默段子',
         question: '提问互动'
       };
-      prompt += `微博类型：${typeMap[this.weiboType]}\n`;
+      prompt += `微博类型：${typeMap[state.weiboType]}\n`;
       
       // 添加主题和目标受众
-      prompt += `微博主题：${this.weiboTitle}\n`;
-      prompt += `目标受众：${this.targetAudience}\n`;
+      prompt += `微博主题：${state.weiboTitle}\n`;
+      prompt += `目标受众：${state.targetAudience}\n`;
       
       // 添加关键词
-      prompt += `内容要点：${this.weiboKeywords}\n`;
+      prompt += `内容要点：${state.weiboKeywords}\n`;
       
       // 添加风格和长度
       const styleMap = {
@@ -535,7 +595,7 @@ export default {
         emotional: '情感充沛',
         sarcastic: '讽刺调侃'
       };
-      prompt += `语言风格：${styleMap[this.writingStyle]}\n`;
+      prompt += `语言风格：${styleMap[state.writingStyle]}\n`;
       
       const lengthMap = {
         short: '简短 (50字以内)',
@@ -543,28 +603,27 @@ export default {
         long: '较长 (100-200字)',
         'super-long': '超长 (200-500字)'
       };
-      prompt += `微博长度：${lengthMap[this.weiboLength]}\n`;
+      prompt += `微博长度：${lengthMap[state.weiboLength]}\n`;
       
       // 添加内容元素需求
       prompt += `内容元素要求：\n`;
-      if (this.includeEmoji) prompt += `- 请在适当的地方添加表情符号\n`;
-      if (this.includeHashtags) prompt += `- 请添加1-3个相关话题标签，格式为 #话题#\n`;
-      if (this.includeMention) prompt += `- 可以适当添加@某人的元素\n`;
-      if (this.includeQuestion) prompt += `- 请在微博末尾添加互动性提问\n`;
+      if (state.includeEmoji) prompt += `- 请在适当的地方添加表情符号\n`;
+      if (state.includeHashtags) prompt += `- 请添加1-3个相关话题标签，格式为 #话题#\n`;
+      if (state.includeMention) prompt += `- 可以适当添加@某人的元素\n`;
+      if (state.includeQuestion) prompt += `- 请在微博末尾添加互动性提问\n`;
       
       // 添加其他要求
-      if (this.additionalRequirements) {
-        prompt += `其他特殊要求：${this.additionalRequirements}\n`;
+      if (state.additionalRequirements) {
+        prompt += `其他特殊要求：${state.additionalRequirements}\n`;
       }
       
       // 最后的格式说明
       prompt += `\n请直接输出微博内容，不需要添加任何额外解释。确保内容原创、有吸引力，符合微博平台的表达习惯。`;
       
       return prompt;
-    },
-    
-    // 根据长度设置获取最大token数
-    getMaxTokensByLength(length) {
+    };
+
+    const getMaxTokensByLength = (length) => {
       const tokenMap = {
         short: 100,
         medium: 200,
@@ -572,44 +631,41 @@ export default {
         'super-long': 500
       };
       return tokenMap[length] || 200;
-    },
-    
-    // 表单验证
-    validateForm() {
-      if (!this.weiboTitle) {
+    };
+
+    const validateForm = () => {
+      if (!state.weiboTitle) {
         alert('请输入微博主题');
         return false;
       }
-      if (!this.targetAudience) {
+      if (!state.targetAudience) {
         alert('请输入目标读者群体');
         return false;
       }
-      if (!this.weiboKeywords) {
+      if (!state.weiboKeywords) {
         alert('请输入微博关键词或内容要点');
         return false;
       }
       return true;
-    },
-    
-    // 重置表单
-    resetForm() {
-      this.weiboTitle = '';
-      this.targetAudience = '';
-      this.weiboKeywords = '';
-      this.writingStyle = 'casual';
-      this.weiboLength = 'medium';
-      this.additionalRequirements = '';
-      this.includeEmoji = true;
-      this.includeHashtags = true;
-      this.includeMention = false;
-      this.includeQuestion = true;
-    },
-    
-    // 复制结果
-    copyResult() {
-      if (!this.generatedWeibo) return;
+    };
+
+    const resetForm = () => {
+      state.weiboTitle = '';
+      state.targetAudience = '';
+      state.weiboKeywords = '';
+      state.writingStyle = 'casual';
+      state.weiboLength = 'medium';
+      state.additionalRequirements = '';
+      state.includeEmoji = true;
+      state.includeHashtags = true;
+      state.includeMention = false;
+      state.includeQuestion = true;
+    };
+
+    const copyResult = () => {
+      if (!state.generatedWeibo) return;
       
-      navigator.clipboard.writeText(this.generatedWeibo)
+      navigator.clipboard.writeText(state.generatedWeibo)
         .then(() => {
           alert('微博内容已复制到剪贴板');
         })
@@ -617,958 +673,396 @@ export default {
           console.error('复制失败:', err);
           alert('复制失败，请手动复制');
         });
-    },
-    
-    // 复制提示词
-    copyPrompt() {
-      if (!this.lastUsedPrompt) return;
+    };
+
+    const copyPrompt = () => {
+      if (!state.lastUsedPrompt) return;
       
-      navigator.clipboard.writeText(this.lastUsedPrompt)
-        .then(() => {
-          alert('提示词已复制到剪贴板');
-        })
+      try {
+        // 检查是否支持clipboard API
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(state.lastUsedPrompt)
+            .then(() => {
+              alert('提示词已复制到剪贴板');
+            })
         .catch(err => {
           console.error('复制失败:', err);
+              fallbackCopy(state.lastUsedPrompt);
+            });
+        } else {
+          // 浏览器不支持clipboard API，使用备选方法
+          fallbackCopy(state.lastUsedPrompt);
+        }
+      } catch (error) {
+        console.error('复制操作异常:', error);
+        fallbackCopy(state.lastUsedPrompt);
+      }
+    };
+
+    // 备选的复制方法
+    const fallbackCopy = (text) => {
+      try {
+        // 创建临时textarea元素
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        
+        // 设置样式使元素不可见
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        
+        // 选择文本并执行复制命令
+        textArea.focus();
+        textArea.select();
+        
+        const successful = document.execCommand('copy');
+        if (successful) {
+          alert('提示词已复制到剪贴板');
+        } else {
           alert('复制失败，请手动复制');
-        });
-    },
-    
-    // 显示提示词
-    showPrompt() {
-      if (!this.lastUsedPrompt) return;
-      this.showPromptModal = true;
-    },
-    
-    // 显示小贴士
-    showTips() {
-      this.showTipsModal = true;
-    },
-    
-    // 轮播控制 - 上一页
-    prevExample() {
-      if (this.currentExampleIndex > 0) {
-        this.currentExampleIndex--;
-        this.updateExampleCarousel();
+        }
+        
+        // 清理临时元素
+        document.body.removeChild(textArea);
+      } catch (err) {
+        console.error('备选复制方法失败:', err);
+        alert('复制失败，请手动复制文本');
       }
-    },
-    
-    // 轮播控制 - 下一页
-    nextExample() {
-      const maxVisibleCards = Math.floor(document.querySelector('.example-carousel').clientWidth / 185);
-      const maxIndex = this.examples.length - maxVisibleCards;
+    };
+
+    const showPrompt = () => {
+      if (!state.lastUsedPrompt) return;
+      state.showPromptModal = true;
+    };
+
+    const showTips = () => {
+      state.showTipsModal = true;
+    };
+
+    const prevExample = () => {
+      if (state.currentExampleIndex > 0) {
+        state.currentExampleIndex--;
+        updateExampleCarousel();
+      }
+    };
+
+    const nextExample = () => {
+      const carouselEl = document.querySelector('.example-carousel');
+      const cardWidth = 220; // 调整为与CSS中定义的卡片宽度一致
+      const maxVisibleCards = carouselEl ? Math.floor(carouselEl.clientWidth / cardWidth) : 1;
+      const maxIndex = state.examples.length - maxVisibleCards;
       
-      if (this.currentExampleIndex < maxIndex) {
-        this.currentExampleIndex++;
-        this.updateExampleCarousel();
+      if (state.currentExampleIndex < maxIndex) {
+        state.currentExampleIndex++;
+        updateExampleCarousel();
       }
-    },
-    
-    // 更新轮播位置
-    updateExampleCarousel() {
-      const cardWidth = 185; // 卡片宽度(170px) + 间距(15px)
-      this.exampleTranslateX = -this.currentExampleIndex * cardWidth;
-      if (this.$refs.exampleCarousel) {
-        this.$refs.exampleCarousel.style.transform = `translateX(${this.exampleTranslateX}px)`;
-        this.$refs.exampleCarousel.style.transition = 'transform 0.3s ease';
+    };
+
+    const updateExampleCarousel = () => {
+      const cardWidth = 220; // 调整为与CSS中定义的卡片宽度一致
+      state.exampleTranslateX = -state.currentExampleIndex * cardWidth;
+      if (exampleCarouselRef.value) {
+        exampleCarouselRef.value.style.transform = `translateX(${state.exampleTranslateX}px)`;
+        exampleCarouselRef.value.style.transition = 'transform 0.3s ease';
       }
-    },
-    
-    // 加载参考案例
-    loadExample(exampleId) {
+    };
+
+    const loadExample = (exampleId) => {
       // 解析示例编号
       const index = parseInt(exampleId.replace('example', '')) - 1;
-      if (index < 0 || index >= this.examples.length) return;
+      if (index < 0 || index >= state.examples.length) return;
       
       // 获取示例内容
-      const example = this.examples[index];
+      const example = state.examples[index];
       if (!example) return;
       
       console.log('加载示例:', index, example);
       
-      // 根据示例设置不同的类型
-      const typeMap = {
-        '职场感悟': 'lifestyle',
-        '好物推荐': 'review',
-        '影视评论': 'trending',
-        '体育热点': 'question',
-        '读书心得': 'lifestyle',
-        '农业科技': 'trending',
-        '冰雪产业': 'trending',
-        '智能交通': 'review',
-        '新能源汽车': 'review',
-        '金融科技': 'trending'
-      };
-      
-      const styleMap = {
-        '职场感悟': 'emotional',
-        '好物推荐': 'casual',
-        '影视评论': 'emotional',
-        '体育热点': 'humorous',
-        '读书心得': 'professional',
-        '农业科技': 'professional',
-        '冰雪产业': 'professional',
-        '智能交通': 'casual',
-        '新能源汽车': 'casual',
-        '金融科技': 'professional'
-      };
-      
       // 设置微博参数
-      this.weiboType = typeMap[example.title] || 'trending';
-      this.weiboTitle = example.title;
-      this.targetAudience = example.desc.includes('爱好者') ? example.desc.split('爱好者')[0] + '爱好者' : example.desc.split('的')[0] + '关注者';
-      this.weiboKeywords = example.desc;
-      this.writingStyle = styleMap[example.title] || 'casual';
-      this.weiboLength = 'medium';
+      state.weiboType = example.weiboType || 'trending';
+      state.weiboTitle = example.title;
+      state.targetAudience = example.desc.includes('爱好者') ? 
+                             example.desc.split('爱好者')[0] + '爱好者' : 
+                             example.desc.split('的')[0] + '关注者';
+      state.weiboKeywords = example.desc;
+      state.writingStyle = example.writingStyle || 'casual';
+      state.weiboLength = 'medium';
       
-      // 设置合适的内容元素
-      if (this.weiboType === 'question') {
-        this.includeQuestion = true;
+      // 根据微博类型设置合适的内容元素
+      if (state.weiboType === 'question') {
+        state.includeQuestion = true;
+      } else if (state.weiboType === 'humor') {
+        state.includeEmoji = true;
+        state.writingStyle = 'humorous';
+      } else if (state.weiboType === 'review') {
+        state.includeRating = true;
+        state.includeProsCons = true;
       }
       
       console.log('已设置参数:', {
-        type: this.weiboType,
-        title: this.weiboTitle,
-        audience: this.targetAudience,
-        keywords: this.weiboKeywords,
-        style: this.writingStyle
+        type: state.weiboType,
+        title: state.weiboTitle,
+        audience: state.targetAudience,
+        keywords: state.weiboKeywords,
+        style: state.writingStyle
       });
-    },
-    
-    // 离线生成的示例微博（开发环境使用）
-    getOfflineGeneratedWeibo() {
-      // 根据不同的微博类型生成对应的示例内容
-      let samples = [];
+    };
+
+    // 添加formatMarkdown方法
+    const formatMarkdown = (text) => {
+      if (!text) return '';
       
-      switch(this.weiboType) {
-        case 'review':
-          samples = [
-            `刚入手的新款蓝牙耳机体验分享！🎧 降噪效果真的惊艳到我，地铁上嘈杂声瞬间消失，仿佛拥有了专属小宇宙！续航给我惊到，重度使用三天都不用充电！透明模式下交流完全不受影响，音质也相当不错👍 #数码好物推荐# #蓝牙耳机推荐# 你们用过这款吗？感觉如何？`,
-            `最近买的智能家居套装也太香了！💯 一句话控制全屋设备，回家自动开灯调温度，安防系统也很给力。特别是那个智能窗帘，早上跟着日出自动打开，起床体验不要太舒服～ #好物分享# #智能家居套装# 大家有没有智能家居踩坑经历？求分享经验～`,
-            `新款电动牙刷入手两周报告📝 震动精准到位，清洁力比普通牙刷强太多！App监测刷牙死角很实用，充一次电能用20天。最爱的是旅行便携盒设计，出差带着超方便，再也不会忘记充电了😁 #测评分享# #口腔护理好物# 你们现在还在用普通牙刷吗？`
-          ];
-          break;
+      // 处理加粗文本
+      text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      
+      // 处理列表项
+      text = text.replace(/\n\n/g, '<br><br>');
+      
+      return text;
+    };
+
+    const getOfflineGeneratedWeibo = () => {
+      // 简化模拟数据，每种类型只保留一个示例
+      const samples = {
+        'review': `刚入手的新款蓝牙耳机体验分享！🎧 降噪效果真的惊艳到我，地铁上嘈杂声瞬间消失，仿佛拥有了专属小宇宙！续航给我惊到，重度使用三天都不用充电！透明模式下交流完全不受影响，音质也相当不错👍 #数码好物推荐# #蓝牙耳机推荐# 你们用过这款吗？感觉如何？`,
+        
+        'trending': `《流浪地球2》今天二刷回来…真的被国产科幻片的进步震撼到了！特效已经完全不输好莱坞，剧情更是紧凑到让人窒息😱。最震撼的还是那种面对毁灭时的东方式浪漫与坚韧，看完莫名感到心安。中国科幻电影的未来，好像一下子就有了更多可能性✨。#流浪地球2# #国产科幻电影# 你们看了吗？最喜欢哪个片段？`,
+        
+        'lifestyle': `#2023职场感悟# 这周终于啃下了那个困扰团队半个月的技术难题！熬夜加班的疲惫一扫而空，成就感真的是工作中最好的续航能量了✨。感谢团队每个人的付出，单打独斗永远不如众人拾柴。职场中最重要的，与其说是个人能力，不如说是解决问题的决心和团队协作的默契。你们职场中遇到过最有成就感的时刻是什么？一起分享吧！👇`,
+        
+        'humor': `今天在公司茶水间听到两位同事聊天：\n"你知道AI为什么这么火吗？"\n"为什么？"\n"因为它不用996，不用交五险一金，不用年终述职，不吃不喝不休假还不辞职！"\n"那我们岂不是要失业了？😱"\n"放心，我们还有一个无可替代的优势..."\n"什么优势？"\n"我们会喝奶茶啊！" 🧋\n#职场段子# #AI时代# 你们觉得AI会取代哪些工作？`,
+        
+        'question': `世界杯1/4决赛也太刺激了吧！😱 梅西那脚助攻简直神来之笔，看得我从沙发上跳起来！C罗那个表情，心都要碎了。足球就是这样，一瞬间可以改变一切。突然意识到这可能是这两位球王同台的最后一届世界杯了…有点舍不得😢 #卡塔尔世界杯# #梅西C罗# 大家支持哪个队夺冠啊？评论区告诉我！⚽`
+      };
+      
+      return samples[state.weiboType] || `今天的阳光也太好了吧！☀️ 午休时在公司楼下晒了会太阳，整个人都元气满满！这种初春的温暖真的很治愈，感觉冬天的阴霾一扫而空～生活中这种小确幸真的很重要。#春日分享# #生活碎片# 你们今天的小确幸是什么呢？`;
+    };
+
+    const formatWeiboContent = (content) => {
+      if (!content) return '';
+      
+      // 高亮话题标签 #xxx#
+      let formatted = content.replace(/#([^#]+)#/g, '<span class="weibo-hashtag">#$1#</span>');
+      
+      // 高亮@提及
+      formatted = formatted.replace(/@([a-zA-Z0-9_\u4e00-\u9fa5]+)/g, '<span class="weibo-mention">@$1</span>');
+      
+      // 保留换行符
+      formatted = formatted.replace(/\n/g, '<br>');
+      
+      return formatted;
+    };
+
+    const hasImageContent = () => {
+      // 这里可以根据内容类型或关键词判断是否需要显示图片
+      // 示例：如果是产品测评类型，或内容包含"图片"关键词，则显示图片
+      return state.weiboType === 'review' || state.generatedWeibo?.includes('图片') || 
+             (state.weiboType === 'lifestyle' && Math.random() > 0.5);
+    };
+
+    // 添加处理SSE消息的函数
+    const processSSEMessages = (buffer) => {
+      // 寻找完整的SSE消息（以\n\n分隔）
+      const messages = buffer.split('\n\n');
+      
+      // 如果最后一块不是完整的（没有以\n\n结尾），保留它
+      const incompleteChunk = buffer.endsWith('\n\n') ? '' : messages.pop();
+      
+      for (const message of messages) {
+        if (!message.trim()) continue; // 跳过空消息
+        
+        // 记录原始消息用于调试
+        console.log('处理SSE消息:', message);
+        
+        // 处理data:前缀的行
+        if (message.startsWith('data:')) {
+          const content = message.substring(5).trim();
           
-        case 'trending':
-          samples = [
-            `《流浪地球2》今天二刷回来…真的被国产科幻片的进步震撼到了！特效已经完全不输好莱坞，剧情更是紧凑到让人窒息😱。最震撼的还是那种面对毁灭时的东方式浪漫与坚韧，看完莫名感到心安。中国科幻电影的未来，好像一下子就有了更多可能性✨。#流浪地球2# #国产科幻电影# 你们看了吗？最喜欢哪个片段？`,
-            `最近数字人民币普及也太快了吧！今天商场购物全程数字钱包支付，比传统支付还便捷，完全不需要掏手机了。据说还能离线支付，网络崩了也能用，这波操作很有未来感啊！#数字人民币# #支付新方式# 有多少朋友已经开始使用数字人民币了？体验如何？`,
-            `AIGC技术发展真的太快了！今天试了最新的AI绘画工具，只需输入几个关键词就能生成超写实图像，完全颠覆了我对创作的理解！这是一场彻底的创意革命，以后设计师工作会被取代吗？🤔 #AI绘画# #AIGC趋势# 大家怎么看待AI创作的未来？`
-          ];
-          break;
+          // 检查是否为结束标记
+          if (content === '[DONE]') {
+            console.log('流式响应已完成');
+            continue;
+          }
           
-        case 'lifestyle':
-          samples = [
-            `#2023职场感悟# 这周终于啃下了那个困扰团队半个月的技术难题！熬夜加班的疲惫一扫而空，成就感真的是工作中最好的续航能量了✨。感谢团队每个人的付出，单打独斗永远不如众人拾柴。职场中最重要的，与其说是个人能力，不如说是解决问题的决心和团队协作的默契。你们职场中遇到过最有成就感的时刻是什么？一起分享吧！👇`,
-            `今日份早餐打卡：自制全麦三明治+鲜榨果汁🥪 早起半小时，给自己做顿营养早餐，整个上午都元气满满！把时间花在仪式感上，生活品质真的会不一样～ #健康生活方式# #早餐日记# 你们平时早餐都吃什么？有推荐的快手早餐吗？`,
-            `连续21天健身打卡成功！💪 刚开始真的每天都要靠意志力爬起来，现在已经养成习惯，不运动反而难受。体重下降5斤，精神状态也好了很多，朋友都说我气色变好了！健身真的是最值得坚持的事情之一。#健身打卡# #生活习惯养成# 有多少人因为懒放弃了健身？😂`
-          ];
-          break;
-          
-        case 'humor':
-          samples = [
-            `今天在公司茶水间听到两位同事聊天：\n"你知道AI为什么这么火吗？"\n"为什么？"\n"因为它不用996，不用交五险一金，不用年终述职，不吃不喝不休假还不辞职！"\n"那我们岂不是要失业了？😱"\n"放心，我们还有一个无可替代的优势..."\n"什么优势？"\n"我们会喝奶茶啊！" 🧋\n#职场段子# #AI时代# 你们觉得AI会取代哪些工作？`,
-            `深夜打开冰箱，发现昨天的外卖在跟我热情招手👋\n我：你还能吃吗？\n外卖：那要看你的勇气了！\n我：……\n鼓起勇气吃了后，我成功…………\n躺在了卫生间地板上🥲\n#生活段子# #深夜卫生间爆笑史# 有多少人跟我一样勇敢（傻）？`,
-            `刚才看到一个段子笑死我了：\n女朋友："亲爱的，如果我和你妈同时掉水里，你先救谁？"\n男友思考片刻："我先救我妈，然后再救你。"\n女友大怒："为什么！？"\n男友诚恳道："因为我妈不会游泳，你不是说你当年校运会游泳拿过冠军吗？" 😂\n#爆笑情侣日常# #恋爱脑回路# 你们遇到过类似的灵魂拷问吗？`
-          ];
-          break;
-          
-        case 'question':
-          samples = [
-            `世界杯1/4决赛也太刺激了吧！😱 梅西那脚助攻简直神来之笔，看得我从沙发上跳起来！C罗那个表情，心都要碎了。足球就是这样，一瞬间可以改变一切。突然意识到这可能是这两位球王同台的最后一届世界杯了…有点舍不得😢 #卡塔尔世界杯# #梅西C罗# 大家支持哪个队夺冠啊？评论区告诉我！⚽`,
-            `大家有没有发现，很多时候我们舍不得为自己花钱，但给家人朋友买礼物却毫不犹豫？🎁 今天给妈妈买了一个很贵的护肤品，自己却一直舍不得买，看到她笑得那么开心，突然觉得很值得！#生活感悟# #亲情# 你们最近为爱的人花的最值得的一笔钱是什么？`,
-            `现在各APP的广告是不是越来越离谱了？😡 刚才看视频，正看到关键时刻，突然蹦出30秒广告！我真的会谢！有时候就想为了避开广告开个会员，但又觉得这是掉进了商家的陷阱...#吐槽大会# #APP广告# 你们会为了避开广告而开会员吗？怎么看待这种营销策略？`
-          ];
-          break;
-          
-        default:
-          samples = [
-            `今天的阳光也太好了吧！☀️ 午休时在公司楼下晒了会太阳，整个人都元气满满！这种初春的温暖真的很治愈，感觉冬天的阴霾一扫而空～生活中这种小确幸真的很重要。#春日分享# #生活碎片# 你们今天的小确幸是什么呢？`,
-            `刚刚看完《流浪地球2》，被震撼到了！中国科幻电影真的成长了😭 特效不输好莱坞，情感戏更是催泪，那种东方式的浪漫与牺牲精神太感人了。看完走出影院时感觉整个人都被掏空了，但又充满希望。#流浪地球2# #国产科幻# 有一起看的吗？感觉如何？`,
-            `新入手的降噪耳机体验分享！🎧 地铁上嘈杂声瞬间消失90%，仿佛有了专属小世界！续航能力超乎想象，重度使用三天才需充电一次。最爱的是透明模式，不用摘下就能正常交流，太智能了！#好物分享# #数码推荐# 你们用过哪款降噪耳机体验最好？`
-          ];
+          try {
+            const data = JSON.parse(content);
+            console.log('解析的JSON数据:', data);
+            
+            // 尝试多种可能的数据格式
+            let textContent = '';
+            
+            // 格式1: OpenAI格式 - choices[0].delta.content
+            if (data.status === 'success' && data.data?.choices?.[0]?.delta?.content) {
+              textContent = data.data.choices[0].delta.content;
+            } 
+            // 格式2: 简化格式 - content直接在顶层
+            else if (data.content) {
+              textContent = data.content;
+            }
+            // 格式3: data.choices[0].delta.content (没有status包装)
+            else if (data.choices?.[0]?.delta?.content) {
+              textContent = data.choices[0].delta.content;
+            }
+            // 格式4: data.choices[0].text 格式
+            else if (data.choices?.[0]?.text) {
+              textContent = data.choices[0].text;
+            }
+            // 格式5: data.text 格式
+            else if (data.text) {
+              textContent = data.text;
+            }
+            
+            if (textContent) {
+              console.log('提取到内容:', textContent);
+              state.generatedWeibo += textContent;
+            }
+          } catch (e) {
+            console.warn('解析JSON失败:', e, '原始内容:', content);
+            
+            // 如果不是JSON，可能是直接返回的文本
+            if (content && content !== '[DONE]' && !content.includes('{') && !content.includes('[')) {
+              console.log('直接使用非JSON内容:', content);
+              state.generatedWeibo += content;
+            }
+          }
+        }
       }
       
-      const index = Math.floor(Math.random() * samples.length);
-      return samples[index];
-    }
+      return incompleteChunk;
+    };
+
+    // 在组件挂载后加载模型列表
+    onMounted(() => {
+      // 设置默认模型列表，防止等待API返回时界面显示"加载中"
+      setupDefaultModels();
+      // 然后尝试从API加载
+      // loadModels(); // 如果有API加载函数，可以取消注释
+    });
+
+    return {
+      ...toRefs(state),
+      isLastPage,
+      setupDefaultModels,
+      generateWeibo,
+      buildPrompt,
+      getMaxTokensByLength,
+      validateForm,
+      resetForm,
+      copyResult,
+      copyPrompt,
+      showPrompt,
+      showTips,
+      prevExample,
+      nextExample,
+      updateExampleCarousel,
+      loadExample,
+      getOfflineGeneratedWeibo,
+      formatWeiboContent,
+      hasImageContent,
+      exampleCarouselRef,
+      formatMarkdown
+    };
   }
 };
 </script>
 
 <style scoped>
-.weibo-article-page {
-  padding: 0;
-  margin-top: -40px; /* 与公众号文章位置一致 */
-  background-color: #f7f7f7;
-  min-height: calc(100vh - 60px);
-}
+/* 引入统一样式文件 */
+@import "@/assets/css/text-creation-common.css";
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
+/* 只保留特定于WeiboArticle的样式，其余使用统一样式 */
 
-.page-nav h2 {
-  margin: 0;
-  font-size: 24px;
-  color: #333;
-}
-
-.page-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.action-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #fff;
-  border: 1px solid #eee;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.action-btn:hover {
-  background-color: #f0f0f0;
-}
-
-.action-btn i {
-  font-size: 18px;
-  color: #666;
-}
-
-/* 两列布局 */
-.main-container {
-  display: flex;
-  gap: 20px;
-}
-
-.input-section {
-  width: 45%;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-}
-
-.right-column {
-  width: 55%;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-/* 标题样式 */
-.section-header {
-  padding: 10px 0;
-  margin-bottom: 10px;
-}
-
-.section-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-size: 18px;
-  color: #333;
-}
-
-.section-title i {
-  color: var(--primary-color, #ba003f);
-}
-
-/* 表单样式 */
-.form-group {
-  flex: 1;
-  margin-bottom: 16px;
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.form-group:hover label {
-  color: var(--primary-color, #ba003f);
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 6px;
-  color: #444;
-  font-weight: 500;
-  transition: color 0.3s ease;
-}
-
-.form-group label.required::after {
-  content: '*';
-  color: var(--primary-color, #ba003f);
-  margin-left: 4px;
-}
-
-.form-control {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.form-control:focus {
-  border-color: var(--primary-color, #ba003f);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-/* 下拉菜单的自定义样式 */
-select.form-control {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
-  background-repeat: no-repeat;
-  background-position: calc(100% - 12px) center;
-  background-size: 12px;
-  padding-right: 32px;
-  cursor: pointer;
-  transition: all 0.3s;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-select.form-control:hover {
-  border-color: #bbb;
-  background-color: #f9f9f9;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-}
-
-select.form-control:focus {
-  border-color: var(--primary-color, #ba003f);
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23ba003f' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
-}
-
-/* 模型选择下拉菜单特殊样式 */
-#model-select {
-  background-color: #f8f8f8;
-  border: 1px solid #ddd;
-  font-weight: 500;
-  position: relative;
-}
-
-#model-select:focus {
-  background-color: #fff;
-  border-color: var(--primary-color, #ba003f);
-}
-
-/* 下拉菜单选项样式 */
-select.form-control option {
-  font-weight: normal;
-  background-color: white;
-  color: #333;
-  padding: 8px;
-}
-
-textarea.form-control {
-  min-height: 100px;
-  line-height: 1.5;
-  resize: vertical;
-  background-color: #fafafa;
-  transition: all 0.3s ease;
-}
-
-textarea.form-control:focus {
-  background-color: #fff;
-  box-shadow: 0 0 0 3px rgba(186, 0, 63, 0.1);
-}
-
-.form-row {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 16px;
-}
-
-/* 复选框样式 - 优化外观 */
-.checkbox-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-top: 8px;
-}
-
-.checkbox-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #f9f9f9;
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 1px solid #eee;
-  transition: all 0.2s;
-}
-
-.checkbox-item:hover {
-  background: #f2f2f2;
-  border-color: #ddd;
-}
-
-.checkbox-label {
-  margin: 0;
-  font-weight: normal;
-  cursor: pointer;
-  color: #555;
-}
-
-input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: var(--primary-color, #ba003f);
-}
-
-/* 按钮样式 */
-.action-buttons {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.btn {
-  padding: 10px 15px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 14px;
-}
-
-.btn:active {
-  transform: scale(0.96);
-}
-
-.btn i {
-  font-size: 16px;
-}
-
-.btn-primary {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  flex: 2;
-}
-
-.btn-primary:hover {
-  background-color: #d4185b;
-  box-shadow: 0 4px 12px rgba(186, 0, 63, 0.2);
-  transform: translateY(-2px);
-}
-
-.btn-secondary {
-  background-color: #f5f5f5;
-  color: #444;
-  flex: 1;
-}
-
-.btn-secondary:hover {
-  background-color: #e5e5e5;
-  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.15);
-  transform: translateY(-2px);
-}
-
-.primary-button, .secondary-button, .prompt-button {
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 14px;
-  border: none;
-  transition: all 0.2s;
-}
-
-.primary-button {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-}
-
-.primary-button:hover {
-  background-color: #d4185b;
-}
-
-.secondary-button {
-  background-color: #f5f5f5;
-  color: #444;
-  border: 1px solid #eee;
-}
-
-.secondary-button:hover {
-  background-color: #e5e5e5;
-}
-
-.prompt-button {
-  background-color: transparent;
-  color: var(--primary-color, #ba003f);
-  border: 1px solid var(--primary-color, #ba003f);
-}
-
-.prompt-button:hover {
-  background-color: rgba(186, 0, 63, 0.05);
-}
-
-/* 加载状态 */
-.model-loading {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: #777;
-  margin-top: 6px;
-}
-
-.model-loading i {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 2px solid rgba(186, 0, 63, 0.3);
-  border-radius: 50%;
-  border-top-color: var(--primary-color, #ba003f);
-  animation: modelSpin 1s linear infinite;
-}
-
-@keyframes modelSpin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.spinning {
-  animation: spin 1.5s linear infinite;
-  display: inline-block;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* 参考案例样式 */
-.examples-section {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  padding: 15px;
-}
-
-.examples-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
+/* 参考案例部分优化 */
 .example-carousel {
   overflow: hidden;
 }
 
 .example-cards {
   display: flex;
-  gap: 15px;
-  transition: transform 0.3s ease;
+  gap: 20px;
+  padding: 10px 0;
 }
 
+/* 确保每个卡片有适当的边距和宽度 */
 .example-card {
-  flex: 0 0 170px; /* 减小固定宽度，显示更多案例 */
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 12px 15px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid #eee;
-  display: flex;
-  flex-direction: row;
-  gap: 12px;
-  overflow: hidden; /* 防止内容溢出 */
-}
-
-.example-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
-  border-color: var(--primary-color, #ba003f);
-}
-
-.example-icon {
-  width: 45px;
-  height: 45px;
-  min-width: 45px;
-  background-color: rgba(186, 0, 63, 0.1);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0;
-}
-
-.example-icon i {
-  font-size: 24px;
-  color: var(--primary-color, #ba003f);
-}
-
-.example-info {
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  font-size: 14px;
-  overflow: hidden; /* 防止溢出 */
-}
-
-.example-title {
-  font-weight: 600;
-  margin-bottom: 5px;
-  color: #333;
-  font-size: 16px;
-}
-
-.example-desc {
-  color: #666;
-  font-size: 14px;
-}
-
-.carousel-controls {
-  display: flex;
-  gap: 10px;
-}
-
-.carousel-control {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid #ddd;
-  background-color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.carousel-control:hover {
-  background-color: var(--primary-color, #ba003f);
-  color: white;
-  border-color: var(--primary-color, #ba003f);
-}
-
-.carousel-control i {
-  font-size: 18px;
-}
-
-.carousel-control.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.carousel-control.disabled:hover {
-  background-color: #fff;
-  color: inherit;
-  border-color: #ddd;
-}
-
-/* 结果展示样式 */
-.result-section {
-  flex: 1;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px;
-  border-bottom: 1px solid #eee;
-}
-
-.section-header .action-buttons {
-  margin: 0;
-  display: flex;
-  gap: 8px;
-}
-
-.result-content-wrapper {
-  position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 400px;
-}
-
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(255, 255, 255, 0.8);
-  z-index: 5;
-  border-radius: 0 0 8px 8px;
-}
-
-.loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 5px solid rgba(186, 0, 63, 0.1);
-  border-radius: 50%;
-  border-top-color: var(--primary-color, #ba003f);
-  animation: spin 1s ease-in-out infinite;
-  margin: 0 auto 20px;
-}
-
-.loading-text {
-  font-size: 16px;
-  color: var(--primary-color, #ba003f);
-  font-weight: 500;
-}
-
-.empty-result {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  min-height: 350px;
-  background-color: #fff;
-  border-radius: 8px;
-  color: #666;
-  text-align: center;
-}
-
-.empty-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-}
-
-.empty-image {
-  width: 120px;
-  height: 120px;
-  margin-bottom: 20px;
-}
-
-.empty-message {
-  margin: 0 0 20px;
-  font-size: 16px;
-  color: #666;
-}
-
-.blur-content {
-  filter: blur(1px);
-  opacity: 0.6;
-  pointer-events: none;
+  min-width: 200px;
+  margin-right: 0; /* 移除右边距，使用gap代替 */
 }
 
 /* 微博特有样式 */
 .weibo-result {
   padding: 20px;
-}
-
-.weibo-post {
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 1px solid #eee;
-}
-
-.weibo-header {
   display: flex;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.weibo-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: var(--primary-color, #ba003f);
-  display: flex;
-  align-items: center;
   justify-content: center;
-  margin-right: 10px;
 }
 
-.weibo-avatar i {
-  font-size: 20px;
-  color: white;
-}
-
-.weibo-username {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0 0 2px 0;
-}
-
-.weibo-timestamp {
-  font-size: 12px;
-  color: #999;
-}
-
-.weibo-body {
-  font-size: 16px;
-  line-height: 1.8;
-  margin-bottom: 15px;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.weibo-stats {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #f0f0f0;
-}
-
-.weibo-stat {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: #666;
+/* 微博内容元素样式 */
+.weibo-hashtag {
+  color: #eb7350;
+  font-weight: 500;
   cursor: pointer;
   transition: color 0.2s;
 }
 
-.weibo-stat:hover {
-  color: var(--primary-color, #ba003f);
+.weibo-hashtag:hover {
+  color: #ba003f;
+  text-decoration: underline;
 }
 
-/* 模态框样式 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.modal-content {
-  background-color: #fff;
-  border-radius: 8px;
-  width: 80%;
-  max-width: 800px;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
-  animation: modal-pop 0.3s ease-out;
-}
-
-@keyframes modal-pop {
-  0% { transform: scale(0.9); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  color: #666;
-  font-size: 20px;
+.weibo-mention {
+  color: #1da1f2;
+  font-weight: 500;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  transition: background-color 0.2s;
+  transition: color 0.2s;
 }
 
-.modal-close:hover {
-  background-color: #f0f0f0;
+.weibo-mention:hover {
+  color: #0c85d0;
+  text-decoration: underline;
 }
 
-.modal-body {
-  padding: 20px;
-  overflow-y: auto;
-  max-height: calc(80vh - 130px);
+/* 微博图片容器样式 */
+.weibo-image-container {
+  margin: 10px 0 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f2f2f2;
 }
 
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 15px 20px;
-  border-top: 1px solid #eee;
+.weibo-image {
+  width: 100%;
+  display: block;
+  border-radius: 8px;
+  transition: transform 0.3s ease;
 }
 
-.prompt-content {
-  background-color: #f5f5f5;
-  padding: 15px;
-  border-radius: 4px;
-  font-family: monospace;
-  white-space: pre-wrap;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #333;
-  border-left: 3px solid var(--primary-color, #ba003f);
-  margin: 0;
-  overflow-x: auto;
+.weibo-image:hover {
+  transform: scale(1.02);
 }
 
-.tips-list {
-  padding-left: 20px;
-  margin: 0;
-}
-
-.tips-list li {
+/* 改进微博内容样式 */
+.weibo-body {
+  font-size: 15px;
+  line-height: 1.6;
   margin-bottom: 12px;
-  color: #555;
+  white-space: pre-wrap;
+  word-break: break-word;
+  letter-spacing: 0.3px;
+  padding: 0 12px; /* 添加左右内边距 */
 }
 
-/* 响应式设计 */
+/* 增加微博文章容器内边距 */
+.weibo-post {
+  padding: 0 10px; /* 添加左右内边距 */
+}
+
+.weibo-article-container {
+  padding: 0 5px; /* 添加容器内边距 */
+}
+
+/* 手机预览样式已在mobile-preview.css中定义 */
+
 @media (max-width: 1200px) {
   .main-container {
     flex-direction: column;
@@ -1581,5 +1075,60 @@ input[type="checkbox"] {
   .examples-section {
     margin-bottom: 20px;
   }
+}
+
+/* 模态框头部样式 */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.prompt-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 4px;
+  max-height: 400px;
+  overflow-y: auto;
 }
 </style> 
